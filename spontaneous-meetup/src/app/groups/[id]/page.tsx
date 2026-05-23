@@ -1,0 +1,246 @@
+"use client";
+
+import { useState, useRef, useEffect } from "react";
+import { useParams, useRouter } from "next/navigation";
+import { useStore } from "@/lib/store";
+import { useGroupMessages } from "@/hooks/useGroupMessages";
+import InterestBadge from "@/components/InterestBadge";
+import TrustBadge from "@/components/TrustBadge";
+import ReportModal from "@/components/ReportModal";
+import ReviewModal from "@/components/ReviewModal";
+import { SAFE_LOCATIONS, SAFE_LOCATION_ICONS } from "@/lib/mock-data";
+
+function timeAgo(ts: number): string {
+  const diff = Date.now() - ts;
+  const mins = Math.floor(diff / 60000);
+  if (mins < 1) return "just now";
+  if (mins < 60) return `${mins}m ago`;
+  return `${Math.floor(mins / 60)}h ago`;
+}
+
+function timeLeft(expiresAt: number): string {
+  const diff = expiresAt - Date.now();
+  if (diff <= 0) return "Expired";
+  const h = Math.floor(diff / (1000 * 60 * 60));
+  const m = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+  return h > 0 ? `${h}h ${m}m left` : `${m}m left`;
+}
+
+export default function GroupPage() {
+  const params = useParams();
+  const router = useRouter();
+  const { currentUser, groups, joinGroup, leaveGroup, sendMessage } = useStore();
+  const [text, setText] = useState("");
+  const [reportTarget, setReportTarget] = useState<{ id: string; name: string; type: "user" | "group" } | null>(null);
+  const [reviewTarget, setReviewTarget] = useState<{ id: string; name: string } | null>(null);
+  const messagesEndRef = useRef<HTMLDivElement>(null);
+
+  const group = groups.find((g) => g.id === params.id);
+  const realtimeMessages = useGroupMessages(params.id as string);
+
+  // Use real-time messages if available, fall back to store messages
+  const messages = realtimeMessages.length > 0 ? realtimeMessages : (group?.messages ?? []);
+
+  const safeLocation = group ? SAFE_LOCATIONS.find((l) => l.id === group.safeLocationId) : null;
+
+  useEffect(() => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
+  }, [messages.length]);
+
+  if (!group) {
+    return (
+      <div className="max-w-2xl mx-auto px-4 py-12 text-center text-gray-400">
+        <p className="text-4xl mb-3">😕</p>
+        <p>Group not found</p>
+        <button onClick={() => router.push("/explore")} className="mt-4 text-blue-600 font-medium hover:underline">
+          Back to Explore
+        </button>
+      </div>
+    );
+  }
+
+  const isMember = currentUser ? group.members.some((m) => m.id === currentUser.id) : false;
+  const isFull = group.members.length >= group.maxMembers;
+  const canJoin = !isMember && !isFull && !!currentUser &&
+    (!group.femaleOnly || currentUser.gender === "Female");
+
+  function handleSend(e: React.FormEvent) {
+    e.preventDefault();
+    if (!text.trim() || !currentUser) return;
+    sendMessage(group!.id, text.trim());
+    setText("");
+  }
+
+  return (
+    <>
+      <div className="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-4">
+        {/* Group header card */}
+        <div className="bg-white border border-gray-200 rounded-2xl p-4">
+          <div className="flex items-start justify-between gap-3 mb-3">
+            <div>
+              <div className="flex items-center gap-2 flex-wrap mb-1">
+                <h1 className="text-lg font-bold text-gray-900">{group.name}</h1>
+                {group.femaleOnly && (
+                  <span className="px-2 py-0.5 bg-pink-50 border border-pink-200 text-pink-600 text-xs rounded-full font-medium">♀ Women only</span>
+                )}
+                <span className="px-2 py-0.5 bg-green-50 border border-green-200 text-green-700 text-xs rounded-full font-medium">🌍 Public</span>
+              </div>
+              <p className="text-sm text-gray-500">{group.neighborhood}</p>
+            </div>
+            <div className="flex items-center gap-2">
+              <InterestBadge interest={group.topic} size="md" />
+              {currentUser && (
+                <button onClick={() => setReportTarget({ id: group.id, name: group.name, type: "group" })}
+                  title="Report group" className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
+                  🚩
+                </button>
+              )}
+            </div>
+          </div>
+
+          {/* Safe location banner */}
+          {safeLocation && (
+            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2.5 mb-3">
+              <span className="text-lg">{SAFE_LOCATION_ICONS[safeLocation.type]}</span>
+              <div className="flex-1">
+                <p className="text-xs font-semibold text-emerald-800">{safeLocation.name}</p>
+                <p className="text-xs text-emerald-600 capitalize">{safeLocation.type} · Verified safe location ✓</p>
+              </div>
+            </div>
+          )}
+
+          <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-4">
+            <div className="flex items-center gap-1.5"><span>🕐</span><span>{group.plannedTime}</span></div>
+            <div className="flex items-center gap-1.5"><span>⏱</span><span className="text-amber-600 font-medium">{timeLeft(group.expiresAt)}</span></div>
+            <div className="flex items-center gap-1.5"><span>👥</span><span>{group.members.length}/{group.maxMembers} members</span></div>
+            <div className="flex items-center gap-1.5"><span>🔓</span><span className="text-green-600 font-medium">Public meetup</span></div>
+          </div>
+
+          {/* Members with trust info */}
+          <div className="mb-4">
+            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Members</p>
+            <div className="space-y-2">
+              {group.members.map((m) => (
+                <div key={m.id} className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2">
+                  <div className="flex items-center gap-2.5">
+                    <div className="relative">
+                      <div className="w-8 h-8 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">{m.avatar.charAt(0)}</div>
+                    </div>
+                    <div>
+                      <div className="flex items-center gap-1">
+                        <span className="text-sm font-semibold text-gray-800">{m.name}</span>
+                        {m.isVerified && <span className="text-blue-500 text-xs" title="Verified">✓</span>}
+                        {m.collegeVerified && <span className="text-purple-500 text-xs" title="College Verified">🎓</span>}
+                        {m.showGender && m.gender && <span className="text-xs text-gray-400">{m.gender === "Female" ? "♀" : m.gender === "Male" ? "♂" : "⚧"}</span>}
+                      </div>
+                      {m.trustScore > 0 && (
+                        <p className="text-xs text-amber-500 font-medium">⭐ {m.trustScore.toFixed(1)} · {m.reviewCount} reviews</p>
+                      )}
+                    </div>
+                  </div>
+                  {currentUser && m.id !== currentUser.id && (
+                    <div className="flex gap-1.5">
+                      {isMember && (
+                        <button onClick={() => setReviewTarget({ id: m.id, name: m.name })}
+                          className="text-xs px-2.5 py-1 bg-amber-50 border border-amber-200 text-amber-600 rounded-lg hover:bg-amber-100 transition-colors font-medium">
+                          ⭐ Review
+                        </button>
+                      )}
+                      <button onClick={() => setReportTarget({ id: m.id, name: m.name, type: "user" })}
+                        className="text-xs px-2.5 py-1 bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200 transition-colors">
+                        🚩
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ))}
+            </div>
+          </div>
+
+          {/* Join / Leave */}
+          {currentUser && (
+            <div className="flex gap-2">
+              {canJoin && (
+                <button onClick={() => joinGroup(group.id)} className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors">
+                  Join Group
+                </button>
+              )}
+              {!canJoin && !isMember && group.femaleOnly && currentUser.gender !== "Female" && (
+                <div className="flex-1 bg-pink-50 text-pink-500 py-2 rounded-xl text-sm font-medium text-center border border-pink-200">
+                  ♀ Women-only group
+                </div>
+              )}
+              {!canJoin && !isMember && isFull && (
+                <div className="flex-1 bg-gray-100 text-gray-500 py-2 rounded-xl text-sm font-medium text-center">Group is full</div>
+              )}
+              {isMember && (
+                <button onClick={() => { leaveGroup(group.id); router.push("/explore"); }}
+                  className="px-4 py-2 border border-red-200 text-red-500 rounded-xl text-sm font-medium hover:bg-red-50 transition-colors">
+                  Leave
+                </button>
+              )}
+            </div>
+          )}
+        </div>
+
+        {/* Chat */}
+        <div className="bg-white border border-gray-200 rounded-2xl flex flex-col overflow-hidden">
+          <div className="px-4 py-3 border-b border-gray-100">
+            <p className="text-sm font-semibold text-gray-900">Group chat</p>
+            {!isMember && <p className="text-xs text-gray-400">Join to send messages</p>}
+          </div>
+
+          <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[240px] max-h-[360px]">
+            {messages.length === 0 ? (
+              <div className="text-center py-8 text-gray-400">
+                <p className="text-2xl mb-1">💬</p>
+                <p className="text-sm">No messages yet. Say something!</p>
+              </div>
+            ) : (
+              messages.map((msg) => {
+                const isMe = msg.userId === currentUser?.id;
+                return (
+                  <div key={msg.id} className={`flex gap-2 ${isMe ? "flex-row-reverse" : ""}`}>
+                    <div className="w-7 h-7 flex-shrink-0 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
+                      {msg.userAvatar.charAt(0)}
+                    </div>
+                    <div className={`max-w-[75%] flex flex-col gap-0.5 ${isMe ? "items-end" : "items-start"}`}>
+                      {!isMe && <span className="text-xs text-gray-400">{msg.userName}</span>}
+                      <div className={`px-3 py-2 rounded-2xl text-sm ${isMe ? "bg-blue-600 text-white rounded-tr-sm" : "bg-gray-100 text-gray-900 rounded-tl-sm"}`}>
+                        {msg.text}
+                      </div>
+                      <span className="text-xs text-gray-400">{timeAgo(msg.timestamp)}</span>
+                    </div>
+                  </div>
+                );
+              })
+            )}
+            <div ref={messagesEndRef} />
+          </div>
+
+          {isMember && currentUser ? (
+            <form onSubmit={handleSend} className="p-3 border-t border-gray-100 flex gap-2">
+              <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Type a message..."
+                className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
+              <button type="submit" disabled={!text.trim()} className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium disabled:opacity-40 hover:bg-blue-700 transition-colors">
+                Send
+              </button>
+            </form>
+          ) : (
+            <div className="p-3 border-t border-gray-100 text-center">
+              <p className="text-xs text-gray-400">Join the group to chat</p>
+            </div>
+          )}
+        </div>
+      </div>
+
+      {/* Modals */}
+      {reportTarget && (
+        <ReportModal targetId={reportTarget.id} targetName={reportTarget.name} targetType={reportTarget.type} onClose={() => setReportTarget(null)} />
+      )}
+      {reviewTarget && group && (
+        <ReviewModal toUserId={reviewTarget.id} toUserName={reviewTarget.name} groupId={group.id} onClose={() => setReviewTarget(null)} />
+      )}
+    </>
+  );
+}

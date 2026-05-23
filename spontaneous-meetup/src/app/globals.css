@@ -1,0 +1,49 @@
+@import "tailwindcss";
+
+:root {
+  --font-geist: "Geist", system-ui, sans-serif;
+}
+
+@theme inline {
+  --font-sans: var(--font-geist);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+.scrollbar-none {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+
+/* Keep Leaflet below any modal overlay */
+.leaflet-pane,
+.leaflet-tile,
+.leaflet-marker-icon,
+.leaflet-marker-shadow,
+.leaflet-tile-container,
+.leaflet-map-pane svg,
+.leaflet-map-pane canvas,
+.leaflet-zoom-box,
+.leaflet-image-layer,
+.leaflet-layer {
+  z-index: 1 !important;
+}
+
+.leaflet-top,
+.leaflet-bottom {
+  z-index: 2 !important;
+}
+
+.leaflet-control {
+  z-index: 2 !important;
+}
+
+.leaflet-popup-pane {
+  z-index: 3 !important;
+}
