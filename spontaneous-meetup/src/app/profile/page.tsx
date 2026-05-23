@@ -30,6 +30,26 @@ function getCoverCls(id: string) {
   return COVERS.find((c) => c.id === id)?.cls ?? COVERS[0].cls;
 }
 
+// Resize + compress an image file to a base64 JPEG
+function compressImage(file: File, maxW: number, maxH: number, quality = 0.88): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      let { width, height } = img;
+      if (width > maxW) { height = Math.round(height * maxW / width); width = maxW; }
+      if (height > maxH) { width = Math.round(width * maxH / height); height = maxH; }
+      const canvas = document.createElement("canvas");
+      canvas.width = width; canvas.height = height;
+      canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
+      URL.revokeObjectURL(url);
+      resolve(canvas.toDataURL("image/jpeg", quality));
+    };
+    img.onerror = reject;
+    img.src = url;
+  });
+}
+
 // ── Avatar component ─────────────────────────────────────────────────────────
 
 function Avatar({ src, size = "lg", isFree }: { src: string; size?: "sm" | "md" | "lg"; isFree?: boolean }) {
@@ -98,14 +118,21 @@ export default function ProfilePage() {
   const [showCoverPicker, setShowCoverPicker]   = useState(false);
   const [pendingAvatar, setPendingAvatar]       = useState<string | null>(null);
   const [coverId, setCoverId]                   = useState<string>("");
+  const [coverImage, setCoverImage]             = useState<string | null>(null); // uploaded bg
   const [saving, setSaving]                     = useState(false);
+  const [uploadingAvatar, setUploadingAvatar]   = useState(false);
+  const [uploadingCover, setUploadingCover]     = useState(false);
 
-  const avatarPickerRef = useRef<HTMLDivElement>(null);
+  const avatarPickerRef  = useRef<HTMLDivElement>(null);
+  const avatarFileRef    = useRef<HTMLInputElement>(null);
+  const coverFileRef     = useRef<HTMLInputElement>(null);
 
-  // Load persisted cover from localStorage
+  // Load persisted cover (gradient id or uploaded image) from localStorage
   useEffect(() => {
     if (!currentUser) return;
     const id = currentUser.id;
+    const img = localStorage.getItem(`hangr_cover_img_${id}`);
+    if (img) { setCoverImage(img); return; }
     const saved = localStorage.getItem(`hangr_cover_${id}`);
     setCoverId(saved ?? pickDefaultCover(currentUser.name));
   }, [currentUser?.id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -131,8 +158,40 @@ export default function ProfilePage() {
   function chooseCover(id: string) {
     if (!currentUser) return;
     setCoverId(id);
+    setCoverImage(null);
     localStorage.setItem(`hangr_cover_${currentUser.id}`, id);
+    localStorage.removeItem(`hangr_cover_img_${currentUser.id}`);
     setShowCoverPicker(false);
+  }
+
+  async function handleAvatarFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    setUploadingAvatar(true);
+    setShowAvatarPicker(false);
+    try {
+      const compressed = await compressImage(file, 400, 400, 0.9);
+      setPendingAvatar(compressed);
+    } finally {
+      setUploadingAvatar(false);
+      e.target.value = "";
+    }
+  }
+
+  async function handleCoverFile(e: React.ChangeEvent<HTMLInputElement>) {
+    const file = e.target.files?.[0];
+    if (!currentUser || !file) return;
+    setUploadingCover(true);
+    setShowCoverPicker(false);
+    try {
+      const compressed = await compressImage(file, 1200, 480, 0.88);
+      setCoverImage(compressed);
+      localStorage.setItem(`hangr_cover_img_${currentUser.id}`, compressed);
+      localStorage.removeItem(`hangr_cover_${currentUser.id}`);
+    } finally {
+      setUploadingCover(false);
+      e.target.value = "";
+    }
   }
 
   async function saveChanges() {
@@ -200,8 +259,22 @@ export default function ProfilePage() {
         {/* ── LEFT: Profile Card ── */}
         <div className="bg-white rounded-3xl shadow-lg overflow-hidden flex flex-col">
 
+          {/* Hidden file inputs */}
+          <input ref={avatarFileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarFile} />
+          <input ref={coverFileRef}  type="file" accept="image/*" className="hidden" onChange={handleCoverFile} />
+
           {/* Cover */}
-          <div className={`relative h-48 sm:h-56 bg-gradient-to-br ${coverCls} flex-shrink-0 transition-all duration-500`}>
+          <div
+            className={`relative h-48 sm:h-56 flex-shrink-0 transition-all duration-500 ${coverImage ? "" : `bg-gradient-to-br ${coverCls}`}`}
+            style={coverImage ? { backgroundImage: `url(${coverImage})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+          >
+            {/* Loading overlay for cover upload */}
+            {uploadingCover && (
+              <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
+                <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin" />
+              </div>
+            )}
+
             {/* Nav buttons */}
             <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-4">
               <button onClick={() => router.back()}
@@ -211,18 +284,27 @@ export default function ProfilePage() {
               {editing && (
                 <button onClick={() => setShowCoverPicker(!showCoverPicker)}
                   className="flex items-center gap-1.5 bg-white/80 backdrop-blur rounded-full px-3 py-1.5 text-xs font-semibold text-gray-700 hover:bg-white shadow-sm transition-colors">
-                  🎨 Change background
+                  🖼️ Change background
                 </button>
               )}
             </div>
 
             {/* Cover picker */}
             {showCoverPicker && (
-              <div className="absolute top-14 right-4 bg-white rounded-2xl shadow-xl p-3 flex gap-2 z-20 border border-gray-100">
-                {COVERS.map((c) => (
-                  <button key={c.id} onClick={() => chooseCover(c.id)}
-                    className={`w-9 h-9 rounded-xl bg-gradient-to-br ${c.cls} transition-all ${coverId === c.id ? "ring-2 ring-offset-1 ring-gray-800 scale-110" : "hover:scale-105"}`} />
-                ))}
+              <div className="absolute top-14 right-4 bg-white rounded-2xl shadow-xl p-3 z-20 border border-gray-100">
+                {/* Upload from device */}
+                <button onClick={() => coverFileRef.current?.click()}
+                  className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold transition-colors mb-2">
+                  <span className="text-base">📤</span> Upload from device
+                </button>
+                {/* Gradient swatches */}
+                <p className="text-xs text-gray-400 mb-1.5 px-1">Or choose a gradient</p>
+                <div className="flex gap-2">
+                  {COVERS.map((c) => (
+                    <button key={c.id} onClick={() => chooseCover(c.id)}
+                      className={`w-9 h-9 rounded-xl bg-gradient-to-br ${c.cls} transition-all ${!coverImage && coverId === c.id ? "ring-2 ring-offset-1 ring-gray-800 scale-110" : "hover:scale-105"}`} />
+                  ))}
+                </div>
               </div>
             )}
 
@@ -243,18 +325,26 @@ export default function ProfilePage() {
                 {/* Avatar picker dropdown */}
                 {showAvatarPicker && (
                   <div className="absolute top-24 left-0 z-20 bg-white rounded-2xl shadow-xl border border-gray-100 p-3 w-64">
-                    <p className="text-xs font-semibold text-gray-500 mb-2 px-1">Choose avatar</p>
+                    <p className="text-xs font-semibold text-gray-500 mb-2 px-1">Choose photo</p>
+
+                    {/* Upload from device */}
+                    <button onClick={() => avatarFileRef.current?.click()}
+                      className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold transition-colors mb-2">
+                      <span className="text-base">📤</span>
+                      {uploadingAvatar ? "Uploading…" : "Upload from device"}
+                    </button>
 
                     {/* Google photo option */}
                     {currentUser.avatar?.startsWith("http") && (
                       <button onClick={() => { setPendingAvatar(currentUser.avatar); setShowAvatarPicker(false); }}
-                        className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-50 transition-colors mb-2">
+                        className="w-full flex items-center gap-2 px-3 py-2 rounded-xl hover:bg-gray-50 border border-gray-100 transition-colors mb-2">
                         <img src={currentUser.avatar} referrerPolicy="no-referrer" className="w-8 h-8 rounded-full object-cover" alt="" />
                         <span className="text-xs font-medium text-gray-700">Use Google photo</span>
                       </button>
                     )}
 
                     {/* Emoji grid */}
+                    <p className="text-xs text-gray-400 mb-1.5 px-1">Or pick an avatar</p>
                     <div className="grid grid-cols-6 gap-1">
                       {AVATAR_EMOJIS.map((emoji) => (
                         <button key={emoji} onClick={() => { setPendingAvatar(emoji); setShowAvatarPicker(false); }}

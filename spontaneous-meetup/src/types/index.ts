@@ -55,7 +55,7 @@ export interface User {
 export interface SafeLocation {
   id: string;
   name: string;
-  type: "cafe" | "mall" | "park" | "library";
+  type: "cafe" | "mall" | "park" | "library" | "sports";
   neighborhood: string;
   lat: number;
   lng: number;
@@ -91,5 +91,30 @@ export interface Message {
   userName: string;
   userAvatar: string;
   text: string;
+  timestamp: number;
+}
+
+export interface PostComment {
+  id: string;
+  postId: string;
+  userId: string;
+  userName: string;
+  userAvatar: string;
+  text: string;
+  timestamp: number;
+}
+
+export interface Post {
+  id: string;
+  userId: string;
+  userName: string;
+  userAvatar: string;
+  userNeighborhood: string;
+  userIsVerified: boolean;
+  text: string;
+  imageBase64?: string;
+  likes: string[];         // array of userIds
+  comments: PostComment[];
+  topic?: Interest;
   timestamp: number;
 }

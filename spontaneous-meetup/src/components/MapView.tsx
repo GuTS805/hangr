@@ -132,7 +132,8 @@ export default function MapView({
   customPin, flyToUser = false,
   onSelect, onCustomPin, height = "460px",
 }: Props) {
-  const DEFAULT_CENTER: [number, number] = [28.585, 77.336];
+  // Centered over Ghaziabad/NCR to show all locations at a glance
+  const DEFAULT_CENTER: [number, number] = [28.638, 77.408];
   const initialCenter: [number, number] = userPosition
     ? [userPosition.lat, userPosition.lng]
     : DEFAULT_CENTER;
@@ -155,7 +156,7 @@ export default function MapView({
       >
         <MapContainer
           center={initialCenter}
-          zoom={14}
+          zoom={userPosition ? 15 : 12}
           style={{ height: "100%", width: "100%" }}
           scrollWheelZoom
           zoomControl

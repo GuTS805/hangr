@@ -1,8 +1,8 @@
 "use client";
 
 import { create } from "zustand";
-import { User, Group, Message, Interest, Review, Report, ReportReason, Gender } from "@/types";
-import { supabase, ProfileRow, GroupRow, MessageRow } from "./supabase";
+import { User, Group, Message, Interest, Review, Report, ReportReason, Gender, Post, PostComment } from "@/types";
+import { supabase, ProfileRow, GroupRow, MessageRow, PostRow, CommentRow } from "./supabase";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 // ── Mappers ───────────────────────────────────────────────────────
@@ -66,6 +66,35 @@ function mapGroup(row: GroupRow): Group {
 function mapMessage(row: MessageRow): Message {
   return {
     id: row.id,
+    userId: row.user_id,
+    userName: row.user_name,
+    userAvatar: row.user_avatar,
+    text: row.text,
+    timestamp: new Date(row.created_at).getTime(),
+  };
+}
+
+function mapPost(row: PostRow): Post {
+  return {
+    id: row.id,
+    userId: row.user_id,
+    userName: row.user_name,
+    userAvatar: row.user_avatar,
+    userNeighborhood: row.user_neighborhood,
+    userIsVerified: row.user_is_verified,
+    text: row.text,
+    imageBase64: row.image_base64 ?? undefined,
+    likes: row.likes ?? [],
+    comments: (row.post_comments ?? []).map(mapComment),
+    topic: row.topic as Interest | undefined,
+    timestamp: new Date(row.created_at).getTime(),
+  };
+}
+
+function mapComment(row: CommentRow): PostComment {
+  return {
+    id: row.id,
+    postId: row.post_id,
     userId: row.user_id,
     userName: row.user_name,
     userAvatar: row.user_avatar,
@@ -140,6 +169,7 @@ interface AppState {
   freeUntil: number | null;
   groups: Group[];
   nearbyUsers: User[];
+  posts: Post[];
   blockedUserIds: string[];
   reports: Report[];
   reviews: Review[];
@@ -177,6 +207,13 @@ interface AppState {
   // Presence — nearby free users
   subscribePresence: (lat: number, lng: number) => void;
 
+  // Posts
+  loadPosts: () => Promise<void>;
+  createPost: (text: string, imageBase64?: string, topic?: Interest) => Promise<void>;
+  likePost: (postId: string) => Promise<void>;
+  addComment: (postId: string, text: string) => Promise<void>;
+  deletePost: (postId: string) => Promise<void>;
+
   // Profile
   updateGenderSettings: (gender: Gender | undefined, showGender: boolean) => void;
   verifyCollege: () => void;
@@ -196,6 +233,7 @@ export const useStore = create<AppState>()((set, get) => ({
   freeUntil: null,
   groups: [],
   nearbyUsers: [],
+  posts: [],
   blockedUserIds: [],
   reports: [],
   reviews: [],
@@ -236,8 +274,9 @@ export const useStore = create<AppState>()((set, get) => ({
       }
     });
 
-    // Load groups regardless of auth state
+    // Load groups + posts regardless of auth state
     get().loadGroups();
+    get().loadPosts();
 
     // Subscribe to group table changes
     const groupsChannel = supabase
@@ -668,6 +707,123 @@ export const useStore = create<AppState>()((set, get) => ({
       from_user_id: currentUser.id,
       to_user_id: toUserId,
     });
+  },
+
+  // ── Posts ─────────────────────────────────────────────────────
+
+  loadPosts: async () => {
+    const { data, error } = await supabase
+      .from("posts")
+      .select("*, post_comments(*)")
+      .order("created_at", { ascending: false })
+      .limit(50);
+    if (!error && data) {
+      set({ posts: (data as PostRow[]).map(mapPost) });
+    }
+  },
+
+  createPost: async (text, imageBase64, topic) => {
+    const { currentUser, posts } = get();
+    if (!currentUser) return;
+
+    const tempId = `temp_${Date.now()}`;
+    const tempPost: Post = {
+      id: tempId,
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userAvatar: currentUser.avatar,
+      userNeighborhood: currentUser.neighborhood,
+      userIsVerified: currentUser.isVerified,
+      text,
+      imageBase64,
+      likes: [],
+      comments: [],
+      topic,
+      timestamp: Date.now(),
+    };
+    set({ posts: [tempPost, ...posts] });
+
+    const { data, error } = await supabase.from("posts").insert({
+      user_id: currentUser.id,
+      user_name: currentUser.name,
+      user_avatar: currentUser.avatar,
+      user_neighborhood: currentUser.neighborhood,
+      user_is_verified: currentUser.isVerified,
+      text,
+      image_base64: imageBase64 ?? null,
+      topic: topic ?? null,
+      likes: [],
+    }).select("*, post_comments(*)").single();
+
+    if (!error && data) {
+      set({ posts: [mapPost(data as PostRow), ...get().posts.filter((p) => p.id !== tempId)] });
+    } else {
+      set({ posts: get().posts.filter((p) => p.id !== tempId) });
+    }
+  },
+
+  likePost: async (postId) => {
+    const { currentUser, posts } = get();
+    if (!currentUser) return;
+
+    const post = posts.find((p) => p.id === postId);
+    if (!post) return;
+
+    const alreadyLiked = post.likes.includes(currentUser.id);
+    const newLikes = alreadyLiked
+      ? post.likes.filter((id) => id !== currentUser.id)
+      : [...post.likes, currentUser.id];
+
+    set({ posts: posts.map((p) => p.id === postId ? { ...p, likes: newLikes } : p) });
+
+    await supabase.from("posts").update({ likes: newLikes }).eq("id", postId);
+  },
+
+  addComment: async (postId, text) => {
+    const { currentUser, posts } = get();
+    if (!currentUser) return;
+
+    const tempComment: PostComment = {
+      id: `tc_${Date.now()}`,
+      postId,
+      userId: currentUser.id,
+      userName: currentUser.name,
+      userAvatar: currentUser.avatar,
+      text,
+      timestamp: Date.now(),
+    };
+
+    set({
+      posts: posts.map((p) =>
+        p.id === postId ? { ...p, comments: [...p.comments, tempComment] } : p
+      ),
+    });
+
+    const { data, error } = await supabase.from("post_comments").insert({
+      post_id: postId,
+      user_id: currentUser.id,
+      user_name: currentUser.name,
+      user_avatar: currentUser.avatar,
+      text,
+    }).select().single();
+
+    if (!error && data) {
+      const realComment = mapComment(data as CommentRow);
+      set({
+        posts: get().posts.map((p) =>
+          p.id === postId
+            ? { ...p, comments: p.comments.map((c) => c.id === tempComment.id ? realComment : c) }
+            : p
+        ),
+      });
+    }
+  },
+
+  deletePost: async (postId) => {
+    const { currentUser } = get();
+    if (!currentUser) return;
+    set({ posts: get().posts.filter((p) => p.id !== postId) });
+    await supabase.from("posts").delete().eq("id", postId).eq("user_id", currentUser.id);
   },
 
   // ── Profile ───────────────────────────────────────────────────

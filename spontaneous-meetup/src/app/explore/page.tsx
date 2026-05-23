@@ -17,7 +17,7 @@ import { haversine, fmtDistance, requestGeolocation, GeoState, LatLng } from "@/
 import { fetchNearbyPlaces } from "@/lib/overpass";
 
 type Tab           = "people" | "groups" | "map";
-type LocationFilter = "all" | "cafe" | "mall" | "park" | "library";
+type LocationFilter = "all" | "cafe" | "mall" | "park" | "library" | "sports";
 type RadiusFilter  = 0.5 | 1 | 2 | 99;
 
 // ── enrich safe-location list with real distance ──────────────────────────
@@ -337,7 +337,7 @@ export default function ExplorePage() {
 
             {/* Location type filter */}
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
-              {(["all","cafe","mall","park","library"] as LocationFilter[]).map((t) => (
+              {(["all","cafe","mall","park","library","sports"] as LocationFilter[]).map((t) => (
                 <button key={t} onClick={() => setLocFilter(t)}
                   className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                     locFilter === t ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"

@@ -68,3 +68,28 @@ export interface MessageRow {
   text: string;
   created_at: string;
 }
+
+export interface PostRow {
+  id: string;
+  user_id: string;
+  user_name: string;
+  user_avatar: string;
+  user_neighborhood: string;
+  user_is_verified: boolean;
+  text: string;
+  image_base64: string | null;
+  likes: string[];
+  topic: string | null;
+  created_at: string;
+  post_comments?: CommentRow[];
+}
+
+export interface CommentRow {
+  id: string;
+  post_id: string;
+  user_id: string;
+  user_name: string;
+  user_avatar: string;
+  text: string;
+  created_at: string;
+}
