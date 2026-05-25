@@ -103,6 +103,21 @@ function mapComment(row: CommentRow): PostComment {
   };
 }
 
+// ── API helper ───────────────────────────────────────────────────
+
+async function apiCall(path: string, method: string, body?: unknown) {
+  const { data: { session } } = await supabase.auth.getSession();
+  const token = session?.access_token;
+  return fetch(path, {
+    method,
+    headers: {
+      "Content-Type": "application/json",
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+    },
+    ...(body !== undefined ? { body: JSON.stringify(body) } : {}),
+  });
+}
+
 // ── Profile loader with fallback creation ─────────────────────────
 
 async function loadAndSetProfile(
@@ -466,9 +481,9 @@ export const useStore = create<AppState>()((set, get) => ({
       ),
     });
 
-    supabase.from("group_members")
-      .insert({ group_id: groupId, user_id: currentUser.id })
-      .then(({ error }) => { if (error) get().loadGroups(); });
+    apiCall(`/api/groups/${groupId}/join`, "POST")
+      .then((res) => { if (!res.ok) get().loadGroups(); })
+      .catch(() => get().loadGroups());
   },
 
   leaveGroup: (groupId) => {
@@ -483,11 +498,9 @@ export const useStore = create<AppState>()((set, get) => ({
       ),
     });
 
-    supabase.from("group_members")
-      .delete()
-      .eq("group_id", groupId)
-      .eq("user_id", currentUser.id)
-      .then(({ error }) => { if (error) get().loadGroups(); });
+    apiCall(`/api/groups/${groupId}/leave`, "POST")
+      .then((res) => { if (!res.ok) get().loadGroups(); })
+      .catch(() => get().loadGroups());
   },
 
   createGroup: (name, topic, safeLocationId, location, plannedTime, femaleOnly) => {
@@ -509,31 +522,12 @@ export const useStore = create<AppState>()((set, get) => ({
 
     set({ groups: [newGroup, ...groups] });
 
-    supabase.from("groups")
-      .insert({
-        name, topic,
-        created_by: currentUser.id,
-        location_name: location,
-        neighborhood: currentUser.neighborhood,
-        planned_time: plannedTime,
-        safe_location_id: safeLocationId,
-        female_only: femaleOnly,
-        is_public: true,
+    apiCall("/api/groups", "POST", { name, topic, safeLocationId, location, plannedTime, femaleOnly })
+      .then((res) => {
+        if (!res.ok) { get().loadGroups(); return; }
+        get().loadGroups();
       })
-      .select()
-      .single()
-      .then(({ data, error }) => {
-        if (error || !data) { get().loadGroups(); return; }
-
-        // Replace temp group with real one, add creator as member
-        supabase.from("group_members")
-          .insert({ group_id: data.id, user_id: currentUser.id })
-          .then(() => {
-            supabase.from("location_votes")
-              .insert({ group_id: data.id, user_id: currentUser.id, location_id: safeLocationId })
-              .then(() => get().loadGroups());
-          });
-      });
+      .catch(() => get().loadGroups());
   },
 
   sendMessage: (groupId, text) => {
@@ -646,8 +640,7 @@ export const useStore = create<AppState>()((set, get) => ({
       targetId: userId, targetType: "user", reason, timestamp: Date.now(),
     };
     set({ reports: [...reports, report] });
-    supabase.from("reports")
-      .insert({ reporter_id: currentUser.id, target_id: userId, target_type: "user", reason });
+    apiCall("/api/reports", "POST", { targetId: userId, targetType: "user", reason });
   },
 
   reportGroup: (groupId, reason) => {
@@ -658,8 +651,7 @@ export const useStore = create<AppState>()((set, get) => ({
       targetId: groupId, targetType: "group", reason, timestamp: Date.now(),
     };
     set({ reports: [...reports, report] });
-    supabase.from("reports")
-      .insert({ reporter_id: currentUser.id, target_id: groupId, target_type: "group", reason });
+    apiCall("/api/reports", "POST", { targetId: groupId, targetType: "group", reason });
   },
 
   submitReview: (toUserId, groupId, rating, comment) => {
@@ -744,24 +736,14 @@ export const useStore = create<AppState>()((set, get) => ({
     set({ posts: [tempPost, ...posts] });
 
     try {
-      const { data, error } = await supabase.from("posts").insert({
-        user_id: currentUser.id,
-        user_name: currentUser.name,
-        user_avatar: currentUser.avatar,
-        user_neighborhood: currentUser.neighborhood,
-        user_is_verified: currentUser.isVerified,
-        text,
-        image_base64: imageBase64 ?? null,
-        topic: topic ?? null,
-        likes: [],
-      }).select("*, post_comments(*)").single();
-
-      if (!error && data) {
-        set({ posts: [mapPost(data as PostRow), ...get().posts.filter((p) => p.id !== tempId)] });
+      const res = await apiCall("/api/posts", "POST", { text, imageBase64, topic });
+      if (res.ok) {
+        const json = await res.json() as { post: PostRow };
+        set({ posts: [mapPost(json.post), ...get().posts.filter((p) => p.id !== tempId)] });
       }
-      // on error keep the temp post in local state so the user sees their post
+      // on error keep temp post visible so user doesn't lose their input
     } catch {
-      // DB table may not exist yet — keep temp post visible
+      // keep temp post visible
     }
   },
 
@@ -830,7 +812,7 @@ export const useStore = create<AppState>()((set, get) => ({
     const { currentUser } = get();
     if (!currentUser) return;
     set({ posts: get().posts.filter((p) => p.id !== postId) });
-    await supabase.from("posts").delete().eq("id", postId).eq("user_id", currentUser.id);
+    await apiCall(`/api/posts/${postId}`, "DELETE");
   },
 
   // ── Profile ───────────────────────────────────────────────────
