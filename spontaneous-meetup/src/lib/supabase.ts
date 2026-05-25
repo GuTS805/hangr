@@ -32,6 +32,7 @@ export interface ProfileRow {
   last_lat: number | null;
   last_lng: number | null;
   onboarded: boolean;
+  phone: string | null;
   created_at: string;
   status_text: string | null;
   streak_days: number | null;
