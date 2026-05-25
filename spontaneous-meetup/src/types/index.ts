@@ -3,6 +3,7 @@ export interface Ping {
   fromUserId: string;
   fromUserName: string;
   fromUserAvatar: string;
+  fromUserIsVerified: boolean;
   toUserId: string;
   status: "pending" | "accepted" | "declined";
   timestamp: number;

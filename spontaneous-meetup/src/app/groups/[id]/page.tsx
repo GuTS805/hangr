@@ -36,6 +36,11 @@ export default function GroupPage() {
   const [ec, setEc] = useState<{ name: string; phone: string } | null>(null);
   const [joinStep, setJoinStep] = useState<"idle" | "share-prompt">("idle");
   const [isSafeSent, setIsSafeSent] = useState(false);
+  const [timerEnd, setTimerEnd] = useState<number | null>(null);
+  const [timerRemaining, setTimerRemaining] = useState(0);
+  const [timerFired, setTimerFired] = useState(false);
+  const [showFakeCall, setShowFakeCall] = useState(false);
+  const [fakeCallAccepted, setFakeCallAccepted] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const group = groups.find((g) => g.id === params.id);
@@ -55,6 +60,37 @@ export default function GroupPage() {
     const phone = localStorage.getItem("hangr_ec_phone");
     if (name && phone) setEc({ name, phone });
   }, []);
+
+  // Load saved timer for this group
+  useEffect(() => {
+    const stored = localStorage.getItem(`hangr_timer_end_${params.id}`);
+    if (!stored) return;
+    const end = parseInt(stored);
+    if (end > Date.now()) {
+      setTimerEnd(end);
+      setTimerRemaining(end - Date.now());
+    } else {
+      localStorage.removeItem(`hangr_timer_end_${params.id as string}`);
+      setTimerFired(true);
+    }
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Tick timer
+  useEffect(() => {
+    if (!timerEnd) return;
+    const id = setInterval(() => {
+      const remaining = timerEnd - Date.now();
+      if (remaining <= 0) {
+        setTimerFired(true);
+        setTimerEnd(null);
+        setTimerRemaining(0);
+        localStorage.removeItem(`hangr_timer_end_${params.id as string}`);
+      } else {
+        setTimerRemaining(remaining);
+      }
+    }, 15000);
+    return () => clearInterval(id);
+  }, [timerEnd, params.id]);
 
   if (!group) {
     return (
@@ -92,11 +128,35 @@ export default function GroupPage() {
   const shareBody = `Hey, I'm joining a meetup on hangr:\n📍 ${locationName}\n🕐 ${group.plannedTime}\nGroup: "${group.name}"\nI'll check in when it's done.`;
   const safeBody = `Hey ${ec?.name ?? ""}, I'm safe! Just finished the "${group.name}" meetup at ${locationName} on hangr. 👍`;
 
+  function fmtRemaining(ms: number): string {
+    const h = Math.floor(ms / (1000 * 60 * 60));
+    const m = Math.floor((ms % (1000 * 60 * 60)) / (1000 * 60));
+    return h > 0 ? `${h}h ${m}m` : `${m}m`;
+  }
+
+  function doJoin() {
+    joinGroup(group!.id);
+    const timerMins = parseInt(localStorage.getItem("hangr_safety_timer_mins") ?? "0");
+    if (timerMins > 0 && ec) {
+      const end = Date.now() + timerMins * 60 * 1000;
+      localStorage.setItem(`hangr_timer_end_${group!.id}`, String(end));
+      setTimerEnd(end);
+      setTimerRemaining(timerMins * 60 * 1000);
+    }
+  }
+
+  function clearTimer() {
+    setTimerEnd(null);
+    setTimerRemaining(0);
+    setTimerFired(false);
+    localStorage.removeItem(`hangr_timer_end_${group!.id}`);
+  }
+
   function handleJoin() {
     if (ec) {
       setJoinStep("share-prompt");
     } else {
-      joinGroup(group!.id);
+      doJoin();
     }
   }
 
@@ -204,6 +264,36 @@ export default function GroupPage() {
             </div>
           </div>
 
+          {/* Auto-SOS timer countdown */}
+          {isMember && timerEnd && !timerFired && (
+            <div className="mb-3 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5">
+              <span className="text-base">⏱️</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-amber-800">Safety timer: {fmtRemaining(timerRemaining)} remaining</p>
+                <p className="text-xs text-amber-600">Tap &quot;I&apos;m Safe&quot; or send your check-in to cancel</p>
+              </div>
+              <button onClick={clearTimer} className="flex-shrink-0 text-xs text-amber-600 hover:text-amber-800 font-medium">Cancel</button>
+            </div>
+          )}
+
+          {/* Timer expired — urgent SOS */}
+          {isMember && timerFired && ec && !isSafeSent && (
+            <div className="mb-3 flex items-start gap-2 bg-red-50 border-2 border-red-400 rounded-xl px-3 py-3 animate-pulse">
+              <span className="text-lg mt-0.5">🚨</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-bold text-red-800 mb-0.5">Safety timer expired!</p>
+                <p className="text-xs text-red-600 mb-2">You haven&apos;t checked in. Alert {ec.name} now.</p>
+                <a
+                  href={smsLink(ec.phone, sosBody)}
+                  onClick={() => { setIsSafeSent(true); clearTimer(); }}
+                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-500 text-white text-xs font-bold rounded-lg hover:bg-red-600 transition-colors"
+                >
+                  🆘 Send SOS now
+                </a>
+              </div>
+            </div>
+          )}
+
           {/* "I'm Safe" check-in banner — shown after group expires */}
           {isMember && isExpired && ec && !isSafeSent && (
             <div className="mb-3 bg-green-50 border border-green-200 rounded-xl px-3 py-3 flex items-center gap-3">
@@ -214,7 +304,7 @@ export default function GroupPage() {
               </div>
               <a
                 href={smsLink(ec.phone, safeBody)}
-                onClick={() => setIsSafeSent(true)}
+                onClick={() => { setIsSafeSent(true); clearTimer(); }}
                 className="flex-shrink-0 px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700 transition-colors"
               >
                 Send ✓
@@ -240,13 +330,13 @@ export default function GroupPage() {
                   <div className="flex gap-2">
                     <a
                       href={smsLink(ec.phone, shareBody)}
-                      onClick={() => { setTimeout(() => joinGroup(group.id), 200); setJoinStep("idle"); }}
+                      onClick={() => { setJoinStep("idle"); setTimeout(() => doJoin(), 200); }}
                       className="flex-1 text-center py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors"
                     >
                       Share &amp; Join
                     </a>
                     <button
-                      onClick={() => { joinGroup(group.id); setJoinStep("idle"); }}
+                      onClick={() => { doJoin(); setJoinStep("idle"); }}
                       className="flex-1 py-2 bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg hover:bg-gray-200 transition-colors"
                     >
                       Skip &amp; Join
@@ -280,6 +370,13 @@ export default function GroupPage() {
                         🆘 SOS
                       </a>
                     )}
+                    <button
+                      onClick={() => { setShowFakeCall(true); setFakeCallAccepted(false); }}
+                      className="flex items-center gap-1.5 px-3 py-2 bg-gray-800 text-white text-xs font-bold rounded-xl hover:bg-gray-900 transition-colors"
+                      title="Fake incoming call to exit safely"
+                    >
+                      📞 Call
+                    </button>
                     <button onClick={() => { leaveGroup(group.id); router.push("/explore"); }}
                       className="px-4 py-2 border border-red-200 text-red-500 rounded-xl text-sm font-medium hover:bg-red-50 transition-colors">
                       Leave
@@ -355,6 +452,49 @@ export default function GroupPage() {
       )}
       {reviewTarget && group && (
         <ReviewModal toUserId={reviewTarget.id} toUserName={reviewTarget.name} groupId={group.id} onClose={() => setReviewTarget(null)} />
+      )}
+
+      {/* Fake safety call overlay */}
+      {showFakeCall && (
+        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
+          style={{ background: "linear-gradient(180deg,#0f0f1a 0%,#1a1a2e 100%)" }}>
+          {!fakeCallAccepted ? (
+            <div className="text-center px-8 w-full max-w-xs">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-4xl font-bold text-white mx-auto mb-5 shadow-2xl shadow-blue-500/40 animate-pulse">
+                {ec?.name?.charAt(0)?.toUpperCase() ?? "M"}
+              </div>
+              <p className="text-white/50 text-sm mb-1">Incoming call</p>
+              <p className="text-white text-2xl font-bold mb-1">{ec?.name ?? "Mom"}</p>
+              <p className="text-white/30 text-xs mb-20">hangr safety call</p>
+              <div className="flex justify-center gap-20">
+                <button onClick={() => setShowFakeCall(false)} className="flex flex-col items-center gap-3">
+                  <div className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center text-2xl shadow-lg shadow-red-500/30">📵</div>
+                  <span className="text-white/50 text-xs">Decline</span>
+                </button>
+                <button onClick={() => setFakeCallAccepted(true)} className="flex flex-col items-center gap-3">
+                  <div className="w-16 h-16 rounded-full bg-green-500 flex items-center justify-center text-2xl shadow-lg shadow-green-500/30">📞</div>
+                  <span className="text-white/50 text-xs">Accept</span>
+                </button>
+              </div>
+            </div>
+          ) : (
+            <div className="text-center px-8 w-full max-w-xs">
+              <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-4xl font-bold text-white mx-auto mb-5 shadow-2xl shadow-blue-500/40">
+                {ec?.name?.charAt(0)?.toUpperCase() ?? "M"}
+              </div>
+              <p className="text-white text-xl font-bold mb-1">{ec?.name ?? "Mom"}</p>
+              <p className="text-white/40 text-sm mb-1">On call...</p>
+              <p className="text-white/20 text-xs mb-20">Ongoing call</p>
+              <button
+                onClick={() => { setShowFakeCall(false); setFakeCallAccepted(false); }}
+                className="w-16 h-16 rounded-full bg-red-500 flex items-center justify-center text-2xl mx-auto shadow-lg shadow-red-500/30"
+              >
+                📵
+              </button>
+              <p className="text-white/40 text-xs mt-3">End call</p>
+            </div>
+          )}
+        </div>
       )}
     </>
   );

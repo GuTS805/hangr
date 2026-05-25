@@ -92,7 +92,7 @@ export interface PingRow {
   message: string | null;
   status: "pending" | "accepted" | "declined";
   created_at: string;
-  profiles?: { name: string; avatar: string } | null;
+  profiles?: { name: string; avatar: string; is_verified: boolean } | null;
 }
 
 export interface CommentRow {

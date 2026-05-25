@@ -29,8 +29,13 @@ function Avatar({ src, name }: { src: string; name: string }) {
 export default function NotificationsPanel() {
   const { currentUser, receivedPings, loadPings, respondToPing } = useStore();
   const [open, setOpen] = useState(false);
+  const [verifiedOnly, setVerifiedOnly] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
   const router = useRouter();
+
+  useEffect(() => {
+    setVerifiedOnly(localStorage.getItem("hangr_verified_pings_only") === "true");
+  }, []);
 
   // Close on outside click
   useEffect(() => {
@@ -59,8 +64,9 @@ export default function NotificationsPanel() {
         const newPing: Ping = {
           id: (payload.new as PingRow).id,
           fromUserId: fromId,
-          fromUserName: (profile as { name: string; avatar: string } | null)?.name ?? "Someone",
-          fromUserAvatar: (profile as { name: string; avatar: string } | null)?.avatar ?? "??",
+          fromUserName: (profile as { name: string; avatar: string; is_verified: boolean } | null)?.name ?? "Someone",
+          fromUserAvatar: (profile as { name: string; avatar: string; is_verified: boolean } | null)?.avatar ?? "??",
+          fromUserIsVerified: (profile as { name: string; avatar: string; is_verified: boolean } | null)?.is_verified ?? false,
           toUserId: currentUser.id,
           status: "pending",
           timestamp: Date.now(),
@@ -76,7 +82,10 @@ export default function NotificationsPanel() {
 
   if (!currentUser) return null;
 
-  const count = receivedPings.length;
+  const displayedPings = verifiedOnly
+    ? receivedPings.filter((p) => p.fromUserIsVerified)
+    : receivedPings;
+  const count = displayedPings.length;
 
   return (
     <div ref={ref} className="relative">
@@ -109,7 +118,7 @@ export default function NotificationsPanel() {
             )}
           </div>
 
-          {receivedPings.length === 0 ? (
+          {displayedPings.length === 0 ? (
             <div className="px-4 py-8 text-center">
               <p className="text-2xl mb-1">🔔</p>
               <p className="text-sm text-gray-500">No pings yet</p>
@@ -117,11 +126,21 @@ export default function NotificationsPanel() {
             </div>
           ) : (
             <div className="divide-y divide-gray-50 max-h-80 overflow-y-auto">
-              {receivedPings.map((ping) => (
+              {verifiedOnly && receivedPings.length > displayedPings.length && (
+                <p className="px-4 py-2 text-xs text-gray-400 bg-gray-50 text-center">
+                  {receivedPings.length - displayedPings.length} pings from unverified users hidden
+                </p>
+              )}
+              {displayedPings.map((ping) => (
                 <div key={ping.id} className="px-4 py-3 flex items-center gap-3">
                   <Avatar src={ping.fromUserAvatar} name={ping.fromUserName} />
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-semibold text-gray-900 truncate">{ping.fromUserName}</p>
+                    <div className="flex items-center gap-1">
+                      <p className="text-sm font-semibold text-gray-900 truncate">{ping.fromUserName}</p>
+                      {ping.fromUserIsVerified
+                        ? <span className="text-blue-500 text-xs flex-shrink-0" title="Verified">✓</span>
+                        : <span className="text-gray-400 text-xs flex-shrink-0" title="Unverified">○</span>}
+                    </div>
                     <p className="text-xs text-gray-500">wants to hang out 👋 · {timeAgo(ping.timestamp)}</p>
                   </div>
                   <div className="flex gap-1.5 flex-shrink-0">

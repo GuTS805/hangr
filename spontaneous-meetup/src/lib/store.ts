@@ -712,7 +712,7 @@ export const useStore = create<AppState>()((set, get) => ({
     if (!currentUser) return;
     const { data } = await supabase
       .from("pings")
-      .select("*, profiles:from_user_id(name, avatar)")
+      .select("*, profiles:from_user_id(name, avatar, is_verified)")
       .eq("to_user_id", currentUser.id)
       .eq("status", "pending")
       .order("created_at", { ascending: false })
@@ -721,8 +721,9 @@ export const useStore = create<AppState>()((set, get) => ({
       const pings: Ping[] = (data as PingRow[]).map((r) => ({
         id: r.id,
         fromUserId: r.from_user_id,
-        fromUserName: (r.profiles as { name: string; avatar: string } | null)?.name ?? "Someone",
-        fromUserAvatar: (r.profiles as { name: string; avatar: string } | null)?.avatar ?? "??",
+        fromUserName: (r.profiles as { name: string; avatar: string; is_verified: boolean } | null)?.name ?? "Someone",
+        fromUserAvatar: (r.profiles as { name: string; avatar: string; is_verified: boolean } | null)?.avatar ?? "??",
+        fromUserIsVerified: (r.profiles as { name: string; avatar: string; is_verified: boolean } | null)?.is_verified ?? false,
         toUserId: r.to_user_id,
         status: r.status,
         timestamp: new Date(r.created_at).getTime(),
