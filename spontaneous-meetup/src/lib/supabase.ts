@@ -7,7 +7,7 @@ export const supabase = createClient(supabaseUrl, supabaseKey, {
   auth: {
     autoRefreshToken: true,
     persistSession: true,
-    detectSessionInUrl: false, // handled manually in /auth/callback to avoid race condition
+    detectSessionInUrl: true,
   },
 });
 

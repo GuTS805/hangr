@@ -37,14 +37,23 @@ export default function AuthCallbackPage() {
       const code = new URLSearchParams(search).get("code");
       if (code) {
         const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-        if (error || !data.session) {
-          subscription.unsubscribe();
-          clearTimeout(timeout);
-          finish("/auth");
-        } else {
+        if (!error && data.session) {
           subscription.unsubscribe();
           clearTimeout(timeout);
           finish("/");
+          return;
+        }
+        // Exchange failed — maybe detectSessionInUrl already consumed the code.
+        // Check if we have a session anyway before giving up.
+        const { data: { session: existing } } = await supabase.auth.getSession();
+        if (existing) {
+          subscription.unsubscribe();
+          clearTimeout(timeout);
+          finish("/");
+        } else {
+          subscription.unsubscribe();
+          clearTimeout(timeout);
+          finish("/auth");
         }
         return;
       }
