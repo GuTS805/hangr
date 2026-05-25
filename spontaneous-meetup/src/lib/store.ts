@@ -743,22 +743,25 @@ export const useStore = create<AppState>()((set, get) => ({
     };
     set({ posts: [tempPost, ...posts] });
 
-    const { data, error } = await supabase.from("posts").insert({
-      user_id: currentUser.id,
-      user_name: currentUser.name,
-      user_avatar: currentUser.avatar,
-      user_neighborhood: currentUser.neighborhood,
-      user_is_verified: currentUser.isVerified,
-      text,
-      image_base64: imageBase64 ?? null,
-      topic: topic ?? null,
-      likes: [],
-    }).select("*, post_comments(*)").single();
+    try {
+      const { data, error } = await supabase.from("posts").insert({
+        user_id: currentUser.id,
+        user_name: currentUser.name,
+        user_avatar: currentUser.avatar,
+        user_neighborhood: currentUser.neighborhood,
+        user_is_verified: currentUser.isVerified,
+        text,
+        image_base64: imageBase64 ?? null,
+        topic: topic ?? null,
+        likes: [],
+      }).select("*, post_comments(*)").single();
 
-    if (!error && data) {
-      set({ posts: [mapPost(data as PostRow), ...get().posts.filter((p) => p.id !== tempId)] });
-    } else {
-      set({ posts: get().posts.filter((p) => p.id !== tempId) });
+      if (!error && data) {
+        set({ posts: [mapPost(data as PostRow), ...get().posts.filter((p) => p.id !== tempId)] });
+      }
+      // on error keep the temp post in local state so the user sees their post
+    } catch {
+      // DB table may not exist yet — keep temp post visible
     }
   },
 
@@ -776,7 +779,7 @@ export const useStore = create<AppState>()((set, get) => ({
 
     set({ posts: posts.map((p) => p.id === postId ? { ...p, likes: newLikes } : p) });
 
-    await supabase.from("posts").update({ likes: newLikes }).eq("id", postId);
+    supabase.from("posts").update({ likes: newLikes }).eq("id", postId).then(() => {});
   },
 
   addComment: async (postId, text) => {
@@ -799,23 +802,27 @@ export const useStore = create<AppState>()((set, get) => ({
       ),
     });
 
-    const { data, error } = await supabase.from("post_comments").insert({
-      post_id: postId,
-      user_id: currentUser.id,
-      user_name: currentUser.name,
-      user_avatar: currentUser.avatar,
-      text,
-    }).select().single();
+    try {
+      const { data, error } = await supabase.from("post_comments").insert({
+        post_id: postId,
+        user_id: currentUser.id,
+        user_name: currentUser.name,
+        user_avatar: currentUser.avatar,
+        text,
+      }).select().single();
 
-    if (!error && data) {
-      const realComment = mapComment(data as CommentRow);
-      set({
-        posts: get().posts.map((p) =>
-          p.id === postId
-            ? { ...p, comments: p.comments.map((c) => c.id === tempComment.id ? realComment : c) }
-            : p
-        ),
-      });
+      if (!error && data) {
+        const realComment = mapComment(data as CommentRow);
+        set({
+          posts: get().posts.map((p) =>
+            p.id === postId
+              ? { ...p, comments: p.comments.map((c) => c.id === tempComment.id ? realComment : c) }
+              : p
+          ),
+        });
+      }
+    } catch {
+      // keep temp comment visible
     }
   },
 

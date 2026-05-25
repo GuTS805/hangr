@@ -8,6 +8,7 @@ import { Interest, Gender } from "@/types";
 import { INTERESTS, INTEREST_EMOJI } from "@/lib/mock-data";
 import TrustBadge from "@/components/TrustBadge";
 import { STATUS_PRESETS } from "@/components/UserCard";
+import ImageCropModal from "@/components/ImageCropModal";
 
 // ── Cover options ────────────────────────────────────────────────────────────
 
@@ -28,26 +29,6 @@ function pickDefaultCover(name: string) {
 
 function getCoverCls(id: string) {
   return COVERS.find((c) => c.id === id)?.cls ?? COVERS[0].cls;
-}
-
-// Resize + compress an image file to a base64 JPEG
-function compressImage(file: File, maxW: number, maxH: number, quality = 0.88): Promise<string> {
-  return new Promise((resolve, reject) => {
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      let { width, height } = img;
-      if (width > maxW) { height = Math.round(height * maxW / width); width = maxW; }
-      if (height > maxH) { width = Math.round(width * maxH / height); height = maxH; }
-      const canvas = document.createElement("canvas");
-      canvas.width = width; canvas.height = height;
-      canvas.getContext("2d")!.drawImage(img, 0, 0, width, height);
-      URL.revokeObjectURL(url);
-      resolve(canvas.toDataURL("image/jpeg", quality));
-    };
-    img.onerror = reject;
-    img.src = url;
-  });
 }
 
 // ── Avatar component ─────────────────────────────────────────────────────────
@@ -119,9 +100,9 @@ export default function ProfilePage() {
   const [pendingAvatar, setPendingAvatar]       = useState<string | null>(null);
   const [coverId, setCoverId]                   = useState<string>("");
   const [coverImage, setCoverImage]             = useState<string | null>(null); // uploaded bg
-  const [saving, setSaving]                     = useState(false);
-  const [uploadingAvatar, setUploadingAvatar]   = useState(false);
-  const [uploadingCover, setUploadingCover]     = useState(false);
+  const [saving, setSaving] = useState(false);
+
+  const [cropModal, setCropModal] = useState<{ file: File; type: "avatar" | "cover" } | null>(null);
 
   const avatarPickerRef  = useRef<HTMLDivElement>(null);
   const avatarFileRef    = useRef<HTMLInputElement>(null);
@@ -164,34 +145,36 @@ export default function ProfilePage() {
     setShowCoverPicker(false);
   }
 
-  async function handleAvatarFile(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleAvatarFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
     if (!file) return;
-    setUploadingAvatar(true);
     setShowAvatarPicker(false);
-    try {
-      const compressed = await compressImage(file, 400, 400, 0.9);
-      setPendingAvatar(compressed);
-    } finally {
-      setUploadingAvatar(false);
-      e.target.value = "";
-    }
+    setCropModal({ file, type: "avatar" });
+    e.target.value = "";
   }
 
-  async function handleCoverFile(e: React.ChangeEvent<HTMLInputElement>) {
+  function handleCoverFile(e: React.ChangeEvent<HTMLInputElement>) {
     const file = e.target.files?.[0];
-    if (!currentUser || !file) return;
-    setUploadingCover(true);
+    if (!file) return;
     setShowCoverPicker(false);
-    try {
-      const compressed = await compressImage(file, 1200, 480, 0.88);
-      setCoverImage(compressed);
-      localStorage.setItem(`hangr_cover_img_${currentUser.id}`, compressed);
+    setCropModal({ file, type: "cover" });
+    e.target.value = "";
+  }
+
+  function onCropConfirm(dataUrl: string) {
+    if (!cropModal) return;
+    if (cropModal.type === "avatar") {
+      setPendingAvatar(dataUrl);
+    } else if (currentUser) {
+      setCoverImage(dataUrl);
+      localStorage.setItem(`hangr_cover_img_${currentUser.id}`, dataUrl);
       localStorage.removeItem(`hangr_cover_${currentUser.id}`);
-    } finally {
-      setUploadingCover(false);
-      e.target.value = "";
     }
+    setCropModal(null);
+  }
+
+  function onCropCancel() {
+    setCropModal(null);
   }
 
   async function saveChanges() {
@@ -268,13 +251,6 @@ export default function ProfilePage() {
             className={`relative h-48 sm:h-56 flex-shrink-0 transition-all duration-500 ${coverImage ? "" : `bg-gradient-to-br ${coverCls}`}`}
             style={coverImage ? { backgroundImage: `url(${coverImage})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
           >
-            {/* Loading overlay for cover upload */}
-            {uploadingCover && (
-              <div className="absolute inset-0 bg-black/40 flex items-center justify-center z-10">
-                <div className="w-8 h-8 border-3 border-white border-t-transparent rounded-full animate-spin" />
-              </div>
-            )}
-
             {/* Nav buttons */}
             <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-4">
               <button onClick={() => router.back()}
@@ -331,7 +307,7 @@ export default function ProfilePage() {
                     <button onClick={() => avatarFileRef.current?.click()}
                       className="w-full flex items-center gap-2 px-3 py-2 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 text-blue-700 text-xs font-semibold transition-colors mb-2">
                       <span className="text-base">📤</span>
-                      {uploadingAvatar ? "Uploading…" : "Upload from device"}
+                      Upload from device
                     </button>
 
                     {/* Google photo option */}
@@ -724,6 +700,17 @@ export default function ProfilePage() {
         </div>
 
       </div>
+
+      {/* Image crop modal */}
+      {cropModal && (
+        <ImageCropModal
+          file={cropModal.file}
+          aspectRatio={cropModal.type === "avatar" ? 1 : 1200 / 480}
+          shape={cropModal.type === "avatar" ? "circle" : "rect"}
+          onConfirm={onCropConfirm}
+          onCancel={onCropCancel}
+        />
+      )}
     </div>
   );
 }

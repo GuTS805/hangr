@@ -14,8 +14,6 @@ interface Props {
   showRepost?: boolean;
 }
 
-// ── Expiry badge ─────────────────────────────────────────────────────────────
-
 function timeLeft(expiresAt: number): { label: string; urgent: boolean; critical: boolean } {
   const diff = expiresAt - Date.now();
   if (diff <= 0) return { label: "Expired", urgent: true, critical: true };
@@ -37,8 +35,6 @@ function ExpiryBadge({ expiresAt }: { expiresAt: number }) {
   );
 }
 
-// ── Vibe reactions ────────────────────────────────────────────────────────────
-
 const REACTIONS = ["🔥", "💯", "👀", "🙌"];
 type ReactionMap = Record<string, number>;
 
@@ -47,8 +43,6 @@ function isWithinOneHour(plannedTime: string): boolean {
   if (!isNaN(d.getTime())) return d.getTime() - Date.now() < 60 * 60 * 1000 && d.getTime() > Date.now();
   return plannedTime.toLowerCase().includes("in ");
 }
-
-// ── Main component ────────────────────────────────────────────────────────────
 
 export default function GroupCard({ group, onRepost, showRepost }: Props) {
   const { currentUser, joinGroup, groups } = useStore();
@@ -67,7 +61,6 @@ export default function GroupCard({ group, onRepost, showRepost }: Props) {
     (!group.femaleOnly || currentUser.gender === "Female");
   const needsConfirmation = isMember && !confirmed && isWithinOneHour(group.plannedTime);
 
-  // Friend vouching: other groups the current user is in that share members with this group
   const vouchedBy = currentUser
     ? group.members.filter((m) => {
         if (m.id === currentUser.id) return false;
@@ -169,7 +162,6 @@ export default function GroupCard({ group, onRepost, showRepost }: Props) {
               {emoji} {reactions[emoji] > 0 && <span>{reactions[emoji]}</span>}
             </button>
           ))}
-          {/* Invite link */}
           <button onClick={copyInvite}
             className="ml-auto flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors">
             {copied ? "✓ Copied" : "🔗 Invite"}
@@ -212,7 +204,6 @@ export default function GroupCard({ group, onRepost, showRepost }: Props) {
           </div>
 
           <div className="flex items-center gap-2">
-            {/* Repost button for expired groups */}
             {isExpired && showRepost && onRepost && (
               <button onClick={() => onRepost(group)}
                 className="px-3 py-1 bg-violet-600 text-white text-xs font-medium rounded-lg hover:bg-violet-700 transition-colors">

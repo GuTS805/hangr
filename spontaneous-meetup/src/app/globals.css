@@ -1,12 +1,111 @@
+@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
+@import url('https://db.onlinewebfonts.com/c/14936bb7a4b6575fd2eee80a3ab52cc2?family=Feather+Bold');
 @import "tailwindcss";
 
 :root {
-  --font-geist: "Geist", system-ui, sans-serif;
+  --green:        #52A862;
+  --green-hover:  #448C50;
+  --green-shadow: #3D7D47;
+  --dark-blue:    #1E1B3A;
+  --duo-blue:     #7BA7D4;
+  --duo-red:      #E07575;
+  --duo-orange:   #E8A060;
+  --duo-golden:   #E8BC50;
+  --gray-text:    #4A4560;
+  --gray-light:   #8A87A0;
+  --border-color: #E8E5F0;
+  --nav-text:     #B0AACC;
+  --card-bg:      #ffffff;
+  --card-bg-2:    #f8f7ff;
 }
 
 @theme inline {
-  --font-sans: var(--font-geist);
+  --font-sans: 'Nunito', 'DIN Round Pro', -apple-system, BlinkMacSystemFont, sans-serif;
+  --color-duo-green:  #52A862;
+  --color-duo-blue:   #7BA7D4;
+  --color-duo-dark:   #1E1B3A;
+  --color-duo-red:    #E07575;
+  --color-duo-orange: #E8A060;
 }
+
+/* ── Animations ─────────────────────────────────────────────────────────── */
+@keyframes duo-float {
+  0%, 100% { transform: translateY(0px); }
+  50%       { transform: translateY(-12px); }
+}
+@keyframes duo-float-alt {
+  0%, 100% { transform: translateY(0px) rotate(-1deg); }
+  50%       { transform: translateY(-9px) rotate(1deg); }
+}
+@keyframes duo-ping {
+  0%        { transform: scale(1); opacity: 0.75; }
+  75%, 100% { transform: scale(2.4); opacity: 0; }
+}
+@keyframes duo-slide-up {
+  from { opacity: 0; transform: translateY(28px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.anim-float    { animation: duo-float     4s   ease-in-out infinite; }
+.anim-float-d1 { animation: duo-float     4.5s ease-in-out 0.8s  infinite; }
+.anim-float-d2 { animation: duo-float-alt 5s   ease-in-out 0.4s  infinite; }
+.anim-float-d3 { animation: duo-float     5.5s ease-in-out 1.2s  infinite; }
+.anim-float-d4 { animation: duo-float-alt 4.8s ease-in-out 1.8s  infinite; }
+.anim-ping     { animation: duo-ping      2s   ease-out    infinite; }
+.anim-slide-up { animation: duo-slide-up  0.7s ease-out    forwards; }
+@media (max-width: 1024px) { .desktop-only { display: none !important; } }
+
+/* ── Duolingo-style 3D buttons ──────────────────────────────────────────── */
+.duo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  height: 48px;
+  padding: 0 24px;
+  font-family: 'Nunito', sans-serif;
+  font-size: 15px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  border-radius: 12px;
+  border: none;
+  cursor: pointer;
+  transition: background 0.12s, box-shadow 0.1s, transform 0.1s;
+  white-space: nowrap;
+  text-decoration: none;
+}
+.duo-btn-primary {
+  background: var(--green);
+  color: #fff;
+  box-shadow: 0 4px 0 var(--green-shadow);
+}
+.duo-btn-primary:hover  { background: var(--green-hover); }
+.duo-btn-primary:active { box-shadow: none; transform: translateY(4px); }
+
+.duo-btn-secondary {
+  background: transparent;
+  color: var(--duo-blue);
+  border: 2px solid #CFCFCF;
+  box-shadow: 0 4px 0 #CFCFCF;
+}
+.duo-btn-secondary:hover  { border-color: #BEBEBE; }
+.duo-btn-secondary:active { box-shadow: none; transform: translateY(4px); }
+
+.duo-btn-dark {
+  background: var(--dark-blue);
+  color: #fff;
+  box-shadow: 0 4px 0 #08063a;
+}
+.duo-btn-dark:hover  { background: #1a1870; }
+.duo-btn-dark:active { box-shadow: none; transform: translateY(4px); }
+
+.duo-btn-sm {
+  height: 36px;
+  padding: 0 16px;
+  font-size: 13px;
+  border-radius: 10px;
+}
+.duo-btn-sm.duo-btn-primary  { box-shadow: 0 3px 0 var(--green-shadow); }
+.duo-btn-sm.duo-btn-dark     { box-shadow: 0 3px 0 #08063a; }
 
 * {
   box-sizing: border-box;
