@@ -13,7 +13,7 @@ export async function POST(req: NextRequest) {
   let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
 
-  const { name, topic, safeLocationId, location, plannedTime, femaleOnly } = body as Record<string, unknown>;
+  const { name, topic, safeLocationId, location, plannedTime, femaleOnly, expiresInHours } = body as Record<string, unknown>;
 
   if (typeof name !== "string" || name.trim().length < 3 || name.trim().length > 60)
     return NextResponse.json({ error: "Group name must be 3–60 characters" }, { status: 400 });
@@ -29,6 +29,10 @@ export async function POST(req: NextRequest) {
 
   const { data: profile } = await sb.from("profiles").select("neighborhood").eq("id", user.id).single();
 
+  const hours = typeof expiresInHours === "number" && expiresInHours > 0 && expiresInHours <= 24
+    ? expiresInHours : 4;
+  const expiresAt = new Date(Date.now() + hours * 60 * 60 * 1000).toISOString();
+
   const { data, error: dbError } = await sb.from("groups").insert({
     name: name.trim(),
     topic,
@@ -39,6 +43,7 @@ export async function POST(req: NextRequest) {
     safe_location_id: safeLocationId,
     female_only: femaleOnly === true,
     is_public: true,
+    expires_at: expiresAt,
   }).select().single();
 
   if (dbError) return NextResponse.json({ error: dbError.message }, { status: 500 });

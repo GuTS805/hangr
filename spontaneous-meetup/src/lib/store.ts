@@ -204,7 +204,7 @@ interface AppState {
   loadGroups: () => Promise<void>;
   joinGroup: (groupId: string) => void;
   leaveGroup: (groupId: string) => void;
-  createGroup: (name: string, topic: Interest, safeLocationId: string, location: string, plannedTime: string, femaleOnly: boolean) => void;
+  createGroup: (name: string, topic: Interest, safeLocationId: string, location: string, plannedTime: string, femaleOnly: boolean, expiresInHours?: number) => void;
   sendMessage: (groupId: string, text: string) => void;
 
   // Voting
@@ -504,7 +504,7 @@ export const useStore = create<AppState>()((set, get) => ({
       .catch(() => get().loadGroups());
   },
 
-  createGroup: (name, topic, safeLocationId, location, plannedTime, femaleOnly) => {
+  createGroup: (name, topic, safeLocationId, location, plannedTime, femaleOnly, expiresInHours = 4) => {
     const { currentUser, groups } = get();
     if (!currentUser) return;
 
@@ -513,7 +513,7 @@ export const useStore = create<AppState>()((set, get) => ({
       id: tempId, name, topic,
       members: [currentUser], maxMembers: 8,
       location, neighborhood: currentUser.neighborhood,
-      expiresAt: Date.now() + 4 * 60 * 60 * 1000,
+      expiresAt: Date.now() + expiresInHours * 60 * 60 * 1000,
       createdAt: Date.now(), plannedTime, messages: [],
       safeLocationId, femaleOnly, isPublic: true,
       createdBy: currentUser.id,
@@ -523,7 +523,7 @@ export const useStore = create<AppState>()((set, get) => ({
 
     set({ groups: [newGroup, ...groups] });
 
-    apiCall("/api/groups", "POST", { name, topic, safeLocationId, location, plannedTime, femaleOnly })
+    apiCall("/api/groups", "POST", { name, topic, safeLocationId, location, plannedTime, femaleOnly, expiresInHours })
       .then((res) => {
         if (!res.ok) { get().loadGroups(); return; }
         get().loadGroups();

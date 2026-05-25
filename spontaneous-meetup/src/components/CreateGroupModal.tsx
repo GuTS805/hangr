@@ -11,6 +11,14 @@ interface Props {
   prefilledLocation?: SafeLocation | null;
 }
 
+const EXPIRY_OPTIONS = [
+  { label: "1 hour",  value: 1 },
+  { label: "2 hours", value: 2 },
+  { label: "4 hours", value: 4 },
+  { label: "8 hours", value: 8 },
+  { label: "Today",   value: 12 },
+];
+
 export default function CreateGroupModal({ onClose, prefilledLocation }: Props) {
   const router = useRouter();
   const { createGroup, currentUser } = useStore();
@@ -19,13 +27,14 @@ export default function CreateGroupModal({ onClose, prefilledLocation }: Props) 
   const [safeLocationId, setSafeLocationId] = useState(prefilledLocation?.id ?? SAFE_LOCATIONS[0].id);
   const [plannedTime, setPlannedTime] = useState("");
   const [femaleOnly, setFemaleOnly] = useState(false);
+  const [expiresInHours, setExpiresInHours] = useState(4);
 
   const selectedLocation = SAFE_LOCATIONS.find((l) => l.id === safeLocationId)!;
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (!name.trim() || !plannedTime.trim()) return;
-    createGroup(name.trim(), topic, safeLocationId, selectedLocation.name, plannedTime.trim(), femaleOnly);
+    createGroup(name.trim(), topic, safeLocationId, selectedLocation.name, plannedTime.trim(), femaleOnly, expiresInHours);
     onClose();
     router.push("/explore");
   }
@@ -125,6 +134,30 @@ export default function CreateGroupModal({ onClose, prefilledLocation }: Props) 
               className="w-full border border-gray-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
               required
             />
+          </div>
+
+          {/* Expiry duration */}
+          <div>
+            <label className="block text-sm font-medium text-gray-700 mb-2">
+              Group expires in
+              <span className="text-xs text-gray-400 font-normal ml-1">(after this, the group disappears)</span>
+            </label>
+            <div className="flex gap-2 flex-wrap">
+              {EXPIRY_OPTIONS.map((opt) => (
+                <button
+                  key={opt.value}
+                  type="button"
+                  onClick={() => setExpiresInHours(opt.value)}
+                  className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
+                    expiresInHours === opt.value
+                      ? "bg-amber-500 text-white"
+                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                  }`}
+                >
+                  {opt.label}
+                </button>
+              ))}
+            </div>
           </div>
 
           {/* Female-only toggle */}
