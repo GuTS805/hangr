@@ -1,8 +1,8 @@
 "use client";
 
 import { create } from "zustand";
-import { User, Group, Message, Interest, Review, Report, ReportReason, Gender, Post, PostComment } from "@/types";
-import { supabase, ProfileRow, GroupRow, MessageRow, PostRow, CommentRow } from "./supabase";
+import { User, Group, Message, Interest, Review, Report, ReportReason, Gender, Post, PostComment, Ping } from "@/types";
+import { supabase, ProfileRow, GroupRow, MessageRow, PostRow, CommentRow, PingRow } from "./supabase";
 import type { RealtimeChannel } from "@supabase/supabase-js";
 
 // ── Mappers ───────────────────────────────────────────────────────
@@ -189,6 +189,7 @@ interface AppState {
   blockedUserIds: string[];
   reports: Report[];
   reviews: Review[];
+  receivedPings: Ping[];
   isAuthLoading: boolean;
   needsOnboarding: boolean;
 
@@ -219,6 +220,8 @@ interface AppState {
   reportGroup: (groupId: string, reason: ReportReason) => void;
   submitReview: (toUserId: string, groupId: string, rating: number, comment: string) => void;
   pingUser: (toUserId: string) => Promise<void>;
+  loadPings: () => Promise<void>;
+  respondToPing: (pingId: string, status: "accepted" | "declined") => Promise<void>;
 
   // Presence — nearby free users
   subscribePresence: (lat: number, lng: number) => void;
@@ -253,6 +256,7 @@ export const useStore = create<AppState>()((set, get) => ({
   blockedUserIds: [],
   reports: [],
   reviews: [],
+  receivedPings: [],
   isAuthLoading: true,
   needsOnboarding: false,
   _presenceChannel: null,
@@ -267,6 +271,7 @@ export const useStore = create<AppState>()((set, get) => ({
 
     if (session?.user) {
       await loadAndSetProfile(session.user, set, get);
+      get().loadPings();
     } else {
       set({ isAuthLoading: false });
     }
@@ -700,6 +705,37 @@ export const useStore = create<AppState>()((set, get) => ({
       from_user_id: currentUser.id,
       to_user_id: toUserId,
     });
+  },
+
+  loadPings: async () => {
+    const { currentUser } = get();
+    if (!currentUser) return;
+    const { data } = await supabase
+      .from("pings")
+      .select("*, profiles:from_user_id(name, avatar)")
+      .eq("to_user_id", currentUser.id)
+      .eq("status", "pending")
+      .order("created_at", { ascending: false })
+      .limit(20);
+    if (data) {
+      const pings: Ping[] = (data as PingRow[]).map((r) => ({
+        id: r.id,
+        fromUserId: r.from_user_id,
+        fromUserName: (r.profiles as { name: string; avatar: string } | null)?.name ?? "Someone",
+        fromUserAvatar: (r.profiles as { name: string; avatar: string } | null)?.avatar ?? "??",
+        toUserId: r.to_user_id,
+        status: r.status,
+        timestamp: new Date(r.created_at).getTime(),
+      }));
+      set({ receivedPings: pings });
+    }
+  },
+
+  respondToPing: async (pingId, status) => {
+    set((s) => ({
+      receivedPings: s.receivedPings.filter((p) => p.id !== pingId),
+    }));
+    await supabase.from("pings").update({ status }).eq("id", pingId);
   },
 
   // ── Posts ─────────────────────────────────────────────────────

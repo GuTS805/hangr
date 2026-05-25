@@ -60,6 +60,7 @@ export default function GroupPage() {
   }
 
   const isMember = currentUser ? group.members.some((m) => m.id === currentUser.id) : false;
+  const badTrustMembers = group.members.filter((m) => m.trustScore > 0 && m.trustScore < 3.0 && m.reviewCount >= 3);
   const isFull = group.members.length >= group.maxMembers;
   const canJoin = !isMember && !isFull && !!currentUser &&
     (!group.femaleOnly || currentUser.gender === "Female");
@@ -109,6 +110,19 @@ export default function GroupPage() {
             </div>
           )}
 
+          {/* Low trust warning banner */}
+          {badTrustMembers.length > 0 && (
+            <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2.5 mb-3">
+              <span className="text-base mt-0.5">⚠️</span>
+              <div>
+                <p className="text-xs font-semibold text-red-700 mb-0.5">Low trust score alert</p>
+                <p className="text-xs text-red-600">
+                  {badTrustMembers.map((m) => m.name).join(", ")} {badTrustMembers.length === 1 ? "has" : "have"} a low community trust score based on past reviews. Exercise caution.
+                </p>
+              </div>
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-4">
             <div className="flex items-center gap-1.5"><span>🕐</span><span>{group.plannedTime}</span></div>
             <div className="flex items-center gap-1.5"><span>⏱</span><span className="text-amber-600 font-medium">{timeLeft(group.expiresAt)}</span></div>
@@ -132,9 +146,14 @@ export default function GroupPage() {
                         {m.isVerified && <span className="text-blue-500 text-xs" title="Verified">✓</span>}
                         {m.collegeVerified && <span className="text-purple-500 text-xs" title="College Verified">🎓</span>}
                         {m.showGender && m.gender && <span className="text-xs text-gray-400">{m.gender === "Female" ? "♀" : m.gender === "Male" ? "♂" : "⚧"}</span>}
+                        {m.trustScore > 0 && m.trustScore < 3.0 && m.reviewCount >= 3 && (
+                          <span className="text-xs font-semibold text-red-500 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full" title="Low trust score">⚠️ Low trust</span>
+                        )}
                       </div>
                       {m.trustScore > 0 && (
-                        <p className="text-xs text-amber-500 font-medium">⭐ {m.trustScore.toFixed(1)} · {m.reviewCount} reviews</p>
+                        <p className={`text-xs font-medium ${m.trustScore < 3.0 && m.reviewCount >= 3 ? "text-red-500" : "text-amber-500"}`}>
+                          ⭐ {m.trustScore.toFixed(1)} · {m.reviewCount} reviews
+                        </p>
                       )}
                     </div>
                   </div>

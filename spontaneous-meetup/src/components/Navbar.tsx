@@ -4,6 +4,7 @@ import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { LogoMark } from "@/components/Logo";
+import NotificationsPanel from "@/components/NotificationsPanel";
 
 const NAV_LINKS = [
   { href: "/",        label: "Home"    },
@@ -66,6 +67,9 @@ export default function Navbar() {
               </Link>
             );
           })}
+
+          {/* Notifications */}
+          {currentUser && <NotificationsPanel />}
 
           {/* Right: user pill or sign in */}
           {currentUser ? (

@@ -1,3 +1,13 @@
+export interface Ping {
+  id: string;
+  fromUserId: string;
+  fromUserName: string;
+  fromUserAvatar: string;
+  toUserId: string;
+  status: "pending" | "accepted" | "declined";
+  timestamp: number;
+}
+
 export type Interest =
   | "Gaming" | "Cricket" | "Coding" | "Cafes"
   | "Anime"  | "Music"   | "Gym"    | "Football"

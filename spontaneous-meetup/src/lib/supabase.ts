@@ -85,6 +85,16 @@ export interface PostRow {
   post_comments?: CommentRow[];
 }
 
+export interface PingRow {
+  id: string;
+  from_user_id: string;
+  to_user_id: string;
+  message: string | null;
+  status: "pending" | "accepted" | "declined";
+  created_at: string;
+  profiles?: { name: string; avatar: string } | null;
+}
+
 export interface CommentRow {
   id: string;
   post_id: string;

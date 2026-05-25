@@ -61,6 +61,10 @@ export default function GroupCard({ group, onRepost, showRepost }: Props) {
     (!group.femaleOnly || currentUser.gender === "Female");
   const needsConfirmation = isMember && !confirmed && isWithinOneHour(group.plannedTime);
 
+  const badTrustMembers = group.members.filter(
+    (m) => m.trustScore > 0 && m.trustScore < 3.0 && m.reviewCount >= 3
+  );
+
   const vouchedBy = currentUser
     ? group.members.filter((m) => {
         if (m.id === currentUser.id) return false;
@@ -131,6 +135,18 @@ export default function GroupCard({ group, onRepost, showRepost }: Props) {
             <span>{SAFE_LOCATION_ICONS[safeLocation.type]}</span>
             <span className="font-medium">{safeLocation.name}</span>
             <span className="ml-auto px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded text-xs font-medium">Safe place ✓</span>
+          </div>
+        )}
+
+        {/* Low trust score warning */}
+        {badTrustMembers.length > 0 && (
+          <div className="flex items-center gap-1.5 mb-2 bg-red-50 border border-red-200 rounded-lg px-2.5 py-1.5">
+            <span className="text-xs">⚠️</span>
+            <span className="text-xs text-red-700 font-medium">
+              {badTrustMembers.length === 1
+                ? `${badTrustMembers[0].name} has a low trust score (${badTrustMembers[0].trustScore.toFixed(1)})`
+                : `${badTrustMembers.length} members have low trust scores`}
+            </span>
           </div>
         )}
 
