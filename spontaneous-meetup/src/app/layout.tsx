@@ -44,7 +44,7 @@ export default function RootLayout({
         <StoreInitializer />
         <Navbar />
         {/* Mobile: full-width single column. Desktop: centred max-width container */}
-        <main className="w-full sm:max-w-2xl sm:mx-auto sm:px-4">{children}</main>
+        <main>{children}</main>
         <PingToast />
       </body>
     </html>
