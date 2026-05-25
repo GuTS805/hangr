@@ -118,6 +118,23 @@ html, body {
   -webkit-overflow-scrolling: touch;
 }
 
+.mobile-top-bar {
+  height: calc(56px + env(safe-area-inset-top, 0px));
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.mobile-top-spacer {
+  height: calc(56px + env(safe-area-inset-top, 0px));
+}
+.mobile-bottom-nav {
+  padding-bottom: env(safe-area-inset-bottom, 0px);
+}
+.mobile-bottom-spacer {
+  height: calc(60px + env(safe-area-inset-bottom, 0px));
+}
+.mobile-sheet-bottom {
+  padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
+}
+
 /* Bottom-sheet slide-up for modals on mobile */
 @keyframes sheet-up {
   from { transform: translateY(100%); opacity: 0; }

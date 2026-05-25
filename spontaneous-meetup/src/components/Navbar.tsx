@@ -84,10 +84,8 @@ export default function Navbar() {
           MOBILE: compact top bar (logo + bell + avatar)
       ───────────────────────────────────────────────── */}
       <header
-        className="sm:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4"
+        className="mobile-top-bar sm:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4"
         style={{
-          height: "56px",
-          paddingTop: "env(safe-area-inset-top)",
           background: "#111",
           borderBottom: "1px solid rgba(255,255,255,0.07)",
         }}
@@ -132,17 +130,16 @@ export default function Navbar() {
       </header>
 
       {/* Mobile top spacer */}
-      <div className="sm:hidden h-14" style={{ height: "calc(56px + env(safe-area-inset-top))" }} />
+      <div className="mobile-top-spacer sm:hidden" />
 
       {/* ─────────────────────────────────────────────────
           MOBILE: icon bottom tab bar
       ───────────────────────────────────────────────── */}
       <nav
-        className="sm:hidden fixed bottom-0 left-0 right-0 z-50 flex"
+        className="mobile-bottom-nav sm:hidden fixed bottom-0 left-0 right-0 z-50 flex"
         style={{
           background: "#111",
           borderTop: "1px solid rgba(255,255,255,0.08)",
-          paddingBottom: "env(safe-area-inset-bottom)",
         }}
       >
         {NAV_TABS.map(({ href, label, Icon }) => {
@@ -169,7 +166,7 @@ export default function Navbar() {
       </nav>
 
       {/* Mobile bottom spacer */}
-      <div className="sm:hidden" style={{ height: "calc(60px + env(safe-area-inset-bottom))" }} />
+      <div className="mobile-bottom-spacer sm:hidden" />
 
       {/* ─────────────────────────────────────────────────
           DESKTOP: floating pill navbar (unchanged)
