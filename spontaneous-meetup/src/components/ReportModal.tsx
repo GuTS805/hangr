@@ -31,10 +31,10 @@ export default function ReportModal({ targetId, targetName, targetType, onClose 
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/50 p-4"
+      className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/50 sm:p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="bg-white rounded-2xl p-6 w-full max-w-sm shadow-xl">
+      <div className="mobile-sheet bg-white rounded-t-3xl sm:rounded-2xl p-6 w-full max-w-sm shadow-xl pb-[max(1.5rem,env(safe-area-inset-bottom))]">
         {submitted ? (
           <div className="text-center py-4">
             <p className="text-3xl mb-3">🛡️</p>
