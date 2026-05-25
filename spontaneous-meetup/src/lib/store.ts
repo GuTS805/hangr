@@ -782,7 +782,7 @@ export const useStore = create<AppState>()((set, get) => ({
 
     set({ posts: posts.map((p) => p.id === postId ? { ...p, likes: newLikes } : p) });
 
-    supabase.from("posts").update({ likes: newLikes }).eq("id", postId).then(() => {});
+    supabase.rpc("toggle_post_like", { p_post_id: postId }).then(() => {});
   },
 
   addComment: async (postId, text) => {
