@@ -9,8 +9,8 @@ export default function StoreInitializer() {
   const { initAuth } = useStore();
 
   useEffect(() => {
-    // Skip on auth pages — callback page does its own session handling
-    if (pathname.startsWith("/auth")) return;
+    // Skip only on callback — it handles its own session exchange
+    if (pathname === "/auth/callback") return;
     initAuth();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
