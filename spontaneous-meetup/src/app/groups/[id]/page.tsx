@@ -33,6 +33,9 @@ export default function GroupPage() {
   const [text, setText] = useState("");
   const [reportTarget, setReportTarget] = useState<{ id: string; name: string; type: "user" | "group" } | null>(null);
   const [reviewTarget, setReviewTarget] = useState<{ id: string; name: string } | null>(null);
+  const [ec, setEc] = useState<{ name: string; phone: string } | null>(null);
+  const [joinStep, setJoinStep] = useState<"idle" | "share-prompt">("idle");
+  const [isSafeSent, setIsSafeSent] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   const group = groups.find((g) => g.id === params.id);
@@ -46,6 +49,12 @@ export default function GroupPage() {
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: "smooth" });
   }, [messages.length]);
+
+  useEffect(() => {
+    const name = localStorage.getItem("hangr_ec_name");
+    const phone = localStorage.getItem("hangr_ec_phone");
+    if (name && phone) setEc({ name, phone });
+  }, []);
 
   if (!group) {
     return (
@@ -70,6 +79,25 @@ export default function GroupPage() {
     if (!text.trim() || !currentUser) return;
     sendMessage(group!.id, text.trim());
     setText("");
+  }
+
+  const isExpired = group.expiresAt <= Date.now();
+  const locationName = safeLocation?.name ?? group.location;
+
+  function smsLink(phone: string, body: string) {
+    return `sms:${phone}?body=${encodeURIComponent(body)}`;
+  }
+
+  const sosBody = `I need help. I'm at ${locationName} for "${group.name}" meetup on hangr. Please check on me.`;
+  const shareBody = `Hey, I'm joining a meetup on hangr:\n📍 ${locationName}\n🕐 ${group.plannedTime}\nGroup: "${group.name}"\nI'll check in when it's done.`;
+  const safeBody = `Hey ${ec?.name ?? ""}, I'm safe! Just finished the "${group.name}" meetup at ${locationName} on hangr. 👍`;
+
+  function handleJoin() {
+    if (ec) {
+      setJoinStep("share-prompt");
+    } else {
+      joinGroup(group!.id);
+    }
   }
 
   return (
@@ -176,27 +204,95 @@ export default function GroupPage() {
             </div>
           </div>
 
-          {/* Join / Leave */}
+          {/* "I'm Safe" check-in banner — shown after group expires */}
+          {isMember && isExpired && ec && !isSafeSent && (
+            <div className="mb-3 bg-green-50 border border-green-200 rounded-xl px-3 py-3 flex items-center gap-3">
+              <span className="text-xl">✅</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-xs font-semibold text-green-800">Meetup ended — let {ec.name} know you&apos;re safe</p>
+                <p className="text-xs text-green-600 truncate">{ec.phone}</p>
+              </div>
+              <a
+                href={smsLink(ec.phone, safeBody)}
+                onClick={() => setIsSafeSent(true)}
+                className="flex-shrink-0 px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700 transition-colors"
+              >
+                Send ✓
+              </a>
+            </div>
+          )}
+          {isSafeSent && (
+            <div className="mb-3 bg-green-50 border border-green-200 rounded-xl px-3 py-2 flex items-center gap-2">
+              <span className="text-green-700 text-xs font-semibold">✓ &quot;I&apos;m safe&quot; message sent to {ec?.name}</span>
+            </div>
+          )}
+
+          {/* Join / Leave + SOS */}
           {currentUser && (
-            <div className="flex gap-2">
-              {canJoin && (
-                <button onClick={() => joinGroup(group.id)} className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors">
-                  Join Group
-                </button>
-              )}
-              {!canJoin && !isMember && group.femaleOnly && currentUser.gender !== "Female" && (
-                <div className="flex-1 bg-pink-50 text-pink-500 py-2 rounded-xl text-sm font-medium text-center border border-pink-200">
-                  ♀ Women-only group
+            <div className="flex flex-col gap-2">
+
+              {/* Pre-join share prompt */}
+              {canJoin && joinStep === "share-prompt" && ec && (
+                <div className="bg-blue-50 border border-blue-200 rounded-xl px-3 py-3">
+                  <p className="text-xs font-semibold text-blue-800 mb-2">
+                    📱 Let {ec.name} know you&apos;re joining this meetup?
+                  </p>
+                  <div className="flex gap-2">
+                    <a
+                      href={smsLink(ec.phone, shareBody)}
+                      onClick={() => { setTimeout(() => joinGroup(group.id), 200); setJoinStep("idle"); }}
+                      className="flex-1 text-center py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors"
+                    >
+                      Share &amp; Join
+                    </a>
+                    <button
+                      onClick={() => { joinGroup(group.id); setJoinStep("idle"); }}
+                      className="flex-1 py-2 bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg hover:bg-gray-200 transition-colors"
+                    >
+                      Skip &amp; Join
+                    </button>
+                  </div>
                 </div>
               )}
-              {!canJoin && !isMember && isFull && (
-                <div className="flex-1 bg-gray-100 text-gray-500 py-2 rounded-xl text-sm font-medium text-center">Group is full</div>
-              )}
-              {isMember && (
-                <button onClick={() => { leaveGroup(group.id); router.push("/explore"); }}
-                  className="px-4 py-2 border border-red-200 text-red-500 rounded-xl text-sm font-medium hover:bg-red-50 transition-colors">
-                  Leave
-                </button>
+
+              <div className="flex gap-2">
+                {canJoin && joinStep === "idle" && (
+                  <button onClick={handleJoin} className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors">
+                    Join Group
+                  </button>
+                )}
+                {!canJoin && !isMember && group.femaleOnly && currentUser.gender !== "Female" && (
+                  <div className="flex-1 bg-pink-50 text-pink-500 py-2 rounded-xl text-sm font-medium text-center border border-pink-200">
+                    ♀ Women-only group
+                  </div>
+                )}
+                {!canJoin && !isMember && isFull && (
+                  <div className="flex-1 bg-gray-100 text-gray-500 py-2 rounded-xl text-sm font-medium text-center">Group is full</div>
+                )}
+                {isMember && (
+                  <>
+                    {ec && !isExpired && (
+                      <a
+                        href={smsLink(ec.phone, sosBody)}
+                        className="flex items-center gap-1.5 px-3 py-2 bg-red-500 text-white text-xs font-bold rounded-xl hover:bg-red-600 transition-colors"
+                        title={`SOS — alert ${ec.name}`}
+                      >
+                        🆘 SOS
+                      </a>
+                    )}
+                    <button onClick={() => { leaveGroup(group.id); router.push("/explore"); }}
+                      className="px-4 py-2 border border-red-200 text-red-500 rounded-xl text-sm font-medium hover:bg-red-50 transition-colors">
+                      Leave
+                    </button>
+                  </>
+                )}
+              </div>
+
+              {/* No emergency contact nudge */}
+              {(canJoin || isMember) && !ec && (
+                <p className="text-xs text-gray-400 text-center">
+                  Add an <a href="/profile" className="text-blue-500 underline">emergency contact</a> in your profile to enable SOS and check-in features
+                </p>
               )}
             </div>
           )}
