@@ -4,7 +4,6 @@ import { INTERESTS } from "@/lib/mock-data";
 
 const VALID_TOPICS = new Set([...INTERESTS as unknown as string[], null, undefined]);
 const MAX_TEXT = 500;
-const MAX_IMAGE_B64 = 2 * 1024 * 1024; // ~1.5 MB decoded
 
 export async function POST(req: NextRequest) {
   const { user, sb, error } = await requireAuth(req);
@@ -13,7 +12,7 @@ export async function POST(req: NextRequest) {
   let body: unknown;
   try { body = await req.json(); } catch { return NextResponse.json({ error: "Invalid JSON" }, { status: 400 }); }
 
-  const { text, imageBase64, topic } = body as Record<string, unknown>;
+  const { text, imageUrl, topic } = body as Record<string, unknown>;
 
   if (typeof text !== "string" || text.trim().length === 0)
     return NextResponse.json({ error: "Post text is required" }, { status: 400 });
@@ -21,11 +20,13 @@ export async function POST(req: NextRequest) {
   if (text.trim().length > MAX_TEXT)
     return NextResponse.json({ error: `Text must be ${MAX_TEXT} characters or less` }, { status: 400 });
 
-  if (imageBase64 !== undefined && imageBase64 !== null) {
-    if (typeof imageBase64 !== "string")
-      return NextResponse.json({ error: "Invalid image" }, { status: 400 });
-    if (imageBase64.length > MAX_IMAGE_B64)
-      return NextResponse.json({ error: "Image too large (max ~1.5 MB)" }, { status: 400 });
+  if (imageUrl !== undefined && imageUrl !== null) {
+    if (typeof imageUrl !== "string")
+      return NextResponse.json({ error: "Invalid image URL" }, { status: 400 });
+    // Only allow URLs from our own Supabase Storage bucket
+    const supabaseUrl = process.env.NEXT_PUBLIC_SUPABASE_URL!;
+    if (!imageUrl.startsWith(`${supabaseUrl}/storage/`))
+      return NextResponse.json({ error: "Image must be uploaded to app storage" }, { status: 400 });
   }
 
   if (topic !== undefined && topic !== null && !VALID_TOPICS.has(topic as string))
@@ -46,7 +47,7 @@ export async function POST(req: NextRequest) {
     user_neighborhood: p?.neighborhood ?? "",
     user_is_verified: p?.is_verified ?? false,
     text: text.trim(),
-    image_base64: imageBase64 ?? null,
+    image_url: imageUrl ?? null,
     topic: topic ?? null,
     likes: [],
   }).select("*, post_comments(*)").single();

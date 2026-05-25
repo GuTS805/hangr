@@ -77,7 +77,8 @@ export interface PostRow {
   user_neighborhood: string;
   user_is_verified: boolean;
   text: string;
-  image_base64: string | null;
+  image_url: string | null;
+  image_base64: string | null;  // legacy
   likes: string[];
   topic: string | null;
   created_at: string;

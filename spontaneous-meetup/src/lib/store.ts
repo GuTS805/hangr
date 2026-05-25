@@ -83,6 +83,7 @@ function mapPost(row: PostRow): Post {
     userNeighborhood: row.user_neighborhood,
     userIsVerified: row.user_is_verified,
     text: row.text,
+    imageUrl: row.image_url ?? undefined,
     imageBase64: row.image_base64 ?? undefined,
     likes: row.likes ?? [],
     comments: (row.post_comments ?? []).map(mapComment),
@@ -718,6 +719,27 @@ export const useStore = create<AppState>()((set, get) => ({
     const { currentUser, posts } = get();
     if (!currentUser) return;
 
+    // Upload image to Supabase Storage before saving to DB
+    let imageUrl: string | undefined;
+    if (imageBase64) {
+      try {
+        const blob = await fetch(imageBase64).then((r) => r.blob());
+        const ext = blob.type === "image/png" ? "png" : "jpg";
+        const path = `${currentUser.id}/${Date.now()}.${ext}`;
+        const { data: uploadData, error: uploadErr } = await supabase.storage
+          .from("post-images")
+          .upload(path, blob, { contentType: blob.type, upsert: false });
+        if (!uploadErr && uploadData) {
+          const { data: { publicUrl } } = supabase.storage
+            .from("post-images")
+            .getPublicUrl(uploadData.path);
+          imageUrl = publicUrl;
+        }
+      } catch {
+        // upload failed — post without image rather than blocking
+      }
+    }
+
     const tempId = `temp_${Date.now()}`;
     const tempPost: Post = {
       id: tempId,
@@ -727,7 +749,7 @@ export const useStore = create<AppState>()((set, get) => ({
       userNeighborhood: currentUser.neighborhood,
       userIsVerified: currentUser.isVerified,
       text,
-      imageBase64,
+      imageUrl,
       likes: [],
       comments: [],
       topic,
@@ -736,12 +758,11 @@ export const useStore = create<AppState>()((set, get) => ({
     set({ posts: [tempPost, ...posts] });
 
     try {
-      const res = await apiCall("/api/posts", "POST", { text, imageBase64, topic });
+      const res = await apiCall("/api/posts", "POST", { text, imageUrl, topic });
       if (res.ok) {
         const json = await res.json() as { post: PostRow };
         set({ posts: [mapPost(json.post), ...get().posts.filter((p) => p.id !== tempId)] });
       }
-      // on error keep temp post visible so user doesn't lose their input
     } catch {
       // keep temp post visible
     }

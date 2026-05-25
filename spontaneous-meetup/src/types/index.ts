@@ -112,8 +112,9 @@ export interface Post {
   userNeighborhood: string;
   userIsVerified: boolean;
   text: string;
-  imageBase64?: string;
-  likes: string[];         // array of userIds
+  imageUrl?: string;     // Supabase Storage URL (new posts)
+  imageBase64?: string;  // legacy: old posts stored as base64
+  likes: string[];
   comments: PostComment[];
   topic?: Interest;
   timestamp: number;
