@@ -154,10 +154,10 @@ async function loadAndSetProfile(
       .single();
     profile = created;
   } else {
-    // Keep Google avatar in sync (it may change)
+    // Keep Google avatar in sync (fire-and-forget, don't block profile load)
     const freshAvatar = authUser.user_metadata?.avatar_url as string | undefined;
     if (freshAvatar && (profile as ProfileRow).avatar !== freshAvatar) {
-      await supabase.from("profiles").update({ avatar: freshAvatar }).eq("id", authUser.id);
+      supabase.from("profiles").update({ avatar: freshAvatar }).eq("id", authUser.id);
       (profile as ProfileRow).avatar = freshAvatar;
     }
   }
@@ -295,9 +295,8 @@ export const useStore = create<AppState>()((set, get) => ({
       }
     });
 
-    // Load groups + posts regardless of auth state
-    get().loadGroups();
-    get().loadPosts();
+    // Load groups + posts in parallel regardless of auth state
+    Promise.all([get().loadGroups(), get().loadPosts()]);
 
     // Subscribe to group table changes
     const groupsChannel = supabase
