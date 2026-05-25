@@ -46,12 +46,14 @@ export default function NotificationsPanel() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  // Real-time: new pings arrive → add to store and reload
+  // Real-time: new pings arrive → add to store
   useEffect(() => {
     if (!currentUser) return;
 
+    // Use a unique channel name every mount so we never hit an already-subscribed channel
+    const channelName = `pings_inbox_${currentUser.id}_${Date.now()}`;
     const channel = supabase
-      .channel(`pings_inbox_${currentUser.id}`)
+      .channel(channelName)
       .on("postgres_changes", {
         event: "INSERT",
         schema: "public",
@@ -60,7 +62,7 @@ export default function NotificationsPanel() {
       }, async (payload) => {
         const fromId = (payload.new as PingRow).from_user_id;
         const { data: profile } = await supabase
-          .from("profiles").select("name, avatar").eq("id", fromId).single();
+          .from("profiles").select("name, avatar, is_verified").eq("id", fromId).single();
         const newPing: Ping = {
           id: (payload.new as PingRow).id,
           fromUserId: fromId,
@@ -77,7 +79,8 @@ export default function NotificationsPanel() {
       })
       .subscribe();
 
-    return () => { channel.unsubscribe(); };
+    // removeChannel fully deregisters it — unsubscribe() alone leaves it in the registry
+    return () => { supabase.removeChannel(channel); };
   }, [currentUser?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (!currentUser) return null;

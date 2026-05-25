@@ -135,6 +135,13 @@ html, body {
   padding-bottom: max(1.5rem, env(safe-area-inset-bottom, 0px));
 }
 
+/* Extra bottom padding on mobile so content isn't hidden under the tab bar */
+@media (max-width: 639px) {
+  main {
+    padding-bottom: calc(60px + env(safe-area-inset-bottom, 0px) + 1rem);
+  }
+}
+
 /* Bottom-sheet slide-up for modals on mobile */
 @keyframes sheet-up {
   from { transform: translateY(100%); opacity: 0; }

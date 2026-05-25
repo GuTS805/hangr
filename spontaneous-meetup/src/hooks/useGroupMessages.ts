@@ -31,9 +31,9 @@ export function useGroupMessages(groupId: string) {
         if (data) setMessages((data as MessageRow[]).map(mapRow));
       });
 
-    // Subscribe to new messages in real-time
+    // Unique channel name per mount to avoid "already subscribed" error
     const channel = supabase
-      .channel(`messages:${groupId}`)
+      .channel(`messages:${groupId}:${Date.now()}`)
       .on(
         "postgres_changes",
         {
@@ -53,7 +53,7 @@ export function useGroupMessages(groupId: string) {
       .subscribe();
 
     return () => {
-      channel.unsubscribe();
+      supabase.removeChannel(channel);
     };
   }, [groupId]);
 
