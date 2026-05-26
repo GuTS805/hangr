@@ -298,9 +298,9 @@ export const useStore = create<AppState>()((set, get) => ({
     // Load groups + posts in parallel regardless of auth state
     Promise.all([get().loadGroups(), get().loadPosts()]);
 
-    // Subscribe to group table changes
+    // Subscribe to group table changes (unique name per mount to avoid already-subscribed error)
     const groupsChannel = supabase
-      .channel("groups_realtime")
+      .channel(`groups_realtime_${Date.now()}`)
       .on("postgres_changes", { event: "*", schema: "public", table: "groups" }, () => {
         get().loadGroups();
       })
@@ -308,6 +308,10 @@ export const useStore = create<AppState>()((set, get) => ({
         get().loadGroups();
       })
       .subscribe();
+
+    // Clean up old channel if reinitializing
+    const existing = get()._groupsChannel;
+    if (existing) supabase.removeChannel(existing);
 
     set({ _groupsChannel: groupsChannel });
   },

@@ -15,80 +15,27 @@ export default function AuthCallbackPage() {
       router.replace(path);
     };
 
-    const search = window.location.search;
-    const hash = window.location.hash;
-
-    // Set up auth state listener first so we never miss SIGNED_IN
+    // detectSessionInUrl:true handles the code/token exchange automatically.
+    // We just listen for the result.
     const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session) {
-        subscription.unsubscribe();
-        clearTimeout(timeout);
         finish("/");
       }
     });
 
-    const timeout = setTimeout(() => {
-      subscription.unsubscribe();
-      finish("/auth");
+    // In case SIGNED_IN already fired before this effect ran, check immediately.
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session) finish("/");
+    });
+
+    // Hard timeout: if nothing happens in 10s, send to login.
+    const timeout = setTimeout(async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      finish(session ? "/" : "/auth");
     }, 10000);
 
-    const handleCallback = async () => {
-      // PKCE flow: ?code= in query string
-      const code = new URLSearchParams(search).get("code");
-      if (code) {
-        const { data, error } = await supabase.auth.exchangeCodeForSession(code);
-        if (!error && data.session) {
-          subscription.unsubscribe();
-          clearTimeout(timeout);
-          finish("/");
-          return;
-        }
-        // Exchange failed — maybe detectSessionInUrl already consumed the code.
-        // Check if we have a session anyway before giving up.
-        const { data: { session: existing } } = await supabase.auth.getSession();
-        if (existing) {
-          subscription.unsubscribe();
-          clearTimeout(timeout);
-          finish("/");
-        } else {
-          subscription.unsubscribe();
-          clearTimeout(timeout);
-          finish("/auth");
-        }
-        return;
-      }
-
-      // Implicit flow: parse access_token directly from hash (detectSessionInUrl race condition workaround)
-      const hashParams = new URLSearchParams(hash.replace(/^#/, ""));
-      const access_token = hashParams.get("access_token");
-      const refresh_token = hashParams.get("refresh_token");
-
-      if (access_token && refresh_token) {
-        const { data, error } = await supabase.auth.setSession({ access_token, refresh_token });
-        if (data.session && !error) {
-          subscription.unsubscribe();
-          clearTimeout(timeout);
-          finish("/");
-        } else {
-          subscription.unsubscribe();
-          clearTimeout(timeout);
-          finish("/auth");
-        }
-        return;
-      }
-
-      // Fallback: check storage
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session) {
-        subscription.unsubscribe();
-        clearTimeout(timeout);
-        finish("/");
-      }
-    };
-
-    handleCallback();
-
     return () => {
+      done = true;
       subscription.unsubscribe();
       clearTimeout(timeout);
     };
