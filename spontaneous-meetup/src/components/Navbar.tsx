@@ -62,6 +62,33 @@ function ProfileIcon({ active }: { active: boolean }) {
   );
 }
 
+function ChatsIcon({ active }: { active: boolean }) {
+  return active ? (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M20 2H4c-1.1 0-2 .9-2 2v18l4-4h14c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2zm-2 12H6v-2h12v2zm0-3H6V9h12v2zm0-3H6V6h12v2z"/>
+    </svg>
+  ) : (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/>
+    </svg>
+  );
+}
+
+function FollowIcon({ active }: { active: boolean }) {
+  return active ? (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M16 11c1.66 0 2.99-1.34 2.99-3S17.66 5 16 5c-1.66 0-3 1.34-3 3s1.34 3 3 3zm-8 0c1.66 0 2.99-1.34 2.99-3S9.66 5 8 5C6.34 5 5 6.34 5 8s1.34 3 3 3zm0 2c-2.33 0-7 1.17-7 3.5V19h14v-2.5c0-2.33-4.67-3.5-7-3.5zm8 0c-.29 0-.62.02-.97.05 1.16.84 1.97 1.97 1.97 3.45V19h6v-2.5c0-2.33-4.67-3.5-7-3.5z"/>
+    </svg>
+  ) : (
+    <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+      <circle cx="9" cy="7" r="4"/>
+      <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+      <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+    </svg>
+  );
+}
+
 function MoonIcon() {
   return (
     <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
@@ -97,9 +124,11 @@ function LogoutIcon() {
 }
 
 const NAV_TABS = [
-  { href: "/",        label: "Home",    Icon: HomeIcon },
-  { href: "/feed",    label: "Feed",    Icon: FeedIcon },
+  { href: "/",        label: "Home",    Icon: HomeIcon    },
+  { href: "/feed",    label: "Feed",    Icon: FeedIcon    },
   { href: "/explore", label: "Explore", Icon: ExploreIcon },
+  { href: "/chats",   label: "Chats",   Icon: ChatsIcon   },
+  { href: "/follow",  label: "People",  Icon: FollowIcon  },
   { href: "/profile", label: "Profile", Icon: ProfileIcon },
 ];
 
