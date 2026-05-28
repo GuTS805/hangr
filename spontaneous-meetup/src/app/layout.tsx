@@ -3,6 +3,7 @@ import { Geist } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import StoreInitializer from "@/components/StoreInitializer";
+import ThemeProvider from "@/components/ThemeProvider";
 import PingToast from "@/components/PingToast";
 
 const geist = Geist({
@@ -42,6 +43,7 @@ export default function RootLayout({
     <html lang="en" className={`${geist.variable} h-full`}>
       <body className="min-h-full bg-gray-50 antialiased font-sans overscroll-none">
         <StoreInitializer />
+        <ThemeProvider />
         <Navbar />
         {/* Mobile: full-width single column. Desktop: centred max-width container */}
         <main>{children}</main>

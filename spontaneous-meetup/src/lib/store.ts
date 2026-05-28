@@ -180,6 +180,9 @@ async function loadAndSetProfile(
 // ── Store interface ───────────────────────────────────────────────
 
 interface AppState {
+  darkMode: boolean;
+  toggleDarkMode: () => void;
+
   currentUser: User | null;
   isFree: boolean;
   freeUntil: number | null;
@@ -247,6 +250,13 @@ interface AppState {
 // ── Store ─────────────────────────────────────────────────────────
 
 export const useStore = create<AppState>()((set, get) => ({
+  darkMode: false,
+  toggleDarkMode: () => {
+    const next = !get().darkMode;
+    set({ darkMode: next });
+    if (typeof window !== "undefined") localStorage.setItem("hangr_dark", String(next));
+  },
+
   currentUser: null,
   isFree: false,
   freeUntil: null,
