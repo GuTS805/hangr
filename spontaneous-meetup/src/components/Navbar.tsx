@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
+import { useState, useRef, useEffect } from "react";
 import { useStore } from "@/lib/store";
 import { LogoMark } from "@/components/Logo";
 import NotificationsPanel from "@/components/NotificationsPanel";
 
-// ── SVG icons: filled when active, outline when inactive ──────────────────
+// ── SVG icons ────────────────────────────────────────────────────────────────
 
 function HomeIcon({ active }: { active: boolean }) {
   return active ? (
@@ -38,7 +39,7 @@ function FeedIcon({ active }: { active: boolean }) {
 function ExploreIcon({ active }: { active: boolean }) {
   return active ? (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor">
-      <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 16.93V17h2v1.93c-3.06-.45-5.48-2.87-5.93-5.93H9v-2H7.07C7.52 7.94 9.94 5.52 13 5.07V7h-2V5.07C7.39 5.56 5 8.47 5 12s2.39 6.44 6 6.93zM15 7v2h2v2h-2v2h2v2h-2v1.93C17.61 16.44 19 14.39 19 12s-1.39-4.44-4-4.93V7z" />
+      <path d="M12 2C8.13 2 5 5.13 5 9c0 5.25 7 13 7 13s7-7.75 7-13c0-3.87-3.13-7-7-7zm0 9.5c-1.38 0-2.5-1.12-2.5-2.5s1.12-2.5 2.5-2.5 2.5 1.12 2.5 2.5-1.12 2.5-2.5 2.5z" />
     </svg>
   ) : (
     <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
@@ -61,6 +62,40 @@ function ProfileIcon({ active }: { active: boolean }) {
   );
 }
 
+function MoonIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z" />
+    </svg>
+  );
+}
+
+function SunIcon() {
+  return (
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor">
+      <circle cx="12" cy="12" r="5" />
+      <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+      <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    </svg>
+  );
+}
+
+function LogoutIcon() {
+  return (
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4" />
+      <polyline points="16 17 21 12 16 7" />
+      <line x1="21" y1="12" x2="9" y2="12" />
+    </svg>
+  );
+}
+
 const NAV_TABS = [
   { href: "/",        label: "Home",    Icon: HomeIcon },
   { href: "/feed",    label: "Feed",    Icon: FeedIcon },
@@ -68,12 +103,41 @@ const NAV_TABS = [
   { href: "/profile", label: "Profile", Icon: ProfileIcon },
 ];
 
+function UserAvatar({ user, size = 28 }: { user: { avatar: string; name: string }; size?: number }) {
+  if (user.avatar?.startsWith("http") || user.avatar?.startsWith("data:")) {
+    return (
+      <img src={user.avatar} alt={user.name} referrerPolicy="no-referrer"
+        className="rounded-full object-cover flex-shrink-0"
+        style={{ width: size, height: size }} />
+    );
+  }
+  return (
+    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0"
+      style={{ width: size, height: size, fontSize: Math.round(size * 0.38), background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
+      {user.avatar?.length <= 2 ? user.avatar : user.name.slice(0, 2).toUpperCase()}
+    </div>
+  );
+}
+
 export default function Navbar() {
   const pathname = usePathname();
-  const router   = useRouter();
+  const router = useRouter();
   const { currentUser, isFree, logout, darkMode, toggleDarkMode } = useStore();
+  const [showDropdown, setShowDropdown] = useState(false);
+  const dropdownRef = useRef<HTMLDivElement>(null);
+
+  useEffect(() => {
+    function handler(e: MouseEvent) {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target as Node)) {
+        setShowDropdown(false);
+      }
+    }
+    document.addEventListener("mousedown", handler);
+    return () => document.removeEventListener("mousedown", handler);
+  }, []);
 
   function handleLogout() {
+    setShowDropdown(false);
     logout();
     router.push("/auth");
   }
@@ -81,16 +145,12 @@ export default function Navbar() {
   return (
     <>
       {/* ─────────────────────────────────────────────────
-          MOBILE: compact top bar (logo + bell + avatar)
+          MOBILE: compact top bar
       ───────────────────────────────────────────────── */}
       <header
         className="mobile-top-bar sm:hidden fixed top-0 left-0 right-0 z-50 flex items-center justify-between px-4"
-        style={{
-          background: "#111",
-          borderBottom: "1px solid rgba(255,255,255,0.07)",
-        }}
+        style={{ background: "#111", borderBottom: "1px solid rgba(255,255,255,0.07)" }}
       >
-        {/* Logo */}
         <Link href="/" className="flex items-center gap-2 active:opacity-70 transition-opacity">
           <div className="relative">
             <LogoMark size={30} />
@@ -101,49 +161,38 @@ export default function Navbar() {
           <span className="text-white font-bold text-base tracking-tight">hangr</span>
         </Link>
 
-        {/* Right: bell + dark toggle + avatar */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5">
           {currentUser && <NotificationsPanel />}
           <button
             onClick={toggleDarkMode}
             className="w-8 h-8 flex items-center justify-center rounded-full transition-colors active:opacity-70"
             style={{ color: "rgba(255,255,255,0.6)" }}
-            title={darkMode ? "Light mode" : "Dark mode"}
           >
-            {darkMode ? (
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="12" cy="12" r="5"/>
-                <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            ) : (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-              </svg>
-            )}
+            {darkMode ? <SunIcon /> : <MoonIcon />}
           </button>
           {currentUser ? (
-            <button
-              onClick={handleLogout}
-              className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/20 active:opacity-70 transition-opacity"
-              title="Sign out"
-            >
-              {currentUser.avatar?.startsWith("http") || currentUser.avatar?.startsWith("data:") ? (
-                <img src={currentUser.avatar} alt={currentUser.name} referrerPolicy="no-referrer"
-                  className="w-full h-full object-cover" />
-              ) : (
-                <div className="w-full h-full flex items-center justify-center text-white text-xs font-bold"
-                  style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
-                  {currentUser.avatar?.slice(0, 2)}
+            <div ref={dropdownRef} className="relative">
+              <button
+                onClick={() => setShowDropdown((v) => !v)}
+                className="w-8 h-8 rounded-full overflow-hidden border-2 border-white/20 active:opacity-70 transition-opacity flex-shrink-0"
+              >
+                <UserAvatar user={currentUser} size={32} />
+              </button>
+              {showDropdown && (
+                <div className="absolute right-0 top-10 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[100] min-w-[160px]">
+                  <Link href="/profile" onClick={() => setShowDropdown(false)}
+                    className="flex items-center gap-2.5 px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition-colors">
+                    <ProfileIcon active={false} />
+                    Profile
+                  </Link>
+                  <button onClick={handleLogout}
+                    className="flex items-center gap-2.5 px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 w-full text-left border-t border-gray-100 transition-colors">
+                    <LogoutIcon />
+                    Log out
+                  </button>
                 </div>
               )}
-            </button>
+            </div>
           ) : (
             <Link href="/auth"
               className="px-3 py-1.5 rounded-full text-xs font-bold text-gray-900 bg-white active:opacity-70 transition-opacity">
@@ -161,10 +210,7 @@ export default function Navbar() {
       ───────────────────────────────────────────────── */}
       <nav
         className="mobile-bottom-nav sm:hidden fixed bottom-0 left-0 right-0 z-50 flex"
-        style={{
-          background: "#111",
-          borderTop: "1px solid rgba(255,255,255,0.08)",
-        }}
+        style={{ background: "#111", borderTop: "1px solid rgba(255,255,255,0.08)" }}
       >
         {NAV_TABS.map(({ href, label, Icon }) => {
           const active = pathname === href;
@@ -193,92 +239,123 @@ export default function Navbar() {
       <div className="mobile-bottom-spacer sm:hidden" />
 
       {/* ─────────────────────────────────────────────────
-          DESKTOP: floating pill navbar (unchanged)
+          DESKTOP: fixed left sidebar
       ───────────────────────────────────────────────── */}
-      <div className="hidden sm:flex fixed top-4 left-0 right-0 z-50 justify-center px-4 pointer-events-none">
-        <nav
-          className="pointer-events-auto flex items-center gap-1 px-2 py-2 shadow-2xl"
-          style={{
-            background: "#111",
-            borderRadius: 999,
-            boxShadow: "0 8px 32px rgba(0,0,0,0.35), 0 2px 8px rgba(0,0,0,0.2)",
-          }}
-        >
-          <Link href="/" className="relative flex-shrink-0 mr-1 transition-all hover:opacity-85 active:scale-95">
-            <LogoMark size={34} />
-            {isFree && (
-              <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-400 border-2 border-[#111]" />
-            )}
+      <aside
+        className="hidden sm:flex fixed top-0 left-0 bottom-0 z-50 flex-col"
+        style={{ width: 240, background: "#111", borderRight: "1px solid rgba(255,255,255,0.08)" }}
+      >
+        {/* Logo */}
+        <div className="px-5 py-5 flex-shrink-0">
+          <Link href="/" className="flex items-center gap-3 hover:opacity-85 transition-opacity">
+            <div className="relative flex-shrink-0">
+              <LogoMark size={34} />
+              {isFree && (
+                <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-400 border-2 border-[#111]" />
+              )}
+            </div>
+            <span className="text-white font-bold text-xl tracking-tight">hangr</span>
           </Link>
+        </div>
 
-          {NAV_TABS.map(({ href, label }) => {
-            const active = pathname === href;
+        {/* Nav links */}
+        <nav className="flex-1 px-3 py-2 space-y-1 overflow-y-auto">
+          {NAV_TABS.map(({ href, label, Icon }) => {
+            const active = pathname === href || (href !== "/" && pathname.startsWith(href));
             return (
-              <Link key={href} href={href}
-                className="px-4 py-1.5 rounded-full text-[13px] font-semibold transition-all"
-                style={active ? { background: "rgba(255,255,255,0.15)", color: "#fff" } : { color: "rgba(255,255,255,0.55)" }}
-                onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.9)"; }}
+              <Link
+                key={href}
+                href={href}
+                className="flex items-center gap-4 px-4 py-3 rounded-2xl text-[15px] font-semibold transition-all"
+                style={active
+                  ? { background: "rgba(255,255,255,0.12)", color: "#fff" }
+                  : { color: "rgba(255,255,255,0.55)" }}
+                onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.90)"; }}
                 onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.55)"; }}
               >
+                <Icon active={active} />
                 {label}
               </Link>
             );
           })}
+        </nav>
 
-          {currentUser && <NotificationsPanel />}
-
+        {/* Bottom: notifications + dark mode toggle */}
+        <div className="px-3 pb-5 space-y-1 flex-shrink-0" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+          {currentUser && (
+            <div className="pt-3 flex items-center gap-4 px-4 py-1">
+              <NotificationsPanel sidebarMode />
+              <span className="text-sm font-semibold" style={{ color: "rgba(255,255,255,0.55)" }}>Pings</span>
+            </div>
+          )}
           <button
             onClick={toggleDarkMode}
-            className="w-8 h-8 flex items-center justify-center rounded-full transition-all hover:opacity-90 active:scale-95"
-            style={{ color: "rgba(255,255,255,0.6)" }}
-            title={darkMode ? "Light mode" : "Dark mode"}
+            className="flex items-center gap-4 px-4 py-3 rounded-2xl text-[15px] font-semibold w-full text-left transition-all"
+            style={{ color: "rgba(255,255,255,0.55)" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.90)"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.55)"; }}
           >
-            {darkMode ? (
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
-                <circle cx="12" cy="12" r="5"/>
-                <line x1="12" y1="1" x2="12" y2="3" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <line x1="12" y1="21" x2="12" y2="23" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <line x1="4.22" y1="4.22" x2="5.64" y2="5.64" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <line x1="18.36" y1="18.36" x2="19.78" y2="19.78" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <line x1="1" y1="12" x2="3" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <line x1="21" y1="12" x2="23" y2="12" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <line x1="4.22" y1="19.78" x2="5.64" y2="18.36" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-                <line x1="18.36" y1="5.64" x2="19.78" y2="4.22" stroke="currentColor" strokeWidth="2" strokeLinecap="round"/>
-              </svg>
-            ) : (
-              <svg width="15" height="15" viewBox="0 0 24 24" fill="currentColor">
-                <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"/>
-              </svg>
-            )}
+            {darkMode ? <SunIcon /> : <MoonIcon />}
+            {darkMode ? "Light mode" : "Dark mode"}
           </button>
+        </div>
+      </aside>
 
-          {currentUser ? (
-            <button onClick={handleLogout}
-              className="flex items-center gap-2 pl-1 pr-3 py-1 rounded-full ml-1 transition-all hover:opacity-90 active:scale-95"
-              style={{ background: "#fff" }} title="Sign out">
-              {currentUser.avatar?.startsWith("http") || currentUser.avatar?.startsWith("data:") ? (
-                <img src={currentUser.avatar} alt={currentUser.name} referrerPolicy="no-referrer"
-                  className="w-7 h-7 rounded-full object-cover flex-shrink-0" />
-              ) : (
-                <div className="w-7 h-7 rounded-full text-white text-[11px] font-bold flex items-center justify-center flex-shrink-0"
-                  style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
-                  {currentUser.avatar}
-                </div>
-              )}
-              <span className="text-[13px] font-bold text-gray-900 max-w-[80px] truncate">{currentUser.name.split(" ")[0]}</span>
+      {/* ─────────────────────────────────────────────────
+          DESKTOP: top-right profile pill (fixed)
+      ───────────────────────────────────────────────── */}
+      <div className="hidden sm:block fixed top-4 right-4 z-[60]" ref={dropdownRef}>
+        {currentUser ? (
+          <>
+            <button
+              onClick={() => setShowDropdown((v) => !v)}
+              className="flex items-center gap-2.5 pl-1.5 pr-4 py-1.5 rounded-full shadow-xl transition-all hover:opacity-90 active:scale-95"
+              style={{ background: "#fff" }}
+            >
+              <UserAvatar user={currentUser} size={30} />
+              <span className="text-[13px] font-bold text-gray-900 max-w-[90px] truncate">
+                {currentUser.name.split(" ")[0]}
+              </span>
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666"
+                strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                <polyline points="6 9 12 15 18 9" />
+              </svg>
             </button>
-          ) : (
-            <Link href="/auth"
-              className="px-4 py-1.5 rounded-full text-[13px] font-bold ml-1 transition-all hover:opacity-90 active:scale-95"
-              style={{ background: "#fff", color: "#111" }}>
-              Sign in
-            </Link>
-          )}
-        </nav>
-      </div>
 
-      {/* Desktop top spacer */}
-      <div className="hidden sm:block h-20" />
+            {showDropdown && (
+              <div className="absolute right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[100] min-w-[190px]">
+                <div className="px-4 py-3 border-b border-gray-100">
+                  <p className="text-sm font-bold text-gray-900 truncate">{currentUser.name}</p>
+                  <p className="text-xs text-gray-400 mt-0.5 truncate">{currentUser.neighborhood || currentUser.city}</p>
+                </div>
+                <Link
+                  href="/profile"
+                  onClick={() => setShowDropdown(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition-colors"
+                >
+                  <ProfileIcon active={false} />
+                  Profile
+                </Link>
+                <button
+                  onClick={handleLogout}
+                  className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 w-full text-left border-t border-gray-100 transition-colors"
+                >
+                  <LogoutIcon />
+                  Log out
+                </button>
+              </div>
+            )}
+          </>
+        ) : (
+          <Link
+            href="/auth"
+            className="px-5 py-2 rounded-full text-[13px] font-bold shadow-xl transition-all hover:opacity-90 active:scale-95"
+            style={{ background: "#fff", color: "#111" }}
+          >
+            Sign in
+          </Link>
+        )}
+      </div>
     </>
   );
 }

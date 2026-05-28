@@ -45,8 +45,8 @@ export default function RootLayout({
         <StoreInitializer />
         <ThemeProvider />
         <Navbar />
-        {/* Mobile: full-width single column. Desktop: centred max-width container */}
-        <main>{children}</main>
+        {/* sm:pl-60 offsets the fixed 240px left sidebar on desktop */}
+        <main className="sm:pl-60">{children}</main>
         <PingToast />
       </body>
     </html>

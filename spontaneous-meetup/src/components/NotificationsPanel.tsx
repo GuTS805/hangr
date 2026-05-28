@@ -26,7 +26,7 @@ function Avatar({ src, name }: { src: string; name: string }) {
   );
 }
 
-export default function NotificationsPanel() {
+export default function NotificationsPanel({ sidebarMode = false }: { sidebarMode?: boolean }) {
   const { currentUser, receivedPings, loadPings, respondToPing } = useStore();
   const [open, setOpen] = useState(false);
   const [verifiedOnly, setVerifiedOnly] = useState(false);
@@ -113,7 +113,7 @@ export default function NotificationsPanel() {
 
       {/* Dropdown */}
       {open && (
-        <div className="absolute right-0 top-11 w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50">
+        <div className={`absolute w-80 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-50 ${sidebarMode ? "left-full ml-2 top-0" : "right-0 top-11"}`}>
           <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
             <p className="font-bold text-gray-900 text-sm">Pings</p>
             {count > 0 && (

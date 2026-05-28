@@ -262,6 +262,19 @@ html.dark .bg-gray-50\/50 { background-color: rgba(12,10,30,0.5) !important; }
 /* Sticky backdrops */
 html.dark .backdrop-blur-md { background-color: rgba(26,23,48,0.9) !important; }
 
+/* Sidebar stays dark in all modes — it has its own #111 background */
+html.dark aside[style*="background: #111"],
+html.dark header[style*="background: #111"],
+html.dark nav[style*="background: #111"] {
+  background: #111 !important;
+}
+
+/* Profile dropdown in dark mode */
+html.dark .rounded-2xl.bg-white.shadow-2xl { background-color: #1a1730 !important; }
+html.dark .rounded-2xl.bg-white.shadow-2xl .text-gray-900 { color: #e3dfff !important; }
+html.dark .rounded-2xl.bg-white.shadow-2xl .hover\:bg-gray-50:hover { background-color: #252142 !important; }
+html.dark .rounded-2xl.bg-white.shadow-2xl .border-gray-100 { border-color: rgba(255,255,255,0.08) !important; }
+
 /* Keep Leaflet below any modal overlay */
 .leaflet-pane,
 .leaflet-tile,
