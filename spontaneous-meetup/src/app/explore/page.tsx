@@ -452,14 +452,14 @@ export default function ExplorePage() {
               {!overpassLoading && overpassFetched && filteredLocs.length === 0 && (
                 <div className="text-center py-10 bg-white border border-gray-200 rounded-2xl mb-3">
                   <p className="text-3xl mb-2">🔍</p>
-                  <p className="text-sm font-semibold text-gray-700 mb-1">No places found within 5 km</p>
-                  <p className="text-xs text-gray-400 mb-4">Try expanding the search or drop a custom pin on the map</p>
+                  <p className="text-sm font-semibold text-gray-700 mb-1">No places found within 10 km</p>
+                  <p className="text-xs text-gray-400 mb-4">OSM data may be sparse here — try a wider search or drop a pin on the map</p>
                   <button
                     onClick={() => {
                       if (!userPos) return;
                       setOverpassLoading(true);
                       setOverpassFetched(false);
-                      fetchNearbyPlaces(userPos.lat, userPos.lng, 15000).then((places) => {
+                      fetchNearbyPlaces(userPos.lat, userPos.lng, 25000).then((places) => {
                         setOverpassLocs(places);
                         setOverpassLoading(false);
                         setOverpassFetched(true);
@@ -467,7 +467,7 @@ export default function ExplorePage() {
                     }}
                     className="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl hover:bg-blue-700 transition-colors"
                   >
-                    Search within 15 km →
+                    Search within 25 km →
                   </button>
                 </div>
               )}
