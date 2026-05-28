@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useEffect, useCallback, useRef } from "react";
+import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import GroupCard from "@/components/GroupCard";
 import UserCard from "@/components/UserCard";
@@ -31,6 +32,7 @@ function withDistance(userPos: LatLng | null): SafeLocation[] {
 }
 
 export default function ExplorePage() {
+  const router = useRouter();
   const { currentUser, groups, nearbyUsers } = useStore();
 
   const [tab, setTab]               = useState<Tab>("people");
@@ -136,6 +138,7 @@ export default function ExplorePage() {
   }
 
   function meetAtCustomPin() {
+    if (!currentUser) { router.push("/auth"); return; }
     if (!customPin) return;
     const loc: SafeLocation = {
       id: `custom_${Date.now()}`,
@@ -150,6 +153,7 @@ export default function ExplorePage() {
   }
 
   function meetAtSafeLoc(loc: SafeLocation) {
+    if (!currentUser) { router.push("/auth"); return; }
     setPrefilledLoc(loc);
     setShowCreate(true);
   }
@@ -167,13 +171,13 @@ export default function ExplorePage() {
           </div>
           <div className="flex items-center gap-2">
             <button
-              onClick={() => setShowQuickRoom(true)}
+              onClick={() => { if (!currentUser) { router.push("/auth"); return; } setShowQuickRoom(true); }}
               className="px-3 py-1.5 bg-violet-600 text-white text-xs font-semibold rounded-xl hover:bg-violet-700 transition-colors"
             >
               ⚡ Quick
             </button>
             <button
-              onClick={() => { setPrefilledLoc(null); setShowCreate(true); }}
+              onClick={() => { if (!currentUser) { router.push("/auth"); return; } setPrefilledLoc(null); setShowCreate(true); }}
               className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors"
             >
               + Group

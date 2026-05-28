@@ -124,14 +124,11 @@ export default function ProfilePage() {
     setCoverId(saved ?? pickDefaultCover(currentUser.name));
   }, [currentUser?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (!currentUser) {
-    return (
-      <div className="min-h-[calc(100vh-56px)] flex flex-col items-center justify-center bg-gray-100 p-4 text-center">
-        <p className="text-gray-500 mb-4">You&apos;re not signed in</p>
-        <button onClick={() => router.push("/auth")} className="px-5 py-2 bg-blue-600 text-white rounded-xl font-medium hover:bg-blue-700 transition-colors">Sign in</button>
-      </div>
-    );
-  }
+  useEffect(() => {
+    if (!currentUser) router.replace("/auth");
+  }, [currentUser, router]);
+
+  if (!currentUser) return null;
 
   const displayAvatar = pendingAvatar ?? currentUser.avatar;
   const myGroups      = groups.filter((g) => g.members.some((m) => m.id === currentUser.id));

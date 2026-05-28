@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useCallback, useEffect, useMemo } from "react";
+import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { Interest, Post, PostComment } from "@/types";
 import { INTEREST_EMOJI } from "@/lib/mock-data";
@@ -341,6 +342,7 @@ function PostComposer() {
 
 function PostCard({ post, isMock = false }: { post: Post; isMock?: boolean }) {
   const { currentUser, likePost, addComment, deletePost, pingUser } = useStore();
+  const router = useRouter();
   const [showComments, setShowComments] = useState(false);
   const [commentText, setCommentText] = useState("");
   const [submitting, setSubmitting] = useState(false);
@@ -357,7 +359,7 @@ function PostCard({ post, isMock = false }: { post: Post; isMock?: boolean }) {
   const liked = mockLikes.includes(myId);
 
   const triggerLike = useCallback(() => {
-    if (!currentUser) return;
+    if (!currentUser) { router.push("/auth"); return; }
     const wasLiked = mockLikes.includes(myId);
     setMockLikes(wasLiked ? mockLikes.filter((id) => id !== myId) : [...mockLikes, myId]);
     if (!wasLiked) { setHeartAnim(true); setTimeout(() => setHeartAnim(false), 800); }
@@ -389,7 +391,8 @@ function PostCard({ post, isMock = false }: { post: Post; isMock?: boolean }) {
   };
 
   const handlePing = async () => {
-    if (!currentUser || isOwnPost || pinged) return;
+    if (!currentUser) { router.push("/auth"); return; }
+    if (isOwnPost || pinged) return;
     setPinged(true);
     if (!isMock) await pingUser(post.userId);
   };
@@ -519,7 +522,7 @@ function PostCard({ post, isMock = false }: { post: Post; isMock?: boolean }) {
           Comment
         </button>
         {!isOwnPost && (
-          <button onClick={handlePing} disabled={pinged || !currentUser}
+          <button onClick={handlePing} disabled={pinged}
             className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all active:scale-95 ${
               pinged ? "text-green-500" : "text-gray-500 hover:text-green-500 hover:bg-green-50/50"
             }`}>
@@ -628,15 +631,6 @@ export default function FeedPage() {
   }, [posts]);
 
   const filtered = filter === "all" ? allPosts : allPosts.filter((p) => p.topic === filter);
-
-  if (!currentUser) {
-    return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-3 bg-gray-50">
-        <div className="text-5xl">📸</div>
-        <p className="text-gray-700 font-semibold">Sign in to see the feed</p>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-gray-50">

@@ -318,6 +318,11 @@ export default function GroupPage() {
           )}
 
           {/* Join / Leave + SOS */}
+          {!currentUser && !isExpired && (
+            <button onClick={() => router.push("/auth")} className="w-full bg-blue-600 text-white py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors">
+              Sign in to join
+            </button>
+          )}
           {currentUser && (
             <div className="flex flex-col gap-2">
 
