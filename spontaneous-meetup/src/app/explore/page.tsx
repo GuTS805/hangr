@@ -52,6 +52,7 @@ export default function ExplorePage() {
   // Overpass nearby places (replaces mock locations when GPS available)
   const [overpassLocs, setOverpassLocs] = useState<SafeLocation[]>([]);
   const [overpassLoading, setOverpassLoading] = useState(false);
+  const [overpassFetched, setOverpassFetched] = useState(false);
 
   // Custom pin
   const [customPin, setCustomPin]   = useState<CustomPin | null>(null);
@@ -64,16 +65,19 @@ export default function ExplorePage() {
   useEffect(() => {
     if (!userPos) return;
     setOverpassLoading(true);
+    setOverpassFetched(false);
     fetchNearbyPlaces(userPos.lat, userPos.lng).then((places) => {
       setOverpassLocs(places);
       setOverpassLoading(false);
+      setOverpassFetched(true);
     });
   }, [userPos?.lat, userPos?.lng]); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Use Overpass results if available, otherwise fall back to mock locations with distances
-  const baseLocs: SafeLocation[] = overpassLocs.length > 0
+  // When GPS is available: use Overpass results (even if empty — never show fake Crossing Republik data)
+  // When GPS not available: show mock data with approximate distances
+  const baseLocs: SafeLocation[] = userPos
     ? overpassLocs
-    : withDistance(userPos);
+    : withDistance(null);
 
   const sortedLocs = baseLocs.sort((a, b) => (a.distanceKm ?? 99) - (b.distanceKm ?? 99));
   const filteredLocs = locFilter === "all"
@@ -435,6 +439,39 @@ export default function ExplorePage() {
               <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
                 {geoState.status === "ok" ? "Nearest to you" : "All locations"}
               </p>
+
+              {/* Loading state */}
+              {overpassLoading && (
+                <div className="flex items-center gap-3 py-6 px-4 bg-white border border-gray-200 rounded-2xl mb-3">
+                  <div className="w-5 h-5 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin flex-shrink-0" />
+                  <p className="text-sm text-gray-600">Finding cafes, parks &amp; spots near you…</p>
+                </div>
+              )}
+
+              {/* Empty state after fetch — offer wider radius */}
+              {!overpassLoading && overpassFetched && filteredLocs.length === 0 && (
+                <div className="text-center py-10 bg-white border border-gray-200 rounded-2xl mb-3">
+                  <p className="text-3xl mb-2">🔍</p>
+                  <p className="text-sm font-semibold text-gray-700 mb-1">No places found within 5 km</p>
+                  <p className="text-xs text-gray-400 mb-4">Try expanding the search or drop a custom pin on the map</p>
+                  <button
+                    onClick={() => {
+                      if (!userPos) return;
+                      setOverpassLoading(true);
+                      setOverpassFetched(false);
+                      fetchNearbyPlaces(userPos.lat, userPos.lng, 15000).then((places) => {
+                        setOverpassLocs(places);
+                        setOverpassLoading(false);
+                        setOverpassFetched(true);
+                      });
+                    }}
+                    className="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl hover:bg-blue-700 transition-colors"
+                  >
+                    Search within 15 km →
+                  </button>
+                </div>
+              )}
+
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                 {filteredLocs.map((loc) => {
                   const isSelected  = loc.id === selectedLocId;

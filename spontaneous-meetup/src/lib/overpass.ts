@@ -4,31 +4,39 @@ import { SafeLocation } from "@/types";
 const OVERPASS_ENDPOINT = "https://overpass-api.de/api/interpreter";
 
 const AMENITY_TO_TYPE: Record<string, SafeLocation["type"]> = {
-  cafe:        "cafe",
-  restaurant:  "cafe",
-  fast_food:   "cafe",
-  bar:         "cafe",
-  food_court:  "cafe",
-  library:     "library",
+  cafe:           "cafe",
+  restaurant:     "cafe",
+  fast_food:      "cafe",
+  bar:            "cafe",
+  food_court:     "cafe",
+  library:        "library",
+  sports_centre:  "sports",
+  stadium:        "sports",
 };
 
 function buildQuery(lat: number, lng: number, radiusM: number): string {
-  return `[out:json][timeout:15];
+  return `[out:json][timeout:25];
 (
   node["amenity"~"^(cafe|restaurant|fast_food|bar|food_court)$"]["name"](around:${radiusM},${lat},${lng});
   node["amenity"="library"]["name"](around:${radiusM},${lat},${lng});
+  node["amenity"~"^(sports_centre|stadium)$"]["name"](around:${radiusM},${lat},${lng});
+  way["amenity"~"^(sports_centre|stadium)$"]["name"](around:${radiusM},${lat},${lng});
   node["leisure"="park"]["name"](around:${radiusM},${lat},${lng});
   way["leisure"="park"]["name"](around:${radiusM},${lat},${lng});
-  node["shop"~"^(mall|department_store)$"]["name"](around:${radiusM},${lat},${lng});
-  way["shop"~"^(mall|department_store)$"]["name"](around:${radiusM},${lat},${lng});
+  node["leisure"~"^(sports_centre|stadium|pitch)$"]["name"](around:${radiusM},${lat},${lng});
+  way["leisure"~"^(sports_centre|stadium|pitch)$"]["name"](around:${radiusM},${lat},${lng});
+  node["shop"~"^(mall|department_store|supermarket)$"]["name"](around:${radiusM},${lat},${lng});
+  way["shop"~"^(mall|department_store|supermarket)$"]["name"](around:${radiusM},${lat},${lng});
 );
-out center 40;`;
+out center 50;`;
 }
 
 function elementToType(el: OverpassElement): SafeLocation["type"] {
   if (el.tags.amenity) return AMENITY_TO_TYPE[el.tags.amenity] ?? "cafe";
   if (el.tags.leisure === "park") return "park";
+  if (el.tags.leisure === "sports_centre" || el.tags.leisure === "stadium" || el.tags.leisure === "pitch") return "sports";
   if (el.tags.shop === "mall" || el.tags.shop === "department_store") return "mall";
+  if (el.tags.shop === "supermarket") return "cafe";
   return "cafe";
 }
 
@@ -47,7 +55,7 @@ const CACHE_TTL_MS = 5 * 60 * 1000; // 5 min
 export async function fetchNearbyPlaces(
   lat: number,
   lng: number,
-  radiusM = 2000
+  radiusM = 5000
 ): Promise<SafeLocation[]> {
   // Return cached result if same position and fresh
   if (
