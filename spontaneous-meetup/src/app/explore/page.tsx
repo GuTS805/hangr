@@ -318,8 +318,10 @@ export default function ExplorePage() {
 
                 <p className="text-sm text-gray-700 font-medium">
                   {geoState.status === "loading" && "Getting your location…"}
-                  {geoState.status === "ok" && overpassLoading && "📍 Found you · Loading nearby places…"}
-                  {geoState.status === "ok" && !overpassLoading && `📍 ${overpassLocs.length > 0 ? `${overpassLocs.length} real places` : "Showing places"} near you · ±${Math.round(userAccuracy)}m`}
+                  {geoState.status === "ok" && overpassLoading && "📍 Found you · Searching nearby places…"}
+                  {geoState.status === "ok" && !overpassLoading && overpassLocs.length > 0 && `📍 ${overpassLocs.length} places found near you · ±${Math.round(userAccuracy)}m`}
+                  {geoState.status === "ok" && !overpassLoading && overpassLocs.length === 0 && overpassFetched && `📍 No places via OSM · ±${Math.round(userAccuracy)}m — drop a pin on map`}
+                  {geoState.status === "ok" && !overpassLoading && !overpassFetched && `📍 Located · ±${Math.round(userAccuracy)}m`}
                   {geoState.status === "error"   && `Location unavailable — ${geoState.message}`}
                   {geoState.status === "idle"    && "Location not yet detected"}
                 </p>
@@ -444,22 +446,28 @@ export default function ExplorePage() {
               {overpassLoading && (
                 <div className="flex items-center gap-3 py-6 px-4 bg-white border border-gray-200 rounded-2xl mb-3">
                   <div className="w-5 h-5 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin flex-shrink-0" />
-                  <p className="text-sm text-gray-600">Finding cafes, parks &amp; spots near you…</p>
+                  <div>
+                    <p className="text-sm text-gray-700 font-medium">Searching cafes, parks &amp; spots near you…</p>
+                    <p className="text-xs text-gray-400 mt-0.5">Trying multiple servers, this may take a few seconds</p>
+                  </div>
                 </div>
               )}
 
-              {/* Empty state after fetch — offer wider radius */}
+              {/* Empty state after all retries — drop a pin */}
               {!overpassLoading && overpassFetched && filteredLocs.length === 0 && (
                 <div className="text-center py-10 bg-white border border-gray-200 rounded-2xl mb-3">
-                  <p className="text-3xl mb-2">🔍</p>
-                  <p className="text-sm font-semibold text-gray-700 mb-1">No places found within 10 km</p>
-                  <p className="text-xs text-gray-400 mb-4">OSM data may be sparse here — try a wider search or drop a pin on the map</p>
+                  <p className="text-3xl mb-2">📌</p>
+                  <p className="text-sm font-semibold text-gray-700 mb-1">No places found via OpenStreetMap</p>
+                  <p className="text-xs text-gray-400 mb-4">
+                    OSM data might be sparse in your area.<br />
+                    <strong>Drop a custom pin on the map</strong> to set any meeting spot.
+                  </p>
                   <button
                     onClick={() => {
                       if (!userPos) return;
                       setOverpassLoading(true);
                       setOverpassFetched(false);
-                      fetchNearbyPlaces(userPos.lat, userPos.lng, 25000).then((places) => {
+                      fetchNearbyPlaces(userPos.lat, userPos.lng, 50000).then((places) => {
                         setOverpassLocs(places);
                         setOverpassLoading(false);
                         setOverpassFetched(true);
@@ -467,7 +475,7 @@ export default function ExplorePage() {
                     }}
                     className="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl hover:bg-blue-700 transition-colors"
                   >
-                    Search within 25 km →
+                    Retry with 50 km radius →
                   </button>
                 </div>
               )}
