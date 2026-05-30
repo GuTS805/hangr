@@ -125,7 +125,6 @@ function LogoutIcon() {
 
 const NAV_TABS = [
   { href: "/",        label: "Home",    Icon: HomeIcon    },
-  { href: "/feed",    label: "Feed",    Icon: FeedIcon    },
   { href: "/explore", label: "Explore", Icon: ExploreIcon },
   { href: "/chats",   label: "Chats",   Icon: ChatsIcon   },
   { href: "/follow",  label: "People",  Icon: FollowIcon  },
