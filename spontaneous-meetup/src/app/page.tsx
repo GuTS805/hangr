@@ -406,42 +406,44 @@ function DashboardSidebar() {
   ];
 
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* ── I'm Free status card ── */}
-      <div className="relative overflow-hidden rounded-2xl" style={{ background: isFree ? "linear-gradient(135deg,#52A862,#3da000)" : "linear-gradient(135deg,#1E1B3A,#2A2550)" }}>
-        <div className="absolute -top-6 -right-6 w-28 h-28 rounded-full" style={{ background: "rgba(255,255,255,0.07)" }} />
-        <div className="relative p-4">
-          <div className="flex items-center justify-between mb-3">
+      <div className="relative overflow-hidden rounded-3xl" style={{ background: isFree ? "linear-gradient(135deg,#52A862,#3da000)" : "linear-gradient(135deg,#1E1B3A,#2A2550)" }}>
+        <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full" style={{ background: "rgba(255,255,255,0.07)" }} />
+        <div className="absolute -bottom-8 -left-8 w-36 h-36 rounded-full" style={{ background: "rgba(255,255,255,0.05)" }} />
+        <div className="relative p-6">
+          <div className="flex items-start justify-between mb-5">
             <div>
-              <div className="flex items-center gap-1.5 mb-0.5">
-                {isFree && <span className="w-2 h-2 bg-white rounded-full animate-pulse" />}
-                <span className="text-[10px] font-extrabold uppercase tracking-widest text-white/60">
-                  {isFree ? "Live · Visible nearby" : "Offline · Hidden"}
+              <div className="flex items-center gap-2 mb-1">
+                {isFree && <span className="w-2.5 h-2.5 bg-white rounded-full animate-pulse" />}
+                <span className="text-[11px] font-extrabold uppercase tracking-widest text-white/60">
+                  {isFree ? "Live · Visible to people nearby" : "Offline · Hidden from others"}
                 </span>
               </div>
-              <p className="text-base font-extrabold text-white leading-tight">
+              <p className="text-2xl font-extrabold text-white leading-tight">
                 {isFree ? "You're free! 🎉" : "Ready to hang out?"}
               </p>
-              {isFree && freeUntil && <p className="text-[11px] text-white/60 mt-0.5">{formatFreeUntil(freeUntil)} remaining</p>}
+              {isFree && freeUntil && <p className="text-sm text-white/60 mt-1">{formatFreeUntil(freeUntil)} remaining · auto-off at 2h</p>}
+              {!isFree && <p className="text-sm text-white/50 mt-1">Tap to go visible — people nearby will see you</p>}
             </div>
-            <div className="w-10 h-10 rounded-xl border-2 flex items-center justify-center text-lg font-extrabold text-white flex-shrink-0" style={{ background: "rgba(255,255,255,0.15)", borderColor: "rgba(255,255,255,0.3)" }}>
-              {currentUser.avatar?.startsWith("http") ? <img src={currentUser.avatar} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover rounded-lg" /> : currentUser.avatar?.slice(0, 2)}
+            <div className="w-14 h-14 rounded-2xl border-2 flex items-center justify-center text-2xl font-extrabold text-white flex-shrink-0 overflow-hidden" style={{ background: "rgba(255,255,255,0.15)", borderColor: "rgba(255,255,255,0.3)" }}>
+              {currentUser.avatar?.startsWith("http") ? <img src={currentUser.avatar} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover" /> : currentUser.avatar?.slice(0, 2)}
             </div>
           </div>
 
-          <button onClick={handleToggleFree} className="w-full py-2.5 rounded-xl font-extrabold text-sm transition-all active:scale-95 mb-3" style={isFree ? { background: "#fff", color: "#448C50", boxShadow: "0 3px 0 rgba(0,0,0,0.15)" } : { background: "#52A862", color: "#fff", boxShadow: "0 3px 0 #3D7D47" }}>
-            {isFree ? "🟢 Tap to go offline" : "😴 Go Free now"}
+          <button onClick={handleToggleFree} className="w-full py-3.5 rounded-2xl font-extrabold text-[15px] transition-all active:scale-95 mb-4" style={isFree ? { background: "#fff", color: "#448C50", boxShadow: "0 4px 0 rgba(0,0,0,0.15)" } : { background: "#52A862", color: "#fff", boxShadow: "0 4px 0 #3D7D47" }}>
+            {isFree ? "🟢 I'm Free! · Tap to go offline" : "😴 Tap to go Free now"}
           </button>
 
-          <div className="grid grid-cols-3 gap-1.5">
+          <div className="grid grid-cols-3 gap-2.5">
             {[
               { icon: "🔥", value: (currentUser.streakDays ?? 0) > 0 ? `${currentUser.streakDays}d` : "—", label: "Streak" },
               { icon: "👥", value: currentUser.totalMeetups ?? 0, label: "Meetups" },
               { icon: "⭐", value: currentUser.trustScore > 0 ? currentUser.trustScore.toFixed(1) : "New", label: "Trust" },
             ].map(({ icon, value, label }) => (
-              <div key={label} className="rounded-xl px-2 py-2 text-center" style={{ background: "rgba(255,255,255,0.10)" }}>
-                <p className="text-sm font-extrabold text-white">{icon} {value}</p>
-                <p className="text-[10px] font-semibold text-white/60 mt-0.5">{label}</p>
+              <div key={label} className="rounded-2xl px-3 py-3 text-center" style={{ background: "rgba(255,255,255,0.12)" }}>
+                <p className="text-lg font-extrabold text-white">{icon} {value}</p>
+                <p className="text-xs font-semibold text-white/60 mt-1">{label}</p>
               </div>
             ))}
           </div>
@@ -449,16 +451,16 @@ function DashboardSidebar() {
       </div>
 
       {/* ── Quick start ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-3">
-        <div className="flex items-center justify-between mb-2">
-          <p className="text-xs font-extrabold text-gray-500 uppercase tracking-wider">⚡ Quick start</p>
-          <button onClick={() => setShowCreate(true)} className="text-xs font-bold text-blue-600 hover:underline">+ Custom</button>
+      <div className="bg-white rounded-2xl border border-gray-100 p-5">
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm font-extrabold text-gray-700">⚡ Quick start</p>
+          <button onClick={() => setShowCreate(true)} className="text-sm font-bold text-blue-600 hover:underline">+ Custom</button>
         </div>
-        <div className="grid grid-cols-3 gap-1.5">
+        <div className="grid grid-cols-3 gap-3">
           {QUICK_ACTS.map((a) => (
-            <button key={a.label} onClick={() => setShowQuickRoom(true)} className="flex flex-col items-center gap-1 rounded-xl px-2 py-2.5 bg-gray-50 hover:bg-blue-50 border border-gray-100 hover:border-blue-200 transition-all text-center">
-              <span className="text-xl">{a.emoji}</span>
-              <span className="text-[10px] font-bold text-gray-600 leading-tight">{a.label}</span>
+            <button key={a.label} onClick={() => setShowQuickRoom(true)} className="flex flex-col items-center gap-2 rounded-2xl px-3 py-4 bg-gray-50 hover:bg-blue-50 border border-gray-100 hover:border-blue-200 transition-all text-center active:scale-95">
+              <span className="text-2xl">{a.emoji}</span>
+              <span className="text-xs font-bold text-gray-600 leading-tight">{a.label}</span>
             </button>
           ))}
         </div>
@@ -466,35 +468,36 @@ function DashboardSidebar() {
 
       {/* ── Who's free nearby ── */}
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-        <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-100">
-          <div className="flex items-center gap-1.5">
-            <span className="w-2 h-2 rounded-full animate-pulse bg-green-400" />
-            <p className="text-xs font-extrabold text-gray-600">Free right now</p>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <div className="flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full animate-pulse bg-green-400" />
+            <p className="text-sm font-extrabold text-gray-700">Free right now</p>
           </div>
-          <button onClick={() => router.push("/explore")} className="text-xs font-bold text-blue-600 hover:underline">See all →</button>
+          <button onClick={() => router.push("/explore")} className="text-sm font-bold text-blue-600 hover:underline">See all →</button>
         </div>
         {nearbyFree.length === 0 ? (
-          <div className="px-3 py-4 text-center">
-            <p className="text-2xl mb-1">👀</p>
-            <p className="text-xs text-gray-400">Nobody free nearby yet</p>
-            <button onClick={handleToggleFree} className="mt-2 text-xs font-bold text-green-600 hover:underline">Go free to get discovered →</button>
+          <div className="px-5 py-8 text-center">
+            <p className="text-3xl mb-2">👀</p>
+            <p className="text-sm font-semibold text-gray-500 mb-1">Nobody free nearby yet</p>
+            <p className="text-xs text-gray-400 mb-3">Go free above to get discovered</p>
+            <button onClick={handleToggleFree} className="text-sm font-bold text-green-600 hover:underline">Go free now →</button>
           </div>
         ) : (
           <div className="divide-y divide-gray-50">
             {nearbyFree.map((u) => (
-              <div key={u.id} className="flex items-center gap-2.5 px-3 py-2.5">
+              <div key={u.id} className="flex items-center gap-3 px-5 py-4">
                 <div className="relative flex-shrink-0">
-                  <div className="w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-bold" style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
-                    {u.avatar?.startsWith("http") ? <img src={u.avatar} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover rounded-full" /> : u.avatar?.slice(0, 2)}
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold overflow-hidden" style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
+                    {u.avatar?.startsWith("http") ? <img src={u.avatar} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover" /> : u.avatar?.slice(0, 2)}
                   </div>
-                  <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 bg-green-400 rounded-full border-2 border-white" />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-white" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-xs font-bold text-gray-900 truncate">{u.name}</p>
-                  <p className="text-[10px] text-gray-400">{u.distanceKm !== undefined ? `${u.distanceKm < 1 ? `${Math.round(u.distanceKm * 1000)}m` : `${u.distanceKm.toFixed(1)}km`} away` : u.neighborhood}</p>
+                  <p className="text-sm font-bold text-gray-900 truncate">{u.name}</p>
+                  <p className="text-xs text-gray-400 mt-0.5">{u.distanceKm !== undefined ? `${u.distanceKm < 1 ? `${Math.round(u.distanceKm * 1000)}m` : `${u.distanceKm.toFixed(1)}km`} away` : u.neighborhood}</p>
                 </div>
-                <button onClick={() => { setPingedUsers((p) => [...p, u.id]); pingUser(u.id); }} disabled={pingedUsers.includes(u.id)} className="text-[10px] font-bold px-2.5 py-1 rounded-lg flex-shrink-0 transition-all" style={pingedUsers.includes(u.id) ? { background: "rgba(34,197,94,0.1)", color: "#16a34a" } : { background: "#2563eb", color: "#fff" }}>
-                  {pingedUsers.includes(u.id) ? "✓ Sent" : "Ping"}
+                <button onClick={() => { setPingedUsers((p) => [...p, u.id]); pingUser(u.id); }} disabled={pingedUsers.includes(u.id)} className="text-xs font-bold px-4 py-2 rounded-xl flex-shrink-0 transition-all" style={pingedUsers.includes(u.id) ? { background: "rgba(34,197,94,0.1)", color: "#16a34a" } : { background: "#2563eb", color: "#fff" }}>
+                  {pingedUsers.includes(u.id) ? "✓ Sent" : "👋 Ping"}
                 </button>
               </div>
             ))}
@@ -504,19 +507,19 @@ function DashboardSidebar() {
 
       {/* ── Meetup spots ── */}
       <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-        <div className="flex items-center justify-between px-3 py-2.5 border-b border-gray-100">
-          <p className="text-xs font-extrabold text-gray-600">📍 Pick a spot</p>
-          <button onClick={() => router.push("/explore")} className="text-xs font-bold text-blue-600 hover:underline">Map →</button>
+        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+          <p className="text-sm font-extrabold text-gray-700">📍 Pick a meetup spot</p>
+          <button onClick={() => router.push("/explore")} className="text-sm font-bold text-blue-600 hover:underline">Open map →</button>
         </div>
         <div className="divide-y divide-gray-50">
           {spots.map((loc) => (
-            <button key={loc.id} onClick={() => { setPrefilledLoc(loc); setShowCreate(true); }} className="w-full flex items-center gap-2.5 px-3 py-2.5 hover:bg-gray-50 transition-colors text-left">
-              <span className={`w-8 h-8 rounded-lg flex items-center justify-center text-base border flex-shrink-0 ${SAFE_LOCATION_COLORS[loc.type]}`}>{SAFE_LOCATION_ICONS[loc.type]}</span>
+            <button key={loc.id} onClick={() => { setPrefilledLoc(loc); setShowCreate(true); }} className="w-full flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors text-left active:bg-gray-100">
+              <span className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl border flex-shrink-0 ${SAFE_LOCATION_COLORS[loc.type]}`}>{SAFE_LOCATION_ICONS[loc.type]}</span>
               <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-gray-900 truncate">{loc.name}</p>
-                <p className="text-[10px] text-gray-400 capitalize">{loc.type} · {loc.activeGroups > 0 ? <span className="text-orange-500 font-semibold">{loc.activeGroups} active</span> : "Safe ✓"}</p>
+                <p className="text-sm font-bold text-gray-900 truncate">{loc.name}</p>
+                <p className="text-xs text-gray-400 capitalize mt-0.5">{loc.type} · {loc.activeGroups > 0 ? <span className="text-orange-500 font-semibold">{loc.activeGroups} active</span> : <span className="text-green-600">Safe ✓</span>}</p>
               </div>
-              <span className="text-gray-300 text-sm flex-shrink-0">›</span>
+              <span className="text-gray-300 text-lg flex-shrink-0">›</span>
             </button>
           ))}
         </div>
@@ -524,13 +527,13 @@ function DashboardSidebar() {
 
       {/* ── Your interests ── */}
       {currentUser.interests.length > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-3">
-          <div className="flex items-center justify-between mb-2">
-            <p className="text-xs font-extrabold text-gray-500 uppercase tracking-wider">Your vibe</p>
-            <button onClick={() => router.push("/profile")} className="text-xs font-bold text-blue-600 hover:underline">Edit</button>
+        <div className="bg-white rounded-2xl border border-gray-100 p-5">
+          <div className="flex items-center justify-between mb-3">
+            <p className="text-sm font-extrabold text-gray-700">Your vibe</p>
+            <button onClick={() => router.push("/profile")} className="text-sm font-bold text-blue-600 hover:underline">Edit</button>
           </div>
-          <div className="flex flex-wrap gap-1">
-            {currentUser.interests.map((i) => <InterestBadge key={i} interest={i} size="sm" />)}
+          <div className="flex flex-wrap gap-2">
+            {currentUser.interests.map((i) => <InterestBadge key={i} interest={i} size="md" />)}
           </div>
         </div>
       )}
@@ -538,7 +541,7 @@ function DashboardSidebar() {
       {/* ── Active groups ── */}
       {activeGroups.length > 0 && (
         <div className="space-y-2">
-          <p className="text-xs font-extrabold text-gray-500 uppercase tracking-wider px-1">Your groups</p>
+          <p className="text-sm font-extrabold text-gray-600 px-1">Your active groups</p>
           {activeGroups.map((g) => <GroupCard key={g.id} group={g} />)}
         </div>
       )}
@@ -553,34 +556,34 @@ function DashboardSidebar() {
 function GuestSidebar() {
   const router = useRouter();
   return (
-    <div className="space-y-4">
+    <div className="space-y-5">
       {/* Join card */}
-      <div className="rounded-2xl p-5 text-center" style={{ background: "linear-gradient(135deg,#1E1B3A,#2A2550)" }}>
-        <p className="text-2xl mb-2">🎉</p>
-        <p className="text-white font-extrabold text-base mb-1">Join hangr</p>
-        <p className="text-white/60 text-xs mb-4 leading-relaxed">Find people to hang out with right now — cafes, cricket, gaming and more</p>
-        <button onClick={() => router.push("/auth")} className="w-full py-2.5 rounded-xl font-bold text-sm text-white mb-2" style={{ background: "#52A862", boxShadow: "0 3px 0 #3D7D47" }}>
+      <div className="rounded-3xl p-8 text-center" style={{ background: "linear-gradient(135deg,#1E1B3A,#2A2550)" }}>
+        <p className="text-5xl mb-4">🎉</p>
+        <p className="text-white font-extrabold text-2xl mb-2">Join hangr</p>
+        <p className="text-white/60 text-sm mb-6 leading-relaxed max-w-[280px] mx-auto">Find people to hang out with right now — cafes, cricket, gaming and more.</p>
+        <button onClick={() => router.push("/auth")} className="w-full py-4 rounded-2xl font-extrabold text-base text-white mb-3" style={{ background: "#52A862", boxShadow: "0 4px 0 #3D7D47" }}>
           🟢 Get started free
         </button>
-        <button onClick={() => router.push("/auth")} className="w-full py-2 rounded-xl font-bold text-xs border border-white/20 text-white/70 hover:text-white transition-colors">
-          Sign in
+        <button onClick={() => router.push("/auth")} className="w-full py-3 rounded-2xl font-bold text-sm border border-white/20 text-white/70 hover:text-white transition-colors">
+          Already have an account? Sign in
         </button>
       </div>
 
       {/* Features */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-4 space-y-3">
-        <p className="text-xs font-extrabold text-gray-500 uppercase tracking-wider mb-3">Why hangr?</p>
+      <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
+        <p className="text-sm font-extrabold text-gray-600">Why hangr?</p>
         {[
-          { icon: "📍", title: "Real-time meetups", desc: "See who's free near you right now" },
-          { icon: "🛡️", title: "Safe locations only", desc: "Every meetup at a verified café, park, or mall" },
-          { icon: "⭐", title: "Trust scores", desc: "Verified profiles + community ratings" },
-          { icon: "⚡", title: "Instant groups", desc: "Create or join a group in under 30 seconds" },
+          { icon: "📍", title: "Real-time meetups", desc: "See who's free near you right now and connect instantly" },
+          { icon: "🛡️", title: "Safe locations only", desc: "Every meetup at a verified café, park, or mall — no private spots" },
+          { icon: "⭐", title: "Trust scores", desc: "Verified profiles and community ratings so you know who you're meeting" },
+          { icon: "⚡", title: "Instant groups", desc: "Create or join a hangout group in under 30 seconds" },
         ].map((f) => (
-          <div key={f.title} className="flex items-start gap-3">
-            <span className="text-xl flex-shrink-0">{f.icon}</span>
+          <div key={f.title} className="flex items-start gap-4">
+            <span className="text-2xl flex-shrink-0 mt-0.5">{f.icon}</span>
             <div>
               <p className="text-sm font-bold text-gray-800">{f.title}</p>
-              <p className="text-xs text-gray-400 mt-0.5">{f.desc}</p>
+              <p className="text-xs text-gray-400 mt-1 leading-relaxed">{f.desc}</p>
             </div>
           </div>
         ))}
@@ -610,9 +613,11 @@ export default function HomePage() {
         <FeedColumn />
       </div>
 
-      {/* ── Right: Dashboard sidebar (desktop only) ── */}
-      <div className="hidden lg:block w-[320px] xl:w-[360px] shrink-0 sticky top-0 max-h-screen overflow-y-auto p-4">
-        {currentUser ? <DashboardSidebar /> : <GuestSidebar />}
+      {/* ── Right: fills all remaining space ── */}
+      <div className="hidden lg:block flex-1 min-w-0 sticky top-0 max-h-screen overflow-y-auto">
+        <div className="max-w-[480px] mx-auto px-6 py-6">
+          {currentUser ? <DashboardSidebar /> : <GuestSidebar />}
+        </div>
       </div>
     </div>
   );
