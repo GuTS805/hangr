@@ -164,11 +164,21 @@ async function loadAndSetProfile(
 
   if (profile) {
     const p = profile as ProfileRow;
+
+    // "Free" is session-only — always reset to offline on every fresh page load.
+    // If they were left free in the DB (e.g. closed tab while free), clear it now.
+    if (p.is_free) {
+      supabase.from("profiles")
+        .update({ is_free: false, free_until: null })
+        .eq("id", authUser.id)
+        .then(() => {});
+    }
+
     set({
-      currentUser: mapProfile(p),
+      currentUser: mapProfile({ ...p, is_free: false, free_until: null }),
       needsOnboarding: !p.onboarded,
-      isFree: p.is_free ?? false,
-      freeUntil: p.free_until ? new Date(p.free_until).getTime() : null,
+      isFree: false,
+      freeUntil: null,
       isAuthLoading: false,
     });
     get().loadGroups();
