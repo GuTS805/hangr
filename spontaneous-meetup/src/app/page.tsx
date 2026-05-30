@@ -98,11 +98,11 @@ function PostComposer() {
 
   if (!currentUser) {
     return (
-      <div className="bg-white border-b border-gray-100 px-4 py-3 flex items-center gap-3">
-        <div className="w-10 h-10 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 flex-shrink-0">
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+      <div className="bg-white border-b border-gray-100 px-5 py-4 flex items-center gap-4">
+        <div className="w-11 h-11 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 flex-shrink-0">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </div>
-        <button onClick={() => router.push("/auth")} className="flex-1 text-left text-sm text-gray-400 bg-gray-100 rounded-full px-4 py-2.5 hover:bg-gray-200 transition-colors">
+        <button onClick={() => router.push("/auth")} className="flex-1 text-left text-sm text-gray-400 bg-gray-100 rounded-full px-5 py-3 hover:bg-gray-200 transition-colors">
           Sign in to post something…
         </button>
       </div>
@@ -125,35 +125,35 @@ function PostComposer() {
 
   return (
     <div className="bg-white border-b border-gray-100">
-      <div className="px-4 pt-4 pb-3">
-        <div className="flex gap-3">
-          <Avatar src={currentUser.avatar} name={currentUser.name} size={40} />
+      <div className="px-5 pt-5 pb-4">
+        <div className="flex gap-4">
+          <Avatar src={currentUser.avatar} name={currentUser.name} size={44} />
           <div className="flex-1 min-w-0">
-            <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder={`Kya chal raha hai, ${currentUser.name.split(" ")[0]}?`} className="w-full resize-none text-[15px] text-gray-900 placeholder-gray-400 outline-none leading-relaxed bg-transparent" style={{ minHeight: 60 }} maxLength={500} />
+            <textarea value={text} onChange={(e) => setText(e.target.value)} placeholder={`Kya chal raha hai, ${currentUser.name.split(" ")[0]}?`} className="w-full resize-none text-[15px] text-gray-900 placeholder-gray-400 outline-none leading-relaxed bg-transparent" style={{ minHeight: 72 }} maxLength={500} />
             {image && (
               <div className="relative mt-2 rounded-2xl overflow-hidden bg-gray-100">
-                {loadingImg ? <div className="h-32 flex items-center justify-center"><div className="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" /></div>
-                : <><img src={image} alt="preview" className="w-full max-h-60 object-cover" /><button onClick={() => setImage(null)} className="absolute top-2 right-2 w-6 h-6 rounded-full bg-black/50 text-white text-xs flex items-center justify-center">✕</button></>}
+                {loadingImg ? <div className="h-36 flex items-center justify-center"><div className="w-5 h-5 rounded-full border-2 border-blue-500 border-t-transparent animate-spin" /></div>
+                : <><img src={image} alt="preview" className="w-full max-h-64 object-cover" /><button onClick={() => setImage(null)} className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/50 text-white text-xs flex items-center justify-center">✕</button></>}
               </div>
             )}
             {showTopics && (
-              <div className="flex flex-wrap gap-1.5 mt-2">
-                {topics.map((t) => <button key={t} onClick={() => { setTopic(topic === t ? null : t); setShowTopics(false); }} className={`px-2.5 py-1 rounded-full text-xs font-semibold border transition-all ${topic === t ? "bg-blue-600 text-white border-blue-600" : "bg-gray-50 text-gray-600 border-gray-200 hover:border-blue-300"}`}>{INTEREST_EMOJI[t]} {t}</button>)}
+              <div className="flex flex-wrap gap-2 mt-3">
+                {topics.map((t) => <button key={t} onClick={() => { setTopic(topic === t ? null : t); setShowTopics(false); }} className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition-all ${topic === t ? "bg-blue-600 text-white border-blue-600" : "bg-gray-50 text-gray-600 border-gray-200 hover:border-blue-300"}`}>{INTEREST_EMOJI[t]} {t}</button>)}
               </div>
             )}
-            {topic && !showTopics && <div className="mt-2"><button onClick={() => setTopic(null)} className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">{INTEREST_EMOJI[topic]} {topic} <span className="opacity-50">✕</span></button></div>}
+            {topic && !showTopics && <div className="mt-2"><button onClick={() => setTopic(null)} className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold bg-blue-50 text-blue-700 border border-blue-200">{INTEREST_EMOJI[topic]} {topic} <span className="opacity-50">✕</span></button></div>}
           </div>
         </div>
-        <div className="flex items-center justify-between mt-3 pt-3 border-t border-gray-100 ml-[52px]">
+        <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 ml-[60px]">
           <div className="flex gap-1">
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImage} />
-            <button onClick={() => fileRef.current?.click()} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors text-xs font-medium"><ImageIcon /><span>Photo</span></button>
-            <button onClick={() => setShowTopics((v) => !v)} className={`flex items-center gap-1 px-2.5 py-1.5 rounded-lg transition-colors text-xs font-medium ${showTopics || topic ? "text-blue-600 bg-blue-50" : "text-gray-500 hover:text-blue-600 hover:bg-blue-50"}`}><TagIcon /><span>{topic ? INTEREST_EMOJI[topic] : "Vibe"}</span></button>
+            <button onClick={() => fileRef.current?.click()} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors text-sm font-medium"><ImageIcon /><span>Photo</span></button>
+            <button onClick={() => setShowTopics((v) => !v)} className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-colors text-sm font-medium ${showTopics || topic ? "text-blue-600 bg-blue-50" : "text-gray-500 hover:text-blue-600 hover:bg-blue-50"}`}><TagIcon /><span>{topic ? INTEREST_EMOJI[topic] : "Vibe"}</span></button>
           </div>
           <div className="flex items-center gap-2">
             {text.length > 400 && <span className={`text-xs tabular-nums ${text.length > 480 ? "text-red-500" : "text-gray-400"}`}>{500 - text.length}</span>}
-            <button onClick={handlePost} disabled={!canPost} className="px-4 py-1.5 text-sm font-bold rounded-full text-white transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed" style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
-              {posting ? <span className="flex items-center gap-1"><span className="w-3 h-3 rounded-full border-2 border-white/40 border-t-white animate-spin inline-block" />Posting…</span> : "Post"}
+            <button onClick={handlePost} disabled={!canPost} className="px-5 py-2 text-sm font-bold rounded-full text-white transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed" style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
+              {posting ? <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin inline-block" />Posting…</span> : "Post"}
             </button>
           </div>
         </div>
@@ -206,20 +206,20 @@ function PostCard({ post, isMock = false }: { post: Post; isMock?: boolean }) {
 
   return (
     <article className="bg-white border-b border-gray-100">
-      <div className="flex items-center gap-3 px-4 py-3">
+      <div className="flex items-center gap-3 px-5 py-4">
         <div className="relative">
-          <Avatar src={post.userAvatar} name={post.userName} size={42} />
-          <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-white" />
+          <Avatar src={post.userAvatar} name={post.userName} size={46} />
+          <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-400 rounded-full border-2 border-white" />
         </div>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="font-bold text-[14px] text-gray-900">{post.userName}</span>
-            {post.userIsVerified && <svg width="14" height="14" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#3b82f6"/><polyline points="8 12 11 15 16 9" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-            {post.userNeighborhood && <span className="text-gray-400 text-[12px]">· {post.userNeighborhood}</span>}
+            <span className="font-bold text-[15px] text-gray-900">{post.userName}</span>
+            {post.userIsVerified && <svg width="15" height="15" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#3b82f6"/><polyline points="8 12 11 15 16 9" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+            {post.userNeighborhood && <span className="text-gray-400 text-[13px]">· {post.userNeighborhood}</span>}
           </div>
-          <div className="flex items-center gap-1.5 mt-0.5 flex-wrap">
-            <span className="text-[12px] text-gray-400">{timeAgo(post.timestamp)}</span>
-            {post.topic && <><span className="text-gray-300">·</span><span className="px-2 py-0.5 rounded-full text-[11px] font-bold" style={{ background: "#f5f3ff", color: "#7c3aed" }}>{INTEREST_EMOJI[post.topic]} {post.topic}</span></>}
+          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+            <span className="text-[13px] text-gray-400">{timeAgo(post.timestamp)}</span>
+            {post.topic && <><span className="text-gray-300">·</span><span className="px-2.5 py-0.5 rounded-full text-[12px] font-bold" style={{ background: "#f5f3ff", color: "#7c3aed" }}>{INTEREST_EMOJI[post.topic]} {post.topic}</span></>}
           </div>
         </div>
         <div className="relative">
@@ -236,7 +236,7 @@ function PostCard({ post, isMock = false }: { post: Post; isMock?: boolean }) {
         </div>
       </div>
 
-      {post.text && <p className="px-4 pb-3 text-[15px] text-gray-900 leading-relaxed whitespace-pre-wrap">{post.text}</p>}
+      {post.text && <p className="px-5 pb-4 text-[15px] text-gray-900 leading-relaxed whitespace-pre-wrap">{post.text}</p>}
 
       {(post.imageUrl ?? post.imageBase64) && (
         <div className="relative cursor-pointer select-none" onClick={() => { const now = Date.now(); if (now - lastTap.current < 300 && !liked) triggerLike(); lastTap.current = now; }}>
@@ -246,16 +246,16 @@ function PostCard({ post, isMock = false }: { post: Post; isMock?: boolean }) {
       )}
 
       {(mockLikes.length > 0 || mockComments.length > 0) && (
-        <div className="flex items-center gap-3 px-4 pt-2 pb-1">
-          {mockLikes.length > 0 && <button onClick={triggerLike} className="flex items-center gap-1 hover:opacity-70"><div className="w-5 h-5 rounded-full flex items-center justify-center text-xs" style={{ background: "linear-gradient(135deg,#f43f5e,#ec4899)" }}>❤</div><span className="text-[13px] text-gray-600 font-medium ml-1">{mockLikes.length}</span></button>}
-          {mockComments.length > 0 && <button onClick={() => setShowComments((v) => !v)} className="text-[13px] text-gray-500 hover:text-gray-700 ml-auto">{mockComments.length} {mockComments.length === 1 ? "comment" : "comments"}</button>}
+        <div className="flex items-center gap-3 px-5 pt-2 pb-1">
+          {mockLikes.length > 0 && <button onClick={triggerLike} className="flex items-center gap-1.5 hover:opacity-70"><div className="w-5 h-5 rounded-full flex items-center justify-center text-xs" style={{ background: "linear-gradient(135deg,#f43f5e,#ec4899)" }}>❤</div><span className="text-sm text-gray-600 font-medium">{mockLikes.length}</span></button>}
+          {mockComments.length > 0 && <button onClick={() => setShowComments((v) => !v)} className="text-sm text-gray-500 hover:text-gray-700 ml-auto">{mockComments.length} {mockComments.length === 1 ? "comment" : "comments"}</button>}
         </div>
       )}
 
-      <div className="flex border-t border-gray-100 mx-2">
-        <button onClick={triggerLike} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all active:scale-95 ${liked ? "text-red-500" : "text-gray-500 hover:text-red-400 hover:bg-red-50/50"}`}><HeartIcon filled={liked} />Like</button>
-        <button onClick={() => { setShowComments(true); setTimeout(() => commentInputRef.current?.focus(), 80); }} className="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold text-gray-500 hover:text-blue-500 hover:bg-blue-50/50 transition-all active:scale-95"><CommentIcon />Comment</button>
-        {!isOwnPost && <button onClick={handlePing} disabled={pinged} className={`flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl text-[13px] font-semibold transition-all active:scale-95 ${pinged ? "text-green-500" : "text-gray-500 hover:text-green-500 hover:bg-green-50/50"}`}><PingIcon filled={pinged} />{pinged ? "Pinged!" : "Ping"}</button>}
+      <div className="flex border-t border-gray-100 mx-3">
+        <button onClick={triggerLike} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all active:scale-95 ${liked ? "text-red-500" : "text-gray-500 hover:text-red-400 hover:bg-red-50/50"}`}><HeartIcon filled={liked} />Like</button>
+        <button onClick={() => { setShowComments(true); setTimeout(() => commentInputRef.current?.focus(), 80); }} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-gray-500 hover:text-blue-500 hover:bg-blue-50/50 transition-all active:scale-95"><CommentIcon />Comment</button>
+        {!isOwnPost && <button onClick={handlePing} disabled={pinged} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all active:scale-95 ${pinged ? "text-green-500" : "text-gray-500 hover:text-green-500 hover:bg-green-50/50"}`}><PingIcon filled={pinged} />{pinged ? "Pinged!" : "Ping"}</button>}
       </div>
 
       {showComments && (
@@ -297,9 +297,9 @@ type FeedFilter = "all" | Interest;
 const FILTER_TOPICS: Interest[] = ["Cafes","Gaming","Cricket","Coding","Food","Music","Anime"];
 function FilterBar({ filter, setFilter }: { filter: FeedFilter; setFilter: (f: FeedFilter) => void }) {
   return (
-    <div className="flex gap-2 overflow-x-auto py-2.5 px-4 bg-white border-b border-gray-100" style={{ scrollbarWidth: "none" }}>
+    <div className="flex gap-2.5 overflow-x-auto py-3 px-5 bg-white border-b border-gray-100" style={{ scrollbarWidth: "none" }}>
       {(["all", ...FILTER_TOPICS] as FeedFilter[]).map((t) => (
-        <button key={t} onClick={() => setFilter(t)} className={`px-3.5 py-1.5 rounded-full text-[13px] font-bold flex-shrink-0 transition-all active:scale-95 ${filter === t ? "text-white shadow" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`} style={filter === t ? { background: "linear-gradient(135deg,#2563eb,#7c3aed)" } : {}}>
+        <button key={t} onClick={() => setFilter(t)} className={`px-4 py-2 rounded-full text-sm font-bold flex-shrink-0 transition-all active:scale-95 ${filter === t ? "text-white shadow" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`} style={filter === t ? { background: "linear-gradient(135deg,#2563eb,#7c3aed)" } : {}}>
           {t === "all" ? "✦ All" : `${INTEREST_EMOJI[t]} ${t}`}
         </button>
       ))}
@@ -329,12 +329,12 @@ function FeedColumn() {
     <div>
       {/* Sticky header */}
       <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100">
-        <div className="flex items-center justify-between px-4 py-3">
+        <div className="flex items-center justify-between px-5 py-4">
           <div>
-            <h1 className="text-lg font-bold text-gray-900 tracking-tight">Home</h1>
-            <p className="text-xs text-gray-400">{allPosts.length} posts from your area</p>
+            <h1 className="text-xl font-bold text-gray-900 tracking-tight">Home</h1>
+            <p className="text-sm text-gray-400 mt-0.5">{allPosts.length} posts from your area</p>
           </div>
-          <button onClick={handleRefresh} disabled={refreshing} className="w-9 h-9 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors text-gray-500">
+          <button onClick={handleRefresh} disabled={refreshing} className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors text-gray-500">
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={refreshing ? "animate-spin" : ""}><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
           </button>
         </div>
