@@ -33,7 +33,7 @@ function withDistance(userPos: LatLng | null): SafeLocation[] {
 
 export default function ExplorePage() {
   const router = useRouter();
-  const { currentUser, groups, nearbyUsers } = useStore();
+  const { currentUser, groups, nearbyUsers, cachedUserPos } = useStore();
 
   const [tab, setTab]               = useState<Tab>("people");
   const [filter, setFilter]         = useState<Interest | "All">("All");
@@ -44,8 +44,12 @@ export default function ExplorePage() {
   const [showQuickRoom, setShowQuickRoom] = useState(false);
   const [prefilledLoc, setPrefilledLoc]   = useState<SafeLocation | null>(null);
 
-  // GPS
-  const [geoState, setGeoState]         = useState<GeoState>({ status: "idle" });
+  // GPS — initialise from background-prefetched position if already available
+  const [geoState, setGeoState] = useState<GeoState>(() =>
+    cachedUserPos
+      ? { status: "ok", position: cachedUserPos, accuracy: 50 }
+      : { status: "idle" }
+  );
   const [flyToUser, setFlyToUser]       = useState(false);
   const flyTimerRef                     = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
 
@@ -112,7 +116,14 @@ export default function ExplorePage() {
     setShowCreate(true);
   }
 
-  // Request GPS automatically when user switches to map tab
+  // When cachedUserPos arrives (background prefetch completed after component mount), apply it
+  useEffect(() => {
+    if (cachedUserPos && geoState.status === "idle") {
+      setGeoState({ status: "ok", position: cachedUserPos, accuracy: 50 });
+    }
+  }, [cachedUserPos]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  // Request GPS when user switches to map tab — skip if already have position
   useEffect(() => {
     if (tab === "map" && geoState.status === "idle") {
       requestGeolocation(setGeoState);

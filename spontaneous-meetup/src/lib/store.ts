@@ -193,6 +193,10 @@ interface AppState {
   darkMode: boolean;
   toggleDarkMode: () => void;
 
+  // Background-prefetched position (available before user explicitly opens map)
+  cachedUserPos: { lat: number; lng: number } | null;
+  setCachedUserPos: (pos: { lat: number; lng: number } | null) => void;
+
   currentUser: User | null;
   isFree: boolean;
   freeUntil: number | null;
@@ -266,6 +270,9 @@ export const useStore = create<AppState>()((set, get) => ({
     set({ darkMode: next });
     if (typeof window !== "undefined") localStorage.setItem("hangr_dark", String(next));
   },
+
+  cachedUserPos: null,
+  setCachedUserPos: (pos) => set({ cachedUserPos: pos }),
 
   currentUser: null,
   isFree: false,
