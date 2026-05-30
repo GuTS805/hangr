@@ -5,13 +5,14 @@ import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { Interest, Post, PostComment, SafeLocation } from "@/types";
 import {
-  SAFE_LOCATIONS, SAFE_LOCATION_ICONS, SAFE_LOCATION_COLORS,
+  SAFE_LOCATION_ICONS, SAFE_LOCATION_COLORS,
   INTEREST_EMOJI,
 } from "@/lib/mock-data";
 import InterestBadge from "@/components/InterestBadge";
 import CreateGroupModal from "@/components/CreateGroupModal";
 import QuickRoomModal from "@/components/QuickRoomModal";
 import GroupCard from "@/components/GroupCard";
+import { fetchNearbyPlaces } from "@/lib/overpass";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Feed helpers
@@ -384,21 +385,59 @@ function useGeoToggleFree() {
 // ── Logged-in right sidebar ───────────────────────────────────────────────────
 function DashboardSidebar() {
   const router = useRouter();
-  const { currentUser, isFree, freeUntil, groups, nearbyUsers, pingUser } = useStore();
-  const handleToggleFree = useGeoToggleFree();
+  const { currentUser, isFree, freeUntil, groups, nearbyUsers, pingUser, toggleFree, updateStreak } = useStore();
   const [showCreate, setShowCreate] = useState(false);
   const [showQuickRoom, setShowQuickRoom] = useState(false);
   const [prefilledLoc, setPrefilledLoc] = useState<SafeLocation | null>(null);
   const [pingedUsers, setPingedUsers] = useState<string[]>([]);
+  const [userPos, setUserPos] = useState<{ lat: number; lng: number } | null>(null);
+  const [overpassLocs, setOverpassLocs] = useState<SafeLocation[]>([]);
+  const [overpassLoading, setOverpassLoading] = useState(false);
+  const [locError, setLocError] = useState(false);
 
   if (!currentUser) return null;
 
   const nearbyFree = nearbyUsers.filter((u) => u.isFree && u.id !== currentUser.id).slice(0, 3);
-  const spots = SAFE_LOCATIONS.slice(0, 4).map((loc) => ({
-    ...loc,
-    activeGroups: groups.filter((g) => g.safeLocationId === loc.id && g.expiresAt > Date.now()).length,
-  }));
   const activeGroups = groups.filter((g) => g.members.some((m) => m.id === currentUser.id) && g.expiresAt > Date.now()).slice(0, 3);
+
+  // ── Toggle free: location permission fires only on "go free" ──────────────
+  function handleToggleFree() {
+    if (isFree) {
+      // Going offline — no location needed
+      toggleFree();
+      return;
+    }
+    // Going free — request location first, then toggle
+    setLocError(false);
+    if (typeof navigator !== "undefined" && navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (pos) => {
+          const lat = pos.coords.latitude;
+          const lng = pos.coords.longitude;
+          toggleFree(lat, lng);
+          updateStreak();
+          setUserPos({ lat, lng });
+          // Fetch real nearby places for this position
+          setOverpassLoading(true);
+          setOverpassLocs([]);
+          fetchNearbyPlaces(lat, lng).then((places) => {
+            setOverpassLocs(places);
+            setOverpassLoading(false);
+          });
+        },
+        () => {
+          // Location denied/failed — go free without location, no spots
+          toggleFree();
+          updateStreak();
+          setLocError(true);
+        },
+        { timeout: 8000, maximumAge: 30000 },
+      );
+    } else {
+      toggleFree();
+      updateStreak();
+    }
+  }
   const QUICK_ACTS = [
     { emoji: "☕", label: "Chai run" }, { emoji: "🎮", label: "Gaming" },
     { emoji: "🍕", label: "Food trip" }, { emoji: "🏏", label: "Cricket" },
@@ -505,25 +544,70 @@ function DashboardSidebar() {
         )}
       </div>
 
-      {/* ── Meetup spots ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-          <p className="text-sm font-extrabold text-gray-700">📍 Pick a meetup spot</p>
-          <button onClick={() => router.push("/explore")} className="text-sm font-bold text-blue-600 hover:underline">Open map →</button>
+      {/* ── Meetup spots — only shown when free ── */}
+      {!isFree ? (
+        <div className="rounded-2xl border border-dashed border-gray-200 px-5 py-5 text-center">
+          <p className="text-2xl mb-2">📍</p>
+          <p className="text-sm font-semibold text-gray-500">Go free to discover nearby meetup spots</p>
+          <p className="text-xs text-gray-400 mt-1">We'll find cafes, parks & more around you</p>
         </div>
-        <div className="divide-y divide-gray-50">
-          {spots.map((loc) => (
-            <button key={loc.id} onClick={() => { setPrefilledLoc(loc); setShowCreate(true); }} className="w-full flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors text-left active:bg-gray-100">
-              <span className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl border flex-shrink-0 ${SAFE_LOCATION_COLORS[loc.type]}`}>{SAFE_LOCATION_ICONS[loc.type]}</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-sm font-bold text-gray-900 truncate">{loc.name}</p>
-                <p className="text-xs text-gray-400 capitalize mt-0.5">{loc.type} · {loc.activeGroups > 0 ? <span className="text-orange-500 font-semibold">{loc.activeGroups} active</span> : <span className="text-green-600">Safe ✓</span>}</p>
+      ) : (
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+            <p className="text-sm font-extrabold text-gray-700">📍 Pick a meetup spot</p>
+            <button onClick={() => router.push("/explore")} className="text-sm font-bold text-blue-600 hover:underline">Open map →</button>
+          </div>
+
+          {/* Loading */}
+          {overpassLoading && (
+            <div className="flex items-center gap-3 px-5 py-6">
+              <div className="w-5 h-5 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin flex-shrink-0" />
+              <div>
+                <p className="text-sm font-semibold text-gray-700">Finding places near you…</p>
+                <p className="text-xs text-gray-400 mt-0.5">Searching cafes, parks & spots</p>
               </div>
-              <span className="text-gray-300 text-lg flex-shrink-0">›</span>
-            </button>
-          ))}
+            </div>
+          )}
+
+          {/* Location denied */}
+          {!overpassLoading && locError && (
+            <div className="px-5 py-6 text-center">
+              <p className="text-2xl mb-2">🔒</p>
+              <p className="text-sm font-semibold text-gray-600">Location access denied</p>
+              <p className="text-xs text-gray-400 mt-1 mb-3">Enable location in browser settings to see nearby spots</p>
+              <button onClick={() => router.push("/explore")} className="text-sm font-bold text-blue-600 hover:underline">Browse map manually →</button>
+            </div>
+          )}
+
+          {/* Real nearby places */}
+          {!overpassLoading && !locError && overpassLocs.length > 0 && (
+            <div className="divide-y divide-gray-50">
+              {overpassLocs.slice(0, 5).map((loc) => (
+                <button key={loc.id} onClick={() => { setPrefilledLoc(loc); setShowCreate(true); }} className="w-full flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors text-left active:bg-gray-100">
+                  <span className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl border flex-shrink-0 ${SAFE_LOCATION_COLORS[loc.type]}`}>{SAFE_LOCATION_ICONS[loc.type]}</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-sm font-bold text-gray-900 truncate">{loc.name}</p>
+                    <p className="text-xs text-gray-400 capitalize mt-0.5">
+                      {loc.type}{loc.distanceKm !== undefined ? ` · ${loc.distanceKm < 1 ? `${Math.round(loc.distanceKm * 1000)}m` : `${loc.distanceKm.toFixed(1)}km`} away` : " · Safe ✓"}
+                    </p>
+                  </div>
+                  <span className="text-gray-300 text-lg flex-shrink-0">›</span>
+                </button>
+              ))}
+            </div>
+          )}
+
+          {/* No places found */}
+          {!overpassLoading && !locError && userPos && overpassLocs.length === 0 && (
+            <div className="px-5 py-6 text-center">
+              <p className="text-2xl mb-2">🗺️</p>
+              <p className="text-sm font-semibold text-gray-600">No places found nearby</p>
+              <p className="text-xs text-gray-400 mt-1 mb-3">OpenStreetMap data may be sparse here</p>
+              <button onClick={() => router.push("/explore")} className="text-sm font-bold text-blue-600 hover:underline">Drop a pin on the map →</button>
+            </div>
+          )}
         </div>
-      </div>
+      )}
 
       {/* ── Your interests ── */}
       {currentUser.interests.length > 0 && (
