@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { INTEREST_EMOJI } from "@/lib/mock-data";
@@ -127,6 +127,21 @@ export default function PublicProfilePage() {
 
   const [following, setFollowing] = useState(false);
   const [pinged, setPinged] = useState(false);
+  const [highlights, setHighlights] = useState<Post[]>([]);
+
+  // Load highlights this user pinned (stored in localStorage by that user's browser)
+  // Falls back to showing nothing — only what the user chose to share
+  useEffect(() => {
+    const saved = localStorage.getItem(`hangr_highlights_${userId}`);
+    if (!saved) return;
+    const ids: string[] = JSON.parse(saved);
+    // Find matching posts from store + mock
+    const allPosts = [
+      ...posts,
+      ...Object.values(MOCK_POSTS_BY_USER).flat(),
+    ].filter(p => p.userId === userId);
+    setHighlights(allPosts.filter(p => ids.includes(p.id)));
+  }, [userId, posts]);
 
   // Find user: try nearbyUsers first (real DB), then mock fallback
   const user: PublicUser | null = useMemo(() => {
@@ -144,13 +159,6 @@ export default function PublicProfilePage() {
     return MOCK_USERS.find(u => u.id === userId) ?? null;
   }, [userId, nearbyUsers]);
 
-  // Get user's posts (from DB posts + mock)
-  const userPosts = useMemo(() => {
-    const dbPosts = posts.filter(p => p.userId === userId);
-    const mock = MOCK_POSTS_BY_USER[userId] ?? [];
-    const dbIds = new Set(dbPosts.map(p => p.id));
-    return [...dbPosts, ...mock.filter(p => !dbIds.has(p.id))].sort((a, b) => b.timestamp - a.timestamp);
-  }, [posts, userId]);
 
   if (!user) {
     return (
@@ -284,21 +292,24 @@ export default function PublicProfilePage() {
           </div>
         )}
 
-        {/* Posts */}
+        {/* Highlights */}
         <div className="mb-6">
           <div className="flex items-center gap-2 mb-3">
-            <p className="text-sm font-extrabold text-gray-700">Posts</p>
-            <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">{userPosts.length}</span>
+            <p className="text-sm font-extrabold text-gray-700">✨ Highlights</p>
+            {highlights.length > 0 && (
+              <span className="text-xs font-bold px-2 py-0.5 rounded-full bg-gray-100 text-gray-500">{highlights.length}</span>
+            )}
           </div>
 
-          {userPosts.length === 0 ? (
+          {highlights.length === 0 ? (
             <div className="bg-white rounded-2xl border border-gray-100 p-10 text-center">
-              <p className="text-4xl mb-3">✍️</p>
-              <p className="text-gray-500 font-semibold">No posts yet</p>
+              <p className="text-4xl mb-3">📌</p>
+              <p className="text-gray-500 font-semibold">No highlights yet</p>
+              <p className="text-xs text-gray-400 mt-1">{user.name.split(" ")[0]} hasn't pinned anything to their profile</p>
             </div>
           ) : (
             <div className="space-y-3">
-              {userPosts.map(post => <MiniPostCard key={post.id} post={post} />)}
+              {highlights.map(post => <MiniPostCard key={post.id} post={post} />)}
             </div>
           )}
         </div>

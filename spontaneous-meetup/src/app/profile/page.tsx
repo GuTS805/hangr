@@ -1,10 +1,10 @@
 "use client";
 
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase";
-import { Interest, Gender } from "@/types";
+import { Interest, Gender, Post } from "@/types";
 import { INTERESTS, INTEREST_EMOJI } from "@/lib/mock-data";
 import TrustBadge from "@/components/TrustBadge";
 import { STATUS_PRESETS } from "@/components/UserCard";
@@ -75,7 +75,7 @@ export default function ProfilePage() {
   const {
     currentUser, isFree, freeUntil, toggleFree, logout,
     groups, blockedUserIds, unblockUser, updateGenderSettings, verifyCollege,
-    nearbyUsers, updateStatus,
+    nearbyUsers, updateStatus, posts,
   } = useStore();
 
   const [editing, setEditing]       = useState(false);
@@ -110,6 +110,10 @@ export default function ProfilePage() {
 
   const [cropModal, setCropModal] = useState<{ file: File; type: "avatar" | "cover" } | null>(null);
 
+  // Highlights
+  const [highlightIds, setHighlightIds] = useState<string[]>([]);
+  const [showHighlightPicker, setShowHighlightPicker] = useState(false);
+
   const avatarPickerRef  = useRef<HTMLDivElement>(null);
   const avatarFileRef    = useRef<HTMLInputElement>(null);
   const coverFileRef     = useRef<HTMLInputElement>(null);
@@ -128,12 +132,32 @@ export default function ProfilePage() {
     if (!currentUser) router.replace("/auth");
   }, [currentUser, router]);
 
+  // Load highlights from localStorage
+  useEffect(() => {
+    if (!currentUser) return;
+    const saved = localStorage.getItem(`hangr_highlights_${currentUser.id}`);
+    if (saved) setHighlightIds(JSON.parse(saved));
+  }, [currentUser?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
   if (!currentUser) return null;
 
   const displayAvatar = pendingAvatar ?? currentUser.avatar;
   const myGroups      = groups.filter((g) => g.members.some((m) => m.id === currentUser.id));
   const blockedUsers  = nearbyUsers.filter((u) => blockedUserIds.includes(u.id));
   const coverCls      = getCoverCls(coverId);
+
+  // All of this user's posts (DB + any mock posts by their id)
+  // eslint-disable-next-line react-hooks/rules-of-hooks
+  const myPosts = useMemo(() => posts.filter(p => p.userId === currentUser.id), [posts, currentUser.id]);
+  const highlightedPosts = myPosts.filter(p => highlightIds.includes(p.id));
+
+  function toggleHighlight(postId: string) {
+    const next = highlightIds.includes(postId)
+      ? highlightIds.filter(id => id !== postId)
+      : [...highlightIds, postId];
+    setHighlightIds(next);
+    localStorage.setItem(`hangr_highlights_${currentUser!.id}`, JSON.stringify(next));
+  }
 
   function toggleInterest(i: Interest) {
     setSelected((prev) => prev.includes(i) ? prev.filter((x) => x !== i) : [...prev, i]);
@@ -775,6 +799,91 @@ export default function ProfilePage() {
           </div>
         </div>
 
+      </div>
+
+      {/* ── Highlights manager ── */}
+      <div className="max-w-2xl mx-auto px-3 sm:px-4 pb-8 mt-2">
+        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
+          <div className="flex items-center justify-between px-4 py-4 border-b border-gray-100">
+            <div>
+              <p className="text-sm font-extrabold text-gray-800">✨ Highlights</p>
+              <p className="text-xs text-gray-400 mt-0.5">Pin posts to your public profile</p>
+            </div>
+            {myPosts.length > 0 && (
+              <button onClick={() => setShowHighlightPicker(v => !v)}
+                className="text-xs font-bold px-3 py-1.5 rounded-full transition-colors"
+                style={{ background: showHighlightPicker ? "#1e1b3a" : "rgba(37,99,235,0.08)", color: showHighlightPicker ? "#fff" : "#2563eb" }}>
+                {showHighlightPicker ? "Done" : "+ Manage"}
+              </button>
+            )}
+          </div>
+
+          {/* Current highlights */}
+          {!showHighlightPicker && (
+            highlightedPosts.length === 0 ? (
+              <div className="px-4 py-8 text-center">
+                <p className="text-3xl mb-2">📌</p>
+                <p className="text-sm font-semibold text-gray-500">No highlights yet</p>
+                <p className="text-xs text-gray-400 mt-1">
+                  {myPosts.length === 0 ? "Post something first, then pin it here" : "Tap '+ Manage' to pin your best posts"}
+                </p>
+              </div>
+            ) : (
+              <div className="divide-y divide-gray-50">
+                {highlightedPosts.map(post => (
+                  <div key={post.id} className="flex items-start gap-3 px-4 py-3.5">
+                    <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
+                      style={{ background: "rgba(124,58,237,0.08)" }}>
+                      {post.topic ? INTEREST_EMOJI[post.topic as Interest] : "📝"}
+                    </div>
+                    <div className="flex-1 min-w-0">
+                      {post.topic && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full mb-1 inline-block" style={{ background: "#f5f3ff", color: "#7c3aed" }}>{post.topic}</span>}
+                      <p className="text-sm text-gray-700 leading-relaxed line-clamp-2">{post.text}</p>
+                    </div>
+                    <button onClick={() => toggleHighlight(post.id)}
+                      className="w-7 h-7 flex items-center justify-center rounded-full hover:bg-red-50 text-gray-300 hover:text-red-400 transition-colors flex-shrink-0">
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+                    </button>
+                  </div>
+                ))}
+              </div>
+            )
+          )}
+
+          {/* Post picker */}
+          {showHighlightPicker && (
+            <div>
+              {myPosts.length === 0 ? (
+                <div className="px-4 py-8 text-center">
+                  <p className="text-3xl mb-2">✍️</p>
+                  <p className="text-sm text-gray-400">You haven't posted anything yet</p>
+                </div>
+              ) : (
+                <div className="divide-y divide-gray-50">
+                  {myPosts.map(post => {
+                    const isPinned = highlightIds.includes(post.id);
+                    return (
+                      <button key={post.id} onClick={() => toggleHighlight(post.id)}
+                        className={`w-full flex items-start gap-3 px-4 py-3.5 text-left transition-colors ${isPinned ? "bg-violet-50" : "hover:bg-gray-50"}`}>
+                        <div className="w-9 h-9 rounded-xl flex items-center justify-center text-lg flex-shrink-0"
+                          style={{ background: isPinned ? "rgba(124,58,237,0.12)" : "rgba(0,0,0,0.04)" }}>
+                          {post.topic ? INTEREST_EMOJI[post.topic as Interest] : "📝"}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          {post.topic && <span className="text-[11px] font-bold px-2 py-0.5 rounded-full mb-1 inline-block" style={{ background: "#f5f3ff", color: "#7c3aed" }}>{post.topic}</span>}
+                          <p className="text-sm text-gray-700 leading-relaxed line-clamp-2">{post.text}</p>
+                        </div>
+                        <div className={`w-6 h-6 rounded-full border-2 flex items-center justify-center flex-shrink-0 transition-all ${isPinned ? "border-violet-500 bg-violet-500" : "border-gray-200"}`}>
+                          {isPinned && <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="white" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"><polyline points="20 6 9 17 4 12"/></svg>}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
+        </div>
       </div>
 
       {/* Image crop modal */}
