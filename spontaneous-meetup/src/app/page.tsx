@@ -308,6 +308,81 @@ function FilterBar({ filter, setFilter }: { filter: FeedFilter; setFilter: (f: F
   );
 }
 
+// ── Group save prompt ─────────────────────────────────────────────────────────
+function GroupSavePrompts() {
+  const { currentUser, groups } = useStore();
+  const [dismissed, setDismissed] = useState<string[]>([]);
+  const [saved, setSaved] = useState<string[]>([]);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const d = localStorage.getItem(`hangr_fav_dismissed_${currentUser.id}`);
+    const s = localStorage.getItem(`hangr_favourites_${currentUser.id}`);
+    if (d) setDismissed(JSON.parse(d));
+    if (s) setSaved((JSON.parse(s) as { id: string }[]).map(g => g.id));
+  }, [currentUser?.id]); // eslint-disable-line react-hooks/exhaustive-deps
+
+  if (!currentUser) return null;
+
+  const now = Date.now();
+  const prompts = groups.filter(g =>
+    g.expiresAt <= now &&
+    g.expiresAt >= now - 48 * 3600000 &&
+    g.members.some(m => m.id === currentUser.id) &&
+    !dismissed.includes(g.id) &&
+    !saved.includes(g.id)
+  );
+
+  function saveGroup(g: typeof groups[0]) {
+    const key = `hangr_favourites_${currentUser!.id}`;
+    const existing: object[] = JSON.parse(localStorage.getItem(key) ?? "[]");
+    const snapshot = {
+      id: g.id, name: g.name, topic: g.topic,
+      safeLocationId: g.safeLocationId,
+      memberCount: g.members.length,
+      memberNames: g.members.map(m => m.name.split(" ")[0]),
+      memberAvatars: g.members.map(m => m.avatar),
+      endedAt: g.expiresAt, savedAt: Date.now(),
+    };
+    localStorage.setItem(key, JSON.stringify([...existing.filter((e: { id?: string }) => e.id !== g.id), snapshot]));
+    setSaved(p => [...p, g.id]);
+  }
+
+  function dismiss(gId: string) {
+    const key = `hangr_fav_dismissed_${currentUser!.id}`;
+    const next = [...dismissed, gId];
+    setDismissed(next);
+    localStorage.setItem(key, JSON.stringify(next));
+  }
+
+  if (prompts.length === 0) return null;
+
+  return (
+    <div className="border-b border-gray-100">
+      {prompts.map(g => (
+        <div key={g.id} className="flex items-center gap-3 px-5 py-4 bg-amber-50 border-b border-amber-100">
+          <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
+            style={{ background: "rgba(245,158,11,0.12)" }}>
+            {INTEREST_EMOJI[g.topic] ?? "🏘️"}
+          </div>
+          <div className="flex-1 min-w-0">
+            <p className="text-sm font-bold text-gray-800 truncate">{g.name} just ended</p>
+            <p className="text-xs text-amber-600 mt-0.5">Save it to your favourites?</p>
+          </div>
+          <button onClick={() => dismiss(g.id)} className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1 flex-shrink-0">
+            Skip
+          </button>
+          <button onClick={() => saveGroup(g)}
+            className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full text-white flex-shrink-0"
+            style={{ background: "linear-gradient(135deg,#d97706,#b45309)" }}>
+            ⭐ Save
+          </button>
+        </div>
+      ))}
+    </div>
+  );
+}
+
 // ── Feed column ───────────────────────────────────────────────────────────────
 function FeedColumn() {
   const { posts, loadPosts } = useStore();
@@ -341,6 +416,7 @@ function FeedColumn() {
         </div>
       </div>
 
+      <GroupSavePrompts />
       <PostComposer />
       <FilterBar filter={filter} setFilter={setFilter} />
 
