@@ -206,21 +206,21 @@ function PostCard({ post, isMock = false }: { post: Post; isMock?: boolean }) {
   };
 
   return (
-    <article className="bg-white border-b border-gray-100">
-      <div className="flex items-center gap-3 px-5 py-4">
+    <article className="b-card mb-3 mx-3">
+      <div className="flex items-center gap-3 px-5 py-4" style={{ borderBottom: "2px solid #0A0A0A" }}>
         <button onClick={() => router.push(`/profile/${post.userId}`)} className="relative flex-shrink-0 active:opacity-70 transition-opacity">
           <Avatar src={post.userAvatar} name={post.userName} size={46} />
-          <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-400 rounded-full border-2 border-white" />
+          <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-400 rounded-full" style={{ border: "2px solid #0A0A0A" }} />
         </button>
         <div className="flex-1 min-w-0">
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <button onClick={() => router.push(`/profile/${post.userId}`)} className="font-bold text-[15px] text-gray-900 hover:underline">{post.userName}</button>
-            {post.userIsVerified && <svg width="15" height="15" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#3b82f6"/><polyline points="8 12 11 15 16 9" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
-            {post.userNeighborhood && <span className="text-gray-400 text-[13px]">· {post.userNeighborhood}</span>}
+          <div className="flex items-center gap-2 flex-wrap">
+            <button onClick={() => router.push(`/profile/${post.userId}`)} className="font-bold text-[15px] uppercase tracking-wide hover:underline" style={{ color: "var(--b-black)" }}>{post.userName}</button>
+            {post.userIsVerified && <svg width="15" height="15" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#0038FF"/><polyline points="8 12 11 15 16 9" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
+            {post.userNeighborhood && <span className="text-[12px] font-mono" style={{ color: "var(--b-black)", opacity: 0.45 }}>/ {post.userNeighborhood}</span>}
           </div>
-          <div className="flex items-center gap-1.5 mt-1 flex-wrap">
-            <span className="text-[13px] text-gray-400">{timeAgo(post.timestamp)}</span>
-            {post.topic && <><span className="text-gray-300">·</span><span className="px-2.5 py-0.5 rounded-full text-[12px] font-bold" style={{ background: "#f5f3ff", color: "#7c3aed" }}>{INTEREST_EMOJI[post.topic]} {post.topic}</span></>}
+          <div className="flex items-center gap-2 mt-1 flex-wrap">
+            <span className="font-mono text-[12px]" style={{ color: "var(--b-black)", opacity: 0.4 }}>{timeAgo(post.timestamp)}</span>
+            {post.topic && <span className="b-tag">{INTEREST_EMOJI[post.topic]} {post.topic}</span>}
           </div>
         </div>
         <div className="relative">
@@ -237,7 +237,7 @@ function PostCard({ post, isMock = false }: { post: Post; isMock?: boolean }) {
         </div>
       </div>
 
-      {post.text && <p className="px-5 pb-4 text-[15px] text-gray-900 leading-relaxed whitespace-pre-wrap">{post.text}</p>}
+      {post.text && <p className="px-5 py-4 text-[15px] leading-relaxed whitespace-pre-wrap" style={{ color: "var(--b-black)" }}>{post.text}</p>}
 
       {(post.imageUrl ?? post.imageBase64) && (
         <div className="relative cursor-pointer select-none" onClick={() => { const now = Date.now(); if (now - lastTap.current < 300 && !liked) triggerLike(); lastTap.current = now; }}>
@@ -253,10 +253,24 @@ function PostCard({ post, isMock = false }: { post: Post; isMock?: boolean }) {
         </div>
       )}
 
-      <div className="flex border-t border-gray-100 mx-3">
-        <button onClick={triggerLike} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all active:scale-95 ${liked ? "text-red-500" : "text-gray-500 hover:text-red-400 hover:bg-red-50/50"}`}><HeartIcon filled={liked} />Like</button>
-        <button onClick={() => { setShowComments(true); setTimeout(() => commentInputRef.current?.focus(), 80); }} className="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold text-gray-500 hover:text-blue-500 hover:bg-blue-50/50 transition-all active:scale-95"><CommentIcon />Comment</button>
-        {!isOwnPost && <button onClick={handlePing} disabled={pinged} className={`flex-1 flex items-center justify-center gap-2 py-3 rounded-xl text-sm font-semibold transition-all active:scale-95 ${pinged ? "text-green-500" : "text-gray-500 hover:text-green-500 hover:bg-green-50/50"}`}><PingIcon filled={pinged} />{pinged ? "Pinged!" : "Ping"}</button>}
+      <div className="flex" style={{ borderTop: "2px solid #0A0A0A" }}>
+        <button onClick={triggerLike}
+          className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold uppercase tracking-wide transition-colors"
+          style={{ color: liked ? "#FF2D2D" : "var(--b-black)", background: liked ? "#FF2D2D11" : "transparent", borderRight: "2px solid #0A0A0A" }}>
+          <HeartIcon filled={liked} />Like
+        </button>
+        <button onClick={() => { setShowComments(true); setTimeout(() => commentInputRef.current?.focus(), 80); }}
+          className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold uppercase tracking-wide transition-colors"
+          style={{ color: "var(--b-black)", borderRight: !isOwnPost ? "2px solid #0A0A0A" : undefined }}>
+          <CommentIcon />Comment
+        </button>
+        {!isOwnPost && (
+          <button onClick={handlePing} disabled={pinged}
+            className="flex-1 flex items-center justify-center gap-2 py-3 text-sm font-bold uppercase tracking-wide transition-colors"
+            style={{ color: pinged ? "#00C44A" : "var(--b-black)", background: pinged ? "#00C44A11" : "transparent" }}>
+            <PingIcon filled={pinged} />{pinged ? "Pinged!" : "Ping"}
+          </button>
+        )}
       </div>
 
       {showComments && (
@@ -298,10 +312,14 @@ type FeedFilter = "all" | Interest;
 const FILTER_TOPICS: Interest[] = ["Cafes","Gaming","Cricket","Coding","Food","Music","Anime"];
 function FilterBar({ filter, setFilter }: { filter: FeedFilter; setFilter: (f: FeedFilter) => void }) {
   return (
-    <div className="flex gap-2.5 overflow-x-auto py-3 px-5 bg-white border-b border-gray-100" style={{ scrollbarWidth: "none" }}>
+    <div className="flex gap-2 overflow-x-auto py-3 px-4" style={{ scrollbarWidth: "none", borderBottom: "2px solid #0A0A0A", background: "var(--b-bg)" }}>
       {(["all", ...FILTER_TOPICS] as FeedFilter[]).map((t) => (
-        <button key={t} onClick={() => setFilter(t)} className={`px-4 py-2 rounded-full text-sm font-bold flex-shrink-0 transition-all active:scale-95 ${filter === t ? "text-white shadow" : "bg-gray-100 text-gray-600 hover:bg-gray-200"}`} style={filter === t ? { background: "linear-gradient(135deg,#2563eb,#7c3aed)" } : {}}>
-          {t === "all" ? "✦ All" : `${INTEREST_EMOJI[t]} ${t}`}
+        <button key={t} onClick={() => setFilter(t)}
+          className="flex-shrink-0 text-xs font-bold uppercase tracking-wide transition-all active:scale-95"
+          style={filter === t
+            ? { background: "#0A0A0A", color: "#FFE500", border: "2px solid #0A0A0A", padding: "6px 14px" }
+            : { background: "var(--b-card)", color: "var(--b-black)", border: "2px solid #0A0A0A", padding: "6px 14px", boxShadow: "2px 2px 0 #0A0A0A" }}>
+          {t === "all" ? "ALL" : `${INTEREST_EMOJI[t]} ${t.toUpperCase()}`}
         </button>
       ))}
     </div>
@@ -404,13 +422,13 @@ function FeedColumn() {
   return (
     <div>
       {/* Sticky header */}
-      <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100">
+      <div className="sticky top-0 z-30" style={{ background: "var(--b-card)", borderBottom: "2px solid #0A0A0A" }}>
         <div className="flex items-center justify-between px-5 py-4">
           <div>
-            <h1 className="text-xl font-bold text-gray-900 tracking-tight">Home</h1>
-            <p className="text-sm text-gray-400 mt-0.5">{allPosts.length} posts from your area</p>
+            <h1 className="font-bold uppercase tracking-wider" style={{ fontSize: 20, color: "var(--b-black)" }}>Home</h1>
+            <p className="font-mono text-xs mt-0.5" style={{ color: "var(--b-black)", opacity: 0.4 }}>{allPosts.length} posts from your area</p>
           </div>
-          <button onClick={handleRefresh} disabled={refreshing} className="w-10 h-10 flex items-center justify-center rounded-full bg-gray-100 hover:bg-gray-200 transition-colors text-gray-500">
+          <button onClick={handleRefresh} disabled={refreshing} className="w-10 h-10 flex items-center justify-center transition-all" style={{ border: "2px solid #0A0A0A", background: "var(--b-yellow)", boxShadow: "2px 2px 0 #0A0A0A", color: "#0A0A0A" }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={refreshing ? "animate-spin" : ""}><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
           </button>
         </div>
@@ -523,42 +541,43 @@ function DashboardSidebar() {
   return (
     <div className="space-y-5">
       {/* ── I'm Free status card ── */}
-      <div className="relative overflow-hidden rounded-3xl" style={{ background: isFree ? "linear-gradient(135deg,#52A862,#3da000)" : "linear-gradient(135deg,#1E1B3A,#2A2550)" }}>
-        <div className="absolute -top-10 -right-10 w-48 h-48 rounded-full" style={{ background: "rgba(255,255,255,0.07)" }} />
-        <div className="absolute -bottom-8 -left-8 w-36 h-36 rounded-full" style={{ background: "rgba(255,255,255,0.05)" }} />
-        <div className="relative p-6">
-          <div className="flex items-start justify-between mb-5">
+      <div style={{ background: isFree ? "#FFE500" : "#0A0A0A", border: "2px solid #0A0A0A", boxShadow: "4px 4px 0 #0A0A0A" }}>
+        <div className="p-5">
+          <div className="flex items-start justify-between mb-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
-                {isFree && <span className="w-2.5 h-2.5 bg-white rounded-full animate-pulse" />}
-                <span className="text-[11px] font-extrabold uppercase tracking-widest text-white/60">
-                  {isFree ? "Live · Visible to people nearby" : "Offline · Hidden from others"}
+                {isFree && <span className="w-2.5 h-2.5 rounded-full animate-pulse" style={{ background: "#0A0A0A" }} />}
+                <span className="text-[10px] font-bold uppercase tracking-widest" style={{ color: isFree ? "#0A0A0A" : "#FFE500", opacity: 0.7 }}>
+                  {isFree ? "LIVE · VISIBLE TO PEOPLE NEARBY" : "OFFLINE · HIDDEN"}
                 </span>
               </div>
-              <p className="text-2xl font-extrabold text-white leading-tight">
-                {isFree ? "You're free! 🎉" : "Ready to hang out?"}
+              <p className="text-2xl font-black uppercase tracking-tight leading-tight" style={{ color: isFree ? "#0A0A0A" : "#FAFAF5" }}>
+                {isFree ? "You're Free!" : "Go Free Now?"}
               </p>
-              {isFree && freeUntil && <p className="text-sm text-white/60 mt-1">{formatFreeUntil(freeUntil)} remaining · auto-off at 2h</p>}
-              {!isFree && <p className="text-sm text-white/50 mt-1">Tap to go visible — people nearby will see you</p>}
+              {isFree && freeUntil && <p className="font-mono text-xs mt-1" style={{ color: "#0A0A0A", opacity: 0.6 }}>{formatFreeUntil(freeUntil)} left</p>}
             </div>
-            <div className="w-14 h-14 rounded-2xl border-2 flex items-center justify-center text-2xl font-extrabold text-white flex-shrink-0 overflow-hidden" style={{ background: "rgba(255,255,255,0.15)", borderColor: "rgba(255,255,255,0.3)" }}>
-              {currentUser.avatar?.startsWith("http") ? <img src={currentUser.avatar} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover" /> : currentUser.avatar?.slice(0, 2)}
+            <div className="w-14 h-14 flex items-center justify-center text-2xl font-extrabold flex-shrink-0 overflow-hidden" style={{ border: `2px solid ${isFree ? "#0A0A0A" : "#FAFAF5"}`, background: isFree ? "rgba(0,0,0,0.1)" : "rgba(255,255,255,0.08)" }}>
+              {currentUser.avatar?.startsWith("http") ? <img src={currentUser.avatar} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover" /> : <span style={{ color: isFree ? "#0A0A0A" : "#FAFAF5" }}>{currentUser.avatar?.slice(0, 2)}</span>}
             </div>
           </div>
 
-          <button onClick={handleToggleFree} className="w-full py-3.5 rounded-2xl font-extrabold text-[15px] transition-all active:scale-95 mb-4" style={isFree ? { background: "#fff", color: "#448C50", boxShadow: "0 4px 0 rgba(0,0,0,0.15)" } : { background: "#52A862", color: "#fff", boxShadow: "0 4px 0 #3D7D47" }}>
-            {isFree ? "🟢 I'm Free! · Tap to go offline" : "😴 Tap to go Free now"}
+          <button onClick={handleToggleFree}
+            className="w-full py-3 font-black uppercase tracking-widest text-sm transition-all mb-4"
+            style={isFree
+              ? { background: "#0A0A0A", color: "#FFE500", border: "2px solid #0A0A0A", boxShadow: "3px 3px 0 rgba(0,0,0,0.25)" }
+              : { background: "#FFE500", color: "#0A0A0A", border: "2px solid #FFE500", boxShadow: "3px 3px 0 #FFE500" }}>
+            {isFree ? "■ Go Offline" : "▶ Go Free Now"}
           </button>
 
-          <div className="grid grid-cols-3 gap-2.5">
+          <div className="grid grid-cols-3 gap-2">
             {[
-              { icon: "🔥", value: (currentUser.streakDays ?? 0) > 0 ? `${currentUser.streakDays}d` : "—", label: "Streak" },
-              { icon: "👥", value: currentUser.totalMeetups ?? 0, label: "Meetups" },
-              { icon: "⭐", value: currentUser.trustScore > 0 ? currentUser.trustScore.toFixed(1) : "New", label: "Trust" },
-            ].map(({ icon, value, label }) => (
-              <div key={label} className="rounded-2xl px-3 py-3 text-center" style={{ background: "rgba(255,255,255,0.12)" }}>
-                <p className="text-lg font-extrabold text-white">{icon} {value}</p>
-                <p className="text-xs font-semibold text-white/60 mt-1">{label}</p>
+              { value: (currentUser.streakDays ?? 0) > 0 ? `${currentUser.streakDays}d` : "—", label: "STREAK" },
+              { value: String(currentUser.totalMeetups ?? 0), label: "MEETUPS" },
+              { value: currentUser.trustScore > 0 ? currentUser.trustScore.toFixed(1) : "NEW", label: "TRUST" },
+            ].map(({ value, label }) => (
+              <div key={label} className="p-2 text-center" style={{ border: `2px solid ${isFree ? "#0A0A0A" : "#FAFAF5"}`, background: isFree ? "rgba(0,0,0,0.08)" : "rgba(255,255,255,0.06)" }}>
+                <p className="text-lg font-black" style={{ color: isFree ? "#0A0A0A" : "#FAFAF5" }}>{value}</p>
+                <p className="font-mono text-[9px] mt-0.5 uppercase" style={{ color: isFree ? "#0A0A0A" : "#FAFAF5", opacity: 0.55 }}>{label}</p>
               </div>
             ))}
           </div>
@@ -566,16 +585,24 @@ function DashboardSidebar() {
       </div>
 
       {/* ── Quick start ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-5">
-        <div className="flex items-center justify-between mb-4">
-          <p className="text-sm font-extrabold text-gray-700">⚡ Quick start</p>
-          <button onClick={() => setShowCreate(true)} className="text-sm font-bold text-blue-600 hover:underline">+ Custom</button>
+      <div style={{ border: "2px solid #0A0A0A", boxShadow: "4px 4px 0 #0A0A0A", background: "var(--b-card)" }}>
+        <div className="flex items-center justify-between px-4 py-3" style={{ borderBottom: "2px solid #0A0A0A" }}>
+          <p className="text-xs font-black uppercase tracking-widest" style={{ color: "var(--b-black)" }}>⚡ Quick Start</p>
+          <button onClick={() => setShowCreate(true)} className="text-xs font-black uppercase tracking-wide b-btn b-btn-y px-3 py-1">+ Custom</button>
         </div>
-        <div className="grid grid-cols-3 gap-3">
-          {QUICK_ACTS.map((a) => (
-            <button key={a.label} onClick={() => setShowQuickRoom(true)} className="flex flex-col items-center gap-2 rounded-2xl px-3 py-4 bg-gray-50 hover:bg-blue-50 border border-gray-100 hover:border-blue-200 transition-all text-center active:scale-95">
+        <div className="grid grid-cols-3 gap-0 p-0">
+          {QUICK_ACTS.map((a, i) => (
+            <button key={a.label} onClick={() => setShowQuickRoom(true)}
+              className="flex flex-col items-center gap-2 px-3 py-4 text-center transition-all"
+              style={{
+                borderRight: i % 3 !== 2 ? "2px solid #0A0A0A" : undefined,
+                borderBottom: i < 3 ? "2px solid #0A0A0A" : undefined,
+                background: "var(--b-card)",
+              }}
+              onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "#FFE500"}
+              onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "var(--b-card)"}>
               <span className="text-2xl">{a.emoji}</span>
-              <span className="text-xs font-bold text-gray-600 leading-tight">{a.label}</span>
+              <span className="text-[10px] font-black uppercase tracking-wide leading-tight" style={{ color: "var(--b-black)" }}>{a.label}</span>
             </button>
           ))}
         </div>

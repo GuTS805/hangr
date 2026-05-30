@@ -41,7 +41,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${geist.variable} h-full`}>
-      <body className="min-h-full bg-gray-50 antialiased font-sans overscroll-none">
+      <body className="min-h-full antialiased font-sans overscroll-none" style={{ background: "var(--b-bg)", color: "var(--b-black)" }}>
         <StoreInitializer />
         <ThemeProvider />
         <Navbar />

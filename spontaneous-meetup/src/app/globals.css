@@ -1,31 +1,122 @@
-@import url('https://fonts.googleapis.com/css2?family=Nunito:wght@400;500;600;700;800;900&display=swap');
-@import url('https://db.onlinewebfonts.com/c/14936bb7a4b6575fd2eee80a3ab52cc2?family=Feather+Bold');
+@import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=Space+Mono:wght@400;700&family=Nunito:wght@400;500;600;700;800;900&display=swap');
 @import "tailwindcss";
 
+/* ── Brutalist design tokens ─────────────────────────────────────────────── */
 :root {
-  --green:        #52A862;
-  --green-hover:  #448C50;
-  --green-shadow: #3D7D47;
-  --dark-blue:    #1E1B3A;
-  --duo-blue:     #7BA7D4;
-  --duo-red:      #E07575;
-  --duo-orange:   #E8A060;
-  --duo-golden:   #E8BC50;
-  --gray-text:    #4A4560;
-  --gray-light:   #8A87A0;
-  --border-color: #E8E5F0;
-  --nav-text:     #B0AACC;
-  --card-bg:      #ffffff;
-  --card-bg-2:    #f8f7ff;
+  --b-yellow:    #FFE500;
+  --b-black:     #0A0A0A;
+  --b-white:     #FAFAF5;
+  --b-red:       #FF2D2D;
+  --b-green:     #00C44A;
+  --b-blue:      #0038FF;
+  --b-bg:        #F2F1EB;
+  --b-card:      #FFFFFF;
+  --b-border:    2px solid #0A0A0A;
+  --b-shadow:    4px 4px 0 #0A0A0A;
+  --b-shadow-sm: 2px 2px 0 #0A0A0A;
+
+  /* keep legacy vars for pages not yet ported */
+  --green:        #00C44A;
+  --green-hover:  #00A83E;
+  --green-shadow: #008F34;
+  --dark-blue:    #0A0A0A;
+  --duo-blue:     #0038FF;
+  --duo-red:      #FF2D2D;
+  --duo-orange:   #FF6B00;
+  --duo-golden:   #FFE500;
+  --gray-text:    #0A0A0A;
+  --gray-light:   #555555;
+  --border-color: #0A0A0A;
+  --nav-text:     #888888;
+  --card-bg:      #FFFFFF;
+  --card-bg-2:    #F2F1EB;
+}
+
+html.dark {
+  --b-yellow:    #FFE500;
+  --b-black:     #F2F1EB;
+  --b-white:     #0A0A0A;
+  --b-bg:        #111111;
+  --b-card:      #1A1A1A;
+  --b-border:    2px solid #F2F1EB;
+  --b-shadow:    4px 4px 0 #F2F1EB;
+  --b-shadow-sm: 2px 2px 0 #F2F1EB;
 }
 
 @theme inline {
-  --font-sans: 'Nunito', 'DIN Round Pro', -apple-system, BlinkMacSystemFont, sans-serif;
-  --color-duo-green:  #52A862;
-  --color-duo-blue:   #7BA7D4;
-  --color-duo-dark:   #1E1B3A;
-  --color-duo-red:    #E07575;
-  --color-duo-orange: #E8A060;
+  --font-sans: 'Space Grotesk', 'Nunito', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'Space Mono', monospace;
+  --color-duo-green:  #00C44A;
+  --color-duo-blue:   #0038FF;
+  --color-duo-dark:   #0A0A0A;
+  --color-duo-red:    #FF2D2D;
+  --color-duo-orange: #FF6B00;
+}
+
+/* ── Brutalist utility classes ──────────────────────────────────────────── */
+.b-card {
+  background: var(--b-card);
+  border: var(--b-border);
+  box-shadow: var(--b-shadow);
+  border-radius: 0 !important;
+}
+
+.b-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.07em;
+  border: var(--b-border);
+  box-shadow: var(--b-shadow);
+  border-radius: 0 !important;
+  cursor: pointer;
+  transition: transform 0.06s ease, box-shadow 0.06s ease;
+  white-space: nowrap;
+}
+.b-btn:active { transform: translate(4px, 4px); box-shadow: none !important; }
+
+.b-btn-y { background: var(--b-yellow); color: var(--b-black); }
+.b-btn-k { background: var(--b-black);  color: var(--b-yellow); }
+.b-btn-w { background: var(--b-white);  color: var(--b-black); }
+.b-btn-r { background: var(--b-red);    color: #fff; }
+.b-btn-g { background: var(--b-green);  color: #fff; }
+
+.b-input {
+  border: var(--b-border);
+  border-radius: 0 !important;
+  background: var(--b-white);
+  color: var(--b-black);
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 500;
+  outline: none;
+}
+.b-input:focus { box-shadow: var(--b-shadow); }
+
+.b-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border: var(--b-border);
+  background: var(--b-yellow);
+  color: var(--b-black);
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-radius: 0;
+}
+
+.b-section-label {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--b-black);
+  opacity: 0.5;
 }
 
 /* ── Animations ─────────────────────────────────────────────────────────── */
@@ -164,17 +255,17 @@ html, body {
 /* All overrides live here — no need to touch individual page files */
 
 html.dark body {
-  background-color: #0c0a1e;
-  color: #e3dfff;
+  background-color: #111111;
+  color: #F2F1EB;
 }
 
 /* Page backgrounds */
 html.dark .bg-gray-50,
-html.dark .min-h-screen.bg-gray-50 { background-color: #0c0a1e !important; }
+html.dark .min-h-screen.bg-gray-50 { background-color: #111111 !important; }
 
-html.dark .bg-white   { background-color: #1a1730 !important; }
-html.dark .bg-gray-100 { background-color: #201d36 !important; }
-html.dark .bg-gray-200 { background-color: #2a2745 !important; }
+html.dark .bg-white   { background-color: #1A1A1A !important; }
+html.dark .bg-gray-100 { background-color: #222222 !important; }
+html.dark .bg-gray-200 { background-color: #2A2A2A !important; }
 
 /* Sticky/translucent headers */
 html.dark .bg-white\/90,

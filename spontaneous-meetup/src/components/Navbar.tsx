@@ -307,11 +307,11 @@ export default function Navbar() {
               <Link
                 key={href}
                 href={href}
-                className="flex items-center gap-4 px-4 py-3 rounded-2xl text-[15px] font-semibold transition-all"
+                className="flex items-center gap-4 px-4 py-3 text-[15px] font-bold transition-all uppercase tracking-wide"
                 style={active
-                  ? { background: "rgba(255,255,255,0.12)", color: "#fff" }
-                  : { color: "rgba(255,255,255,0.55)" }}
-                onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.90)"; }}
+                  ? { background: "#FFE500", color: "#0A0A0A", border: "2px solid #FFE500" }
+                  : { color: "rgba(255,255,255,0.55)", border: "2px solid transparent" }}
+                onMouseEnter={(e) => { if (!active) (e.currentTarget as HTMLElement).style.color = "#FFE500"; }}
                 onMouseLeave={(e) => { if (!active) (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.55)"; }}
               >
                 <Icon active={active} />
@@ -350,11 +350,11 @@ export default function Navbar() {
           <>
             <button
               onClick={() => setShowDropdown((v) => !v)}
-              className="flex items-center gap-2.5 pl-1.5 pr-4 py-1.5 rounded-full shadow-xl transition-all hover:opacity-90 active:scale-95"
-              style={{ background: "#fff" }}
+              className="flex items-center gap-2.5 pl-1.5 pr-4 py-1.5 transition-all hover:opacity-90 active:scale-95"
+              style={{ background: "#FFE500", border: "2px solid #0A0A0A", boxShadow: "3px 3px 0 #0A0A0A", borderRadius: 0 }}
             >
               <UserAvatar user={currentUser} size={30} />
-              <span className="text-[13px] font-bold text-gray-900 max-w-[90px] truncate">
+              <span className="text-[13px] font-bold max-w-[90px] truncate uppercase tracking-wide" style={{ color: "#0A0A0A" }}>
                 {currentUser.name.split(" ")[0]}
               </span>
               <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666"
@@ -364,25 +364,24 @@ export default function Navbar() {
             </button>
 
             {showDropdown && (
-              <div className="absolute right-0 top-full mt-2 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-[100] min-w-[190px]">
-                <div className="px-4 py-3 border-b border-gray-100">
-                  <p className="text-sm font-bold text-gray-900 truncate">{currentUser.name}</p>
-                  <p className="text-xs text-gray-400 mt-0.5 truncate">{currentUser.neighborhood || currentUser.city}</p>
+              <div className="absolute right-0 top-full mt-2 z-[100] min-w-[190px]" style={{ background: "#FAFAF5", border: "2px solid #0A0A0A", boxShadow: "4px 4px 0 #0A0A0A" }}>
+                <div className="px-4 py-3" style={{ borderBottom: "2px solid #0A0A0A" }}>
+                  <p className="text-sm font-bold uppercase tracking-wide truncate" style={{ color: "#0A0A0A" }}>{currentUser.name}</p>
+                  <p className="text-xs mt-0.5 truncate" style={{ color: "#555" }}>{currentUser.neighborhood || currentUser.city}</p>
                 </div>
-                <Link
-                  href="/profile"
-                  onClick={() => setShowDropdown(false)}
-                  className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-gray-900 hover:bg-gray-50 transition-colors"
-                >
-                  <ProfileIcon active={false} />
-                  Profile
+                <Link href="/profile" onClick={() => setShowDropdown(false)}
+                  className="flex items-center gap-3 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-colors w-full"
+                  style={{ color: "#0A0A0A" }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "#FFE500"}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}>
+                  <ProfileIcon active={false} />Profile
                 </Link>
-                <button
-                  onClick={handleLogout}
-                  className="flex items-center gap-3 px-4 py-3 text-sm font-semibold text-red-500 hover:bg-red-50 w-full text-left border-t border-gray-100 transition-colors"
-                >
-                  <LogoutIcon />
-                  Log out
+                <button onClick={handleLogout}
+                  className="flex items-center gap-3 px-4 py-3 text-sm font-bold uppercase tracking-wide w-full text-left transition-colors"
+                  style={{ color: "#FF2D2D", borderTop: "2px solid #0A0A0A" }}
+                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "#FF2D2D22"}
+                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}>
+                  <LogoutIcon />Log out
                 </button>
               </div>
             )}
