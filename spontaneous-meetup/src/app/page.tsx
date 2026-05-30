@@ -608,16 +608,14 @@ export default function HomePage() {
 
   return (
     <div className="flex min-h-screen items-start">
-      {/* ── Center: Feed ── */}
-      <div className="flex-1 min-w-0 max-w-[640px] border-r border-gray-100">
+      {/* ── Center: Feed — fills all leftover space ── */}
+      <div className="flex-1 min-w-0 border-r border-gray-100">
         <FeedColumn />
       </div>
 
-      {/* ── Right: fills all remaining space ── */}
-      <div className="hidden lg:block flex-1 min-w-0 sticky top-0 max-h-screen overflow-y-auto">
-        <div className="max-w-[480px] mx-auto px-6 py-6">
-          {currentUser ? <DashboardSidebar /> : <GuestSidebar />}
-        </div>
+      {/* ── Right: fixed-width sidebar, no inner centering ── */}
+      <div className="hidden lg:block w-[400px] xl:w-[460px] shrink-0 sticky top-0 max-h-screen overflow-y-auto p-5">
+        {currentUser ? <DashboardSidebar /> : <GuestSidebar />}
       </div>
     </div>
   );
