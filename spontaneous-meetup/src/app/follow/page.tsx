@@ -69,11 +69,13 @@ function UserCard({ user, idx, isFollowing, onToggle }: {
 
   return (
     <div className="bg-white border-b border-gray-100 px-4 py-3.5 flex items-center gap-3">
-      <UserAvatar initials={user.avatar} idx={idx} size={48} />
+      <button onClick={() => router.push(`/profile/${user.id}`)} className="flex-shrink-0 active:opacity-70 transition-opacity">
+        <UserAvatar initials={user.avatar} idx={idx} size={48} />
+      </button>
 
-      <div className="flex-1 min-w-0">
+      <button onClick={() => router.push(`/profile/${user.id}`)} className="flex-1 min-w-0 text-left">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="font-bold text-sm text-gray-900">{user.name}</span>
+          <span className="font-bold text-sm text-gray-900 hover:underline">{user.name}</span>
           {user.isVerified && (
             <svg width="13" height="13" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#3b82f6"/><polyline points="8 12 11 15 16 9" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
           )}
@@ -88,7 +90,7 @@ function UserCard({ user, idx, isFollowing, onToggle }: {
             </span>
           ))}
         </div>
-      </div>
+      </button>
 
       <button
         onClick={() => { if (!currentUser) { router.push("/auth"); return; } onToggle(); }}

@@ -208,13 +208,13 @@ function PostCard({ post, isMock = false }: { post: Post; isMock?: boolean }) {
   return (
     <article className="bg-white border-b border-gray-100">
       <div className="flex items-center gap-3 px-5 py-4">
-        <div className="relative">
+        <button onClick={() => router.push(`/profile/${post.userId}`)} className="relative flex-shrink-0 active:opacity-70 transition-opacity">
           <Avatar src={post.userAvatar} name={post.userName} size={46} />
           <span className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-green-400 rounded-full border-2 border-white" />
-        </div>
+        </button>
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5 flex-wrap">
-            <span className="font-bold text-[15px] text-gray-900">{post.userName}</span>
+            <button onClick={() => router.push(`/profile/${post.userId}`)} className="font-bold text-[15px] text-gray-900 hover:underline">{post.userName}</button>
             {post.userIsVerified && <svg width="15" height="15" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#3b82f6"/><polyline points="8 12 11 15 16 9" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>}
             {post.userNeighborhood && <span className="text-gray-400 text-[13px]">· {post.userNeighborhood}</span>}
           </div>
