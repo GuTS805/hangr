@@ -8,7 +8,6 @@ import { Interest, Gender } from "@/types";
 import { INTERESTS, INTEREST_EMOJI } from "@/lib/mock-data";
 
 type LoginStep   = "idle" | "otp";
-type OnboardStep = "phone" | "otp" | "details";
 
 function isEmail(v: string) { return v.includes("@"); }
 function isPhone(v: string) { return /^\d{10}$/.test(v.replace(/\s/g, "")); }
@@ -151,10 +150,6 @@ export default function AuthPage() {
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError]     = useState("");
 
-  const [onboardStep, setOnboardStep]   = useState<OnboardStep>("phone");
-  const [phone, setPhone]               = useState("");
-  const [phoneOtp, setPhoneOtp]         = useState("");
-  const [verifiedPhone, setVerifiedPhone] = useState("");
   const [age, setAge]                   = useState("");
   const [gender, setGender]             = useState<Gender | "">("");
   const [selected, setSelected]         = useState<Interest[]>([]);
@@ -202,31 +197,6 @@ export default function AuthPage() {
     if (error) { setLoginError(error.message); setLoginLoading(false); }
   }
 
-  async function sendPhoneOtp() {
-    setDetailsError("");
-    const digits = phone.replace(/\D/g, "");
-    if (digits.length < 10) { setDetailsError("Valid 10-digit number daalo"); return; }
-    const formatted = formatPhone(phone);
-    setDetailsLoading(true);
-    const { error } = await supabase.auth.updateUser({ phone: formatted });
-    setDetailsLoading(false);
-    if (error) { setDetailsError(error.message); return; }
-    setVerifiedPhone(formatted);
-    setOnboardStep("otp");
-  }
-
-  async function verifyPhoneOtp() {
-    setDetailsError("");
-    if (phoneOtp.length !== 6) { setDetailsError("6-digit OTP daalo"); return; }
-    setDetailsLoading(true);
-    const { error } = await supabase.auth.verifyOtp({ phone: verifiedPhone, token: phoneOtp, type: "phone_change" });
-    if (error) { setDetailsError("Wrong OTP"); setDetailsLoading(false); return; }
-    const { data: { user } } = await supabase.auth.getUser();
-    if (user) await supabase.from("profiles").update({ phone: verifiedPhone, is_verified: true }).eq("id", user.id);
-    setDetailsLoading(false);
-    setOnboardStep("details");
-  }
-
   async function handleOnboarding(e: React.FormEvent) {
     e.preventDefault();
     if (!age || parseInt(age) < 16 || parseInt(age) > 60) return setDetailsError("Valid age daalo (16–60)");
@@ -240,61 +210,7 @@ export default function AuthPage() {
     setSelected(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i]);
   }
 
-  /* ── Onboarding: phone ── */
-  if (currentUser && needsOnboarding && onboardStep === "phone") {
-    return (
-      <ClayPage>
-        <ClayCard>
-          <div style={{ textAlign: "center", marginBottom: 28 }}>
-            <div style={{ fontSize: 48, marginBottom: 8 }}>📱</div>
-            <h2 style={{ fontSize: 22, fontWeight: 800, color: C.txt, margin: 0 }}>Verify your phone</h2>
-            <p style={{ color: C.txtLight, fontSize: 14, marginTop: 6 }}>We'll send a one-time code</p>
-          </div>
-          <div style={{ display: "flex", borderRadius: 18, overflow: "hidden", background: C.inputBg, boxShadow: C.inputShadow, marginBottom: 14 }}>
-            <div style={{ padding: "15px 16px", fontSize: 14, fontWeight: 700, color: C.txtMid, flexShrink: 0, borderRight: "1px solid rgba(140,100,220,0.15)" }}>🇮🇳 +91</div>
-            <input type="tel" value={phone}
-              onChange={e => setPhone(e.target.value.replace(/\D/g, "").slice(0, 10))}
-              placeholder="10-digit number"
-              style={{ flex: 1, border: "none", outline: "none", background: "transparent", padding: "15px 16px", fontSize: 15, color: C.txt, fontFamily: "inherit", fontWeight: 500 }} maxLength={10} />
-          </div>
-          {detailsError && <ErrorBanner msg={detailsError} />}
-          <ClayBtn variant="primary" onClick={sendPhoneOtp} disabled={detailsLoading || phone.replace(/\D/g, "").length < 10}>
-            {detailsLoading ? <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : "Send OTP →"}
-          </ClayBtn>
-          <p style={{ textAlign: "center", marginTop: 14, fontSize: 12, color: C.txtLight }}>🔒 Number only used for verification</p>
-        </ClayCard>
-      </ClayPage>
-    );
-  }
-
-  /* ── Onboarding: OTP ── */
-  if (currentUser && needsOnboarding && onboardStep === "otp") {
-    return (
-      <ClayPage>
-        <ClayCard>
-          <div style={{ textAlign: "center", marginBottom: 28 }}>
-            <div style={{ fontSize: 48, marginBottom: 8 }}>🔢</div>
-            <h2 style={{ fontSize: 22, fontWeight: 800, color: C.txt, margin: 0 }}>Enter the code</h2>
-            <p style={{ color: C.txtLight, fontSize: 14, marginTop: 6 }}>Sent to <span style={{ color: C.txtMid, fontWeight: 600 }}>{verifiedPhone}</span></p>
-          </div>
-          <ClayInput type="number" value={phoneOtp}
-            onChange={e => setPhoneOtp(e.target.value.slice(0, 6))}
-            placeholder="• • • • • •"
-            style={{ textAlign: "center", fontSize: 28, fontWeight: 900, letterSpacing: "0.45em", marginBottom: 14 }}
-            maxLength={6} />
-          {detailsError && <ErrorBanner msg={detailsError} />}
-          <ClayBtn variant="primary" onClick={verifyPhoneOtp} disabled={detailsLoading || phoneOtp.length !== 6} style={{ marginBottom: 10 }}>
-            {detailsLoading ? <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : "Verify ✓"}
-          </ClayBtn>
-          <ClayBtn variant="ghost" onClick={() => { setOnboardStep("phone"); setPhoneOtp(""); setDetailsError(""); }}>
-            ← Change number
-          </ClayBtn>
-        </ClayCard>
-      </ClayPage>
-    );
-  }
-
-  /* ── Onboarding: details ── */
+  /* ── Onboarding: details (straight after login — no extra phone step) ── */
   if (currentUser && needsOnboarding) {
     return (
       <ClayPage>
