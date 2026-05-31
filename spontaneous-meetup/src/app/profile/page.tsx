@@ -215,8 +215,8 @@ export default function ProfilePage() {
   function chooseCover(id: string) {
     setCoverId(id);
     setCoverImage(null);
-    localStorage.setItem(`hangr_cover_${currentUser.id}`, id);
-    localStorage.removeItem(`hangr_cover_img_${currentUser.id}`);
+    localStorage.setItem(`hangr_cover_${currentUser!.id}`, id);
+    localStorage.removeItem(`hangr_cover_img_${currentUser!.id}`);
     setShowCoverPicker(false);
   }
 
@@ -242,8 +242,8 @@ export default function ProfilePage() {
       setPendingAvatar(dataUrl);
     } else {
       setCoverImage(dataUrl);
-      localStorage.setItem(`hangr_cover_img_${currentUser.id}`, dataUrl);
-      localStorage.removeItem(`hangr_cover_${currentUser.id}`);
+      localStorage.setItem(`hangr_cover_img_${currentUser!.id}`, dataUrl);
+      localStorage.removeItem(`hangr_cover_${currentUser!.id}`);
     }
     setCropModal(null);
   }
@@ -262,7 +262,7 @@ export default function ProfilePage() {
     };
     if (pendingAvatar) updates.avatar = pendingAvatar;
 
-    await supabase.from("profiles").update(updates).eq("id", currentUser.id);
+    await supabase.from("profiles").update(updates).eq("id", currentUser!.id);
 
     updateGenderSettings(gender as Gender || undefined, showGender);
     if (pendingAvatar) setPendingAvatar(null);
@@ -295,6 +295,7 @@ export default function ProfilePage() {
   }
 
   function startEditing() {
+    if (!currentUser) return;
     setName(currentUser.name);
     setAge(currentUser.age?.toString() ?? "");
     setNeighborhood(currentUser.neighborhood ?? "");
