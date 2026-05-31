@@ -15,23 +15,45 @@ export default function Error({
   }, [error]);
 
   return (
-    <div className="min-h-screen bg-gray-50 flex items-center justify-center px-4">
-      <div className="text-center max-w-md">
-        <div className="text-6xl mb-4">😬</div>
-        <h1 className="text-2xl font-bold text-gray-900 mb-2">Something went wrong</h1>
-        <p className="text-gray-500 text-sm mb-6">
-          An unexpected error occurred. You can try again or go back home.
-        </p>
+    <div className="min-h-screen bg-[#F2F1EB] flex items-center justify-center px-4">
+      <div className="text-center max-w-md w-full">
+        <p className="text-[100px] font-black uppercase leading-none text-black">ERR</p>
+        <div
+          className="mb-6 px-6 py-5"
+          style={{ border: "2px solid #FF2D2D", background: "#FF2D2D", boxShadow: "4px 4px 0 #0A0A0A" }}
+        >
+          <p className="text-xl font-black uppercase tracking-tight text-white">Something went wrong</p>
+          <p className="text-xs font-mono text-white/70 mt-1 uppercase tracking-wider">
+            An unexpected error occurred.
+          </p>
+        </div>
         <div className="flex items-center justify-center gap-3">
           <button
             onClick={reset}
-            className="px-4 py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors"
+            className="px-5 py-3 text-sm font-black uppercase tracking-wide transition-all"
+            style={{
+              border: "2px solid #0A0A0A",
+              background: "#FFE500",
+              color: "#0A0A0A",
+              boxShadow: "4px 4px 0 #0A0A0A",
+            }}
+            onMouseEnter={(e) => {
+              (e.currentTarget as HTMLElement).style.transform = "translate(4px,4px)";
+              (e.currentTarget as HTMLElement).style.boxShadow = "none";
+            }}
+            onMouseLeave={(e) => {
+              (e.currentTarget as HTMLElement).style.transform = "";
+              (e.currentTarget as HTMLElement).style.boxShadow = "4px 4px 0 #0A0A0A";
+            }}
           >
             Try again
           </button>
           <Link
             href="/"
-            className="px-4 py-2 bg-gray-100 text-gray-700 text-sm font-semibold rounded-xl hover:bg-gray-200 transition-colors"
+            className="px-5 py-3 text-sm font-black uppercase tracking-wide transition-all"
+            style={{ border: "2px solid #0A0A0A", background: "#fff", color: "#0A0A0A" }}
+            onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#0A0A0A"; (e.currentTarget as HTMLElement).style.color = "#FFE500"; }}
+            onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "#fff"; (e.currentTarget as HTMLElement).style.color = "#0A0A0A"; }}
           >
             Go home
           </Link>

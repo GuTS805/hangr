@@ -30,7 +30,6 @@ export default function PingToast() {
         },
         async (payload) => {
           const fromId = payload.new.from_user_id as string;
-          // Fetch pinger's name and avatar
           const { data: profile } = await supabase
             .from("profiles")
             .select("name, avatar")
@@ -45,8 +44,6 @@ export default function PingToast() {
           };
 
           setPings((prev) => [...prev, notification]);
-
-          // Auto-dismiss after 6s
           setTimeout(() => {
             setPings((prev) => prev.filter((p) => p.id !== notification.id));
           }, 6000);
@@ -64,27 +61,40 @@ export default function PingToast() {
       {pings.map((ping) => (
         <div
           key={ping.id}
-          className="bg-white border border-gray-200 rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3 animate-in slide-in-from-bottom-4 duration-300"
+          className="flex items-center gap-3 px-4 py-3 anim-slide-up"
+          style={{
+            border: "2px solid #0A0A0A",
+            background: "#FFE500",
+            boxShadow: "4px 4px 0 #0A0A0A",
+          }}
         >
+          {/* Avatar */}
           {ping.fromAvatar.startsWith("http") ? (
             <img
               src={ping.fromAvatar}
               alt={ping.fromName}
               className="w-10 h-10 rounded-full object-cover flex-shrink-0"
+              style={{ border: "2px solid #0A0A0A" }}
               referrerPolicy="no-referrer"
             />
           ) : (
-            <div className="w-10 h-10 rounded-full bg-blue-600 text-white text-sm font-bold flex items-center justify-center flex-shrink-0">
+            <div
+              className="w-10 h-10 rounded-full flex items-center justify-center text-sm font-black flex-shrink-0"
+              style={{ border: "2px solid #0A0A0A", background: "#0A0A0A", color: "#FFE500" }}
+            >
               {ping.fromAvatar}
             </div>
           )}
+
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-semibold text-gray-900 truncate">{ping.fromName}</p>
-            <p className="text-xs text-gray-500">wants to hang out 👋</p>
+            <p className="text-sm font-black uppercase text-black truncate">{ping.fromName}</p>
+            <p className="text-[10px] font-bold uppercase text-black/50">wants to hang out 👋</p>
           </div>
+
           <button
             onClick={() => setPings((prev) => prev.filter((p) => p.id !== ping.id))}
-            className="text-gray-400 hover:text-gray-600 flex-shrink-0 text-lg leading-none"
+            className="w-7 h-7 flex items-center justify-center font-black text-xl leading-none text-black hover:bg-black hover:text-[#FFE500] transition-colors flex-shrink-0"
+            style={{ border: "2px solid #0A0A0A" }}
           >
             ×
           </button>

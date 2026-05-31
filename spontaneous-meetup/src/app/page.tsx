@@ -99,11 +99,11 @@ function PostComposer() {
 
   if (!currentUser) {
     return (
-      <div className="bg-white border-b border-gray-100 px-5 py-4 flex items-center gap-4">
-        <div className="w-11 h-11 rounded-full bg-gray-100 flex items-center justify-center text-gray-400 flex-shrink-0">
+      <div className="bg-white border-b-2 border-black px-5 py-4 flex items-center gap-4">
+        <div className="w-11 h-11 border-2 border-black bg-white flex items-center justify-center text-gray-400 flex-shrink-0">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
         </div>
-        <button onClick={() => router.push("/auth")} className="flex-1 text-left text-sm text-gray-400 bg-gray-100 rounded-full px-5 py-3 hover:bg-gray-200 transition-colors">
+        <button onClick={() => router.push("/auth")} className="flex-1 text-left text-sm text-black border-2 border-black bg-white px-5 py-3 hover:bg-[#FFE500] transition-colors font-bold uppercase tracking-wide">
           Sign in to post something…
         </button>
       </div>
@@ -125,7 +125,7 @@ function PostComposer() {
   const topics: Interest[] = ["Cafes","Gaming","Cricket","Coding","Anime","Music","Gym","Football","Movies","Food"];
 
   return (
-    <div className="bg-white border-b border-gray-100">
+    <div className="bg-white border-b-2 border-black">
       <div className="px-5 pt-5 pb-4">
         <div className="flex gap-4">
           <Avatar src={currentUser.avatar} name={currentUser.name} size={44} />
@@ -148,13 +148,13 @@ function PostComposer() {
         <div className="flex items-center justify-between mt-4 pt-4 border-t border-gray-100 ml-[60px]">
           <div className="flex gap-1">
             <input ref={fileRef} type="file" accept="image/*" className="hidden" onChange={handleImage} />
-            <button onClick={() => fileRef.current?.click()} className="flex items-center gap-1.5 px-3 py-2 rounded-xl text-gray-500 hover:text-blue-600 hover:bg-blue-50 transition-colors text-sm font-medium"><ImageIcon /><span>Photo</span></button>
-            <button onClick={() => setShowTopics((v) => !v)} className={`flex items-center gap-1.5 px-3 py-2 rounded-xl transition-colors text-sm font-medium ${showTopics || topic ? "text-blue-600 bg-blue-50" : "text-gray-500 hover:text-blue-600 hover:bg-blue-50"}`}><TagIcon /><span>{topic ? INTEREST_EMOJI[topic] : "Vibe"}</span></button>
+            <button onClick={() => fileRef.current?.click()} className="flex items-center gap-1.5 px-3 py-2 border-2 border-black bg-white text-black font-bold uppercase hover:bg-[#FFE500] transition-colors text-sm"><ImageIcon /><span>Photo</span></button>
+            <button onClick={() => setShowTopics((v) => !v)} className={`flex items-center gap-1.5 px-3 py-2 border-2 border-black bg-white text-black font-bold uppercase hover:bg-[#FFE500] transition-colors text-sm ${showTopics || topic ? "bg-[#FFE500]" : ""}`}><TagIcon /><span>{topic ? INTEREST_EMOJI[topic] : "Vibe"}</span></button>
           </div>
           <div className="flex items-center gap-2">
             {text.length > 400 && <span className={`text-xs tabular-nums ${text.length > 480 ? "text-red-500" : "text-gray-400"}`}>{500 - text.length}</span>}
-            <button onClick={handlePost} disabled={!canPost} className="px-5 py-2 text-sm font-bold rounded-full text-white transition-all active:scale-95 disabled:opacity-40 disabled:cursor-not-allowed" style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
-              {posting ? <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 rounded-full border-2 border-white/40 border-t-white animate-spin inline-block" />Posting…</span> : "Post"}
+            <button onClick={handlePost} disabled={!canPost} className="bg-black border-2 border-black text-[#FFE500] font-black uppercase px-5 py-2 shadow-[3px_3px_0_#0A0A0A] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+              {posting ? <span className="flex items-center gap-1.5"><span className="w-3.5 h-3.5 border-2 border-[#FFE500]/40 border-t-[#FFE500] animate-spin inline-block" />Posting…</span> : "Post"}
             </button>
           </div>
         </div>
@@ -228,7 +228,7 @@ function PostCard({ post, isMock = false }: { post: Post; isMock?: boolean }) {
             <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><circle cx="12" cy="5" r="1.5"/><circle cx="12" cy="12" r="1.5"/><circle cx="12" cy="19" r="1.5"/></svg>
           </button>
           {showMenu && (
-            <div className="absolute right-0 top-10 bg-white rounded-2xl shadow-2xl border border-gray-100 overflow-hidden z-20 min-w-[150px]">
+            <div className="absolute right-0 top-10 bg-white border-2 border-black shadow-[4px_4px_0_#0A0A0A] overflow-hidden z-20 min-w-[150px]">
               {isOwnPost && !isMock ? <button onClick={() => { deletePost(post.id); setShowMenu(false); }} className="w-full px-4 py-3 text-left text-sm text-red-500 font-semibold hover:bg-red-50 flex items-center gap-2">🗑️ Delete</button>
                 : <button onClick={() => setShowMenu(false)} className="w-full px-4 py-3 text-left text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-2">🚩 Report</button>}
               <button onClick={() => setShowMenu(false)} className="w-full px-4 py-3 text-left text-sm text-gray-600 hover:bg-gray-50 flex items-center gap-2 border-t border-gray-50">🔗 Copy link</button>
@@ -274,18 +274,18 @@ function PostCard({ post, isMock = false }: { post: Post; isMock?: boolean }) {
       </div>
 
       {showComments && (
-        <div className="border-t border-gray-50 bg-gray-50/50 pb-2">
+        <div className="border-t-2 border-black bg-[#F2F1EB] pb-2">
           {mockComments.length > 0 && (
             <div className="px-4 pt-3 space-y-3">
               {mockComments.map((c: PostComment) => (
                 <div key={c.id} className="flex gap-2.5">
                   <Avatar src={c.userAvatar} name={c.userName} size={30} />
                   <div className="flex-1 min-w-0">
-                    <div className="inline-block bg-white rounded-2xl rounded-tl-sm px-3.5 py-2 shadow-sm border border-gray-100 max-w-full">
+                    <div className="inline-block border-2 border-black bg-white px-3.5 py-2 max-w-full">
                       <span className="text-[13px] font-bold text-gray-900 mr-1.5">{c.userName}</span>
                       <span className="text-[13px] text-gray-700 break-words">{c.text}</span>
                     </div>
-                    <span className="text-[11px] text-gray-400 ml-3 mt-1 block">{timeAgo(c.timestamp)}</span>
+                    <span className="text-[11px] text-gray-500 ml-3 mt-1 block font-mono">{timeAgo(c.timestamp)}</span>
                   </div>
                 </div>
               ))}
@@ -294,9 +294,9 @@ function PostCard({ post, isMock = false }: { post: Post; isMock?: boolean }) {
           {currentUser && (
             <div className="flex gap-2.5 px-4 pt-3">
               <Avatar src={currentUser.avatar} name={currentUser.name} size={30} />
-              <div className="flex-1 flex items-center bg-white rounded-full border border-gray-200 px-4 py-2 gap-2 focus-within:border-blue-300 transition-colors shadow-sm">
+              <div className="border-2 border-black bg-white flex-1 flex items-center px-4 py-2 gap-2">
                 <input ref={commentInputRef} value={commentText} onChange={(e) => setCommentText(e.target.value)} onKeyDown={(e) => { if (e.key === "Enter" && !e.shiftKey) { e.preventDefault(); handleComment(); }}} placeholder="Kuch likho…" className="flex-1 text-sm outline-none bg-transparent text-gray-800 placeholder-gray-400 min-w-0" maxLength={300} />
-                {commentText.trim() && <button onClick={handleComment} disabled={submitting} className="w-7 h-7 rounded-full flex items-center justify-center text-white flex-shrink-0 active:scale-95" style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}><SendIcon /></button>}
+                {commentText.trim() && <button onClick={handleComment} disabled={submitting} className="bg-black w-8 h-8 flex items-center justify-center text-[#FFE500] border-2 border-black flex-shrink-0 active:opacity-70"><SendIcon /></button>}
               </div>
             </div>
           )}
@@ -376,23 +376,21 @@ function GroupSavePrompts() {
   if (prompts.length === 0) return null;
 
   return (
-    <div className="border-b border-gray-100">
+    <div className="border-b-2 border-black">
       {prompts.map(g => (
-        <div key={g.id} className="flex items-center gap-3 px-5 py-4 bg-amber-50 border-b border-amber-100">
-          <div className="w-10 h-10 rounded-2xl flex items-center justify-center text-2xl flex-shrink-0"
-            style={{ background: "rgba(245,158,11,0.12)" }}>
+        <div key={g.id} className="flex items-center gap-3 px-5 py-4 bg-[#FFE500] border-b-2 border-black">
+          <div className="w-10 h-10 border-2 border-black bg-white flex items-center justify-center text-2xl flex-shrink-0">
             {INTEREST_EMOJI[g.topic] ?? "🏘️"}
           </div>
           <div className="flex-1 min-w-0">
-            <p className="text-sm font-bold text-gray-800 truncate">{g.name} just ended</p>
-            <p className="text-xs text-amber-600 mt-0.5">Save it to your favourites?</p>
+            <p className="text-sm font-bold text-black truncate">{g.name} just ended</p>
+            <p className="text-xs text-black/60 mt-0.5 font-bold uppercase">Save it to your favourites?</p>
           </div>
-          <button onClick={() => dismiss(g.id)} className="text-xs text-gray-400 hover:text-gray-600 px-2 py-1 flex-shrink-0">
+          <button onClick={() => dismiss(g.id)} className="text-black/50 font-bold uppercase text-xs px-2 py-1 flex-shrink-0">
             Skip
           </button>
           <button onClick={() => saveGroup(g)}
-            className="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full text-white flex-shrink-0"
-            style={{ background: "linear-gradient(135deg,#d97706,#b45309)" }}>
+            className="flex items-center gap-1.5 text-xs bg-black border-2 border-black text-[#FFE500] font-black uppercase px-3 py-1.5 flex-shrink-0">
             ⭐ Save
           </button>
         </div>
@@ -609,36 +607,36 @@ function DashboardSidebar() {
       </div>
 
       {/* ── Who's free nearby ── */}
-      <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-        <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
+      <div className="border-2 border-black bg-white shadow-[4px_4px_0_#0A0A0A] overflow-hidden">
+        <div className="flex items-center justify-between px-5 py-4 border-b-2 border-black bg-[#FFE500]">
           <div className="flex items-center gap-2">
-            <span className="w-2.5 h-2.5 rounded-full animate-pulse bg-green-400" />
-            <p className="text-sm font-extrabold text-gray-700">Free right now</p>
+            <span className="w-2 h-2 bg-[#00C44A] border border-black animate-pulse inline-block" />
+            <p className="text-sm font-black uppercase tracking-wide text-black">Free right now</p>
           </div>
-          <button onClick={() => router.push("/explore")} className="text-sm font-bold text-blue-600 hover:underline">See all →</button>
+          <button onClick={() => router.push("/explore")} className="border-2 border-black bg-white text-black font-black uppercase text-xs px-3 py-1 hover:bg-black hover:text-[#FFE500] transition-colors">See all →</button>
         </div>
         {nearbyFree.length === 0 ? (
           <div className="px-5 py-8 text-center">
             <p className="text-3xl mb-2">👀</p>
-            <p className="text-sm font-semibold text-gray-500 mb-1">Nobody free nearby yet</p>
-            <p className="text-xs text-gray-400 mb-3">Go free above to get discovered</p>
-            <button onClick={handleToggleFree} className="text-sm font-bold text-green-600 hover:underline">Go free now →</button>
+            <p className="text-sm font-black text-black mb-1 uppercase">Nobody free nearby yet</p>
+            <p className="text-xs text-black/50 mb-3 font-mono">Go free above to get discovered</p>
+            <button onClick={handleToggleFree} className="bg-[#FFE500] border-2 border-black text-black font-black uppercase text-xs px-4 py-2 shadow-[2px_2px_0_#0A0A0A] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all">Go free now →</button>
           </div>
         ) : (
-          <div className="divide-y divide-gray-50">
+          <div className="divide-y-2 divide-black">
             {nearbyFree.map((u) => (
               <div key={u.id} className="flex items-center gap-3 px-5 py-4">
                 <div className="relative flex-shrink-0">
-                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-white text-sm font-bold overflow-hidden" style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
+                  <div className="w-10 h-10 rounded-full flex items-center justify-center text-[#FFE500] text-sm font-bold overflow-hidden bg-black border-2 border-black">
                     {u.avatar?.startsWith("http") ? <img src={u.avatar} referrerPolicy="no-referrer" alt="" className="w-full h-full object-cover" /> : u.avatar?.slice(0, 2)}
                   </div>
-                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-green-400 rounded-full border-2 border-white" />
+                  <span className="absolute -bottom-0.5 -right-0.5 w-3 h-3 bg-[#00C44A] border-2 border-black" />
                 </div>
                 <div className="flex-1 min-w-0">
-                  <p className="text-sm font-bold text-gray-900 truncate">{u.name}</p>
-                  <p className="text-xs text-gray-400 mt-0.5">{u.distanceKm !== undefined ? `${u.distanceKm < 1 ? `${Math.round(u.distanceKm * 1000)}m` : `${u.distanceKm.toFixed(1)}km`} away` : u.neighborhood}</p>
+                  <p className="text-sm font-black text-black truncate uppercase">{u.name}</p>
+                  <p className="text-xs text-black/50 mt-0.5 font-mono">{u.distanceKm !== undefined ? `${u.distanceKm < 1 ? `${Math.round(u.distanceKm * 1000)}m` : `${u.distanceKm.toFixed(1)}km`} away` : u.neighborhood}</p>
                 </div>
-                <button onClick={() => { setPingedUsers((p) => [...p, u.id]); pingUser(u.id); }} disabled={pingedUsers.includes(u.id)} className="text-xs font-bold px-4 py-2 rounded-xl flex-shrink-0 transition-all" style={pingedUsers.includes(u.id) ? { background: "rgba(34,197,94,0.1)", color: "#16a34a" } : { background: "#2563eb", color: "#fff" }}>
+                <button onClick={() => { setPingedUsers((p) => [...p, u.id]); pingUser(u.id); }} disabled={pingedUsers.includes(u.id)} className="text-xs font-black uppercase px-3 py-1 flex-shrink-0 transition-all border-2 border-black" style={pingedUsers.includes(u.id) ? { background: "#00C44A", color: "#000" } : { background: "#FFE500", color: "#000" }}>
                   {pingedUsers.includes(u.id) ? "✓ Sent" : "👋 Ping"}
                 </button>
               </div>
@@ -649,25 +647,25 @@ function DashboardSidebar() {
 
       {/* ── Meetup spots — only shown when free ── */}
       {!isFree ? (
-        <div className="rounded-2xl border border-dashed border-gray-200 px-5 py-5 text-center">
+        <div className="border-2 border-dashed border-black px-5 py-5 text-center bg-[#F2F1EB]">
           <p className="text-2xl mb-2">📍</p>
-          <p className="text-sm font-semibold text-gray-500">Go free to discover nearby meetup spots</p>
-          <p className="text-xs text-gray-400 mt-1">We'll find cafes, parks & more around you</p>
+          <p className="text-sm font-black text-black uppercase">Go free to discover nearby meetup spots</p>
+          <p className="text-xs text-black/50 mt-1 font-mono">We'll find cafes, parks & more around you</p>
         </div>
       ) : (
-        <div className="bg-white rounded-2xl border border-gray-100 overflow-hidden">
-          <div className="flex items-center justify-between px-5 py-4 border-b border-gray-100">
-            <p className="text-sm font-extrabold text-gray-700">📍 Pick a meetup spot</p>
-            <button onClick={() => router.push("/explore")} className="text-sm font-bold text-blue-600 hover:underline">Open map →</button>
+        <div className="border-2 border-black bg-white shadow-[4px_4px_0_#0A0A0A] overflow-hidden">
+          <div className="flex items-center justify-between px-5 py-4 border-b-2 border-black bg-[#FFE500]">
+            <p className="text-sm font-black uppercase tracking-wide text-black">📍 Pick a meetup spot</p>
+            <button onClick={() => router.push("/explore")} className="border-2 border-black bg-white font-black uppercase text-xs px-3 py-1 hover:bg-black hover:text-[#FFE500] transition-colors">Open map →</button>
           </div>
 
           {/* Loading */}
           {overpassLoading && (
             <div className="flex items-center gap-3 px-5 py-6">
-              <div className="w-5 h-5 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin flex-shrink-0" />
+              <div className="w-5 h-5 border-2 border-black border-t-[#FFE500] animate-spin flex-shrink-0" />
               <div>
-                <p className="text-sm font-semibold text-gray-700">Finding places near you…</p>
-                <p className="text-xs text-gray-400 mt-0.5">Searching cafes, parks & spots</p>
+                <p className="text-sm font-black text-black uppercase">Finding places near you…</p>
+                <p className="text-xs text-black/50 mt-0.5 font-mono">Searching cafes, parks & spots</p>
               </div>
             </div>
           )}
@@ -676,25 +674,25 @@ function DashboardSidebar() {
           {!overpassLoading && locError && (
             <div className="px-5 py-6 text-center">
               <p className="text-2xl mb-2">🔒</p>
-              <p className="text-sm font-semibold text-gray-600">Location access denied</p>
-              <p className="text-xs text-gray-400 mt-1 mb-3">Enable location in browser settings to see nearby spots</p>
-              <button onClick={() => router.push("/explore")} className="text-sm font-bold text-blue-600 hover:underline">Browse map manually →</button>
+              <p className="text-sm font-black text-black uppercase">Location access denied</p>
+              <p className="text-xs text-black/50 mt-1 mb-3 font-mono">Enable location in browser settings to see nearby spots</p>
+              <button onClick={() => router.push("/explore")} className="border-2 border-black bg-[#FFE500] text-black font-black uppercase text-xs px-4 py-2 shadow-[2px_2px_0_#0A0A0A] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all">Browse map manually →</button>
             </div>
           )}
 
           {/* Real nearby places */}
           {!overpassLoading && !locError && overpassLocs.length > 0 && (
-            <div className="divide-y divide-gray-50">
+            <div className="divide-y-2 divide-black">
               {overpassLocs.slice(0, 5).map((loc) => (
-                <button key={loc.id} onClick={() => { setPrefilledLoc(loc); setShowCreate(true); }} className="w-full flex items-center gap-4 px-5 py-4 hover:bg-gray-50 transition-colors text-left active:bg-gray-100">
-                  <span className={`w-11 h-11 rounded-xl flex items-center justify-center text-xl border flex-shrink-0 ${SAFE_LOCATION_COLORS[loc.type]}`}>{SAFE_LOCATION_ICONS[loc.type]}</span>
+                <button key={loc.id} onClick={() => { setPrefilledLoc(loc); setShowCreate(true); }} className="w-full flex items-center gap-4 px-5 py-4 hover:bg-[#FFE500] transition-colors text-left active:bg-[#FFE500]">
+                  <span className={`w-11 h-11 border-2 border-black flex items-center justify-center text-xl flex-shrink-0 ${SAFE_LOCATION_COLORS[loc.type]}`}>{SAFE_LOCATION_ICONS[loc.type]}</span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-sm font-bold text-gray-900 truncate">{loc.name}</p>
-                    <p className="text-xs text-gray-400 capitalize mt-0.5">
+                    <p className="text-sm font-black text-black truncate uppercase">{loc.name}</p>
+                    <p className="text-xs text-black/50 capitalize mt-0.5 font-mono">
                       {loc.type}{loc.distanceKm !== undefined ? ` · ${loc.distanceKm < 1 ? `${Math.round(loc.distanceKm * 1000)}m` : `${loc.distanceKm.toFixed(1)}km`} away` : " · Safe ✓"}
                     </p>
                   </div>
-                  <span className="text-gray-300 text-lg flex-shrink-0">›</span>
+                  <span className="text-black/30 text-lg flex-shrink-0">›</span>
                 </button>
               ))}
             </div>
@@ -704,9 +702,9 @@ function DashboardSidebar() {
           {!overpassLoading && !locError && userPos && overpassLocs.length === 0 && (
             <div className="px-5 py-6 text-center">
               <p className="text-2xl mb-2">🗺️</p>
-              <p className="text-sm font-semibold text-gray-600">No places found nearby</p>
-              <p className="text-xs text-gray-400 mt-1 mb-3">OpenStreetMap data may be sparse here</p>
-              <button onClick={() => router.push("/explore")} className="text-sm font-bold text-blue-600 hover:underline">Drop a pin on the map →</button>
+              <p className="text-sm font-black text-black uppercase">No places found nearby</p>
+              <p className="text-xs text-black/50 mt-1 mb-3 font-mono">OpenStreetMap data may be sparse here</p>
+              <button onClick={() => router.push("/explore")} className="border-2 border-black bg-[#FFE500] text-black font-black uppercase text-xs px-4 py-2 shadow-[2px_2px_0_#0A0A0A] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all">Drop a pin on the map →</button>
             </div>
           )}
         </div>
@@ -714,10 +712,10 @@ function DashboardSidebar() {
 
       {/* ── Your interests ── */}
       {currentUser.interests.length > 0 && (
-        <div className="bg-white rounded-2xl border border-gray-100 p-5">
+        <div className="border-2 border-black bg-white shadow-[4px_4px_0_#0A0A0A] p-5">
           <div className="flex items-center justify-between mb-3">
-            <p className="text-sm font-extrabold text-gray-700">Your vibe</p>
-            <button onClick={() => router.push("/profile")} className="text-sm font-bold text-blue-600 hover:underline">Edit</button>
+            <p className="text-sm font-black uppercase tracking-wide text-black">Your vibe</p>
+            <button onClick={() => router.push("/profile")} className="border-2 border-black text-black font-black uppercase text-xs px-3 py-1 hover:bg-[#FFE500] transition-colors">Edit</button>
           </div>
           <div className="flex flex-wrap gap-2">
             {currentUser.interests.map((i) => <InterestBadge key={i} interest={i} size="md" />)}
@@ -728,7 +726,7 @@ function DashboardSidebar() {
       {/* ── Active groups ── */}
       {activeGroups.length > 0 && (
         <div className="space-y-2">
-          <p className="text-sm font-extrabold text-gray-600 px-1">Your active groups</p>
+          <p className="text-black font-black uppercase text-xs tracking-widest px-1">Your active groups</p>
           {activeGroups.map((g) => <GroupCard key={g.id} group={g} />)}
         </div>
       )}
@@ -745,35 +743,37 @@ function GuestSidebar() {
   return (
     <div className="space-y-5">
       {/* Join card */}
-      <div className="rounded-3xl p-8 text-center" style={{ background: "linear-gradient(135deg,#1E1B3A,#2A2550)" }}>
-        <p className="text-5xl mb-4">🎉</p>
-        <p className="text-white font-extrabold text-2xl mb-2">Join hangr</p>
-        <p className="text-white/60 text-sm mb-6 leading-relaxed max-w-[280px] mx-auto">Find people to hang out with right now — cafes, cricket, gaming and more.</p>
-        <button onClick={() => router.push("/auth")} className="w-full py-4 rounded-2xl font-extrabold text-base text-white mb-3" style={{ background: "#52A862", boxShadow: "0 4px 0 #3D7D47" }}>
-          🟢 Get started free
+      <div className="border-2 border-black bg-black text-[#FFE500] shadow-[4px_4px_0_#FFE500] p-8">
+        <p className="text-5xl mb-4 text-center">🎉</p>
+        <p className="font-black text-2xl mb-2 uppercase tracking-tight text-center">Join hangr</p>
+        <p className="text-[#FFE500]/70 text-sm mb-6 leading-relaxed text-center">Find people to hang out with right now — cafes, cricket, gaming and more.</p>
+        <button onClick={() => router.push("/auth")} className="bg-[#FFE500] border-2 border-black text-black font-black uppercase py-4 w-full shadow-[3px_3px_0_#FFE500] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all mb-3 tracking-wide">
+          Get started free
         </button>
-        <button onClick={() => router.push("/auth")} className="w-full py-3 rounded-2xl font-bold text-sm border border-white/20 text-white/70 hover:text-white transition-colors">
+        <button onClick={() => router.push("/auth")} className="border-2 border-[#FFE500] text-[#FFE500] font-bold uppercase py-3 w-full hover:bg-[#FFE500] hover:text-black transition-colors tracking-wide text-sm">
           Already have an account? Sign in
         </button>
       </div>
 
       {/* Features */}
-      <div className="bg-white rounded-2xl border border-gray-100 p-6 space-y-5">
-        <p className="text-sm font-extrabold text-gray-600">Why hangr?</p>
-        {[
-          { icon: "📍", title: "Real-time meetups", desc: "See who's free near you right now and connect instantly" },
-          { icon: "🛡️", title: "Safe locations only", desc: "Every meetup at a verified café, park, or mall — no private spots" },
-          { icon: "⭐", title: "Trust scores", desc: "Verified profiles and community ratings so you know who you're meeting" },
-          { icon: "⚡", title: "Instant groups", desc: "Create or join a hangout group in under 30 seconds" },
-        ].map((f) => (
-          <div key={f.title} className="flex items-start gap-4">
-            <span className="text-2xl flex-shrink-0 mt-0.5">{f.icon}</span>
-            <div>
-              <p className="text-sm font-bold text-gray-800">{f.title}</p>
-              <p className="text-xs text-gray-400 mt-1 leading-relaxed">{f.desc}</p>
+      <div className="border-2 border-black bg-white shadow-[4px_4px_0_#0A0A0A] p-6">
+        <p className="text-sm font-black uppercase tracking-widest text-black mb-5">Why hangr?</p>
+        <div className="space-y-4">
+          {[
+            { icon: "📍", title: "Real-time meetups", desc: "See who's free near you right now and connect instantly" },
+            { icon: "🛡️", title: "Safe locations only", desc: "Every meetup at a verified café, park, or mall — no private spots" },
+            { icon: "⭐", title: "Trust scores", desc: "Verified profiles and community ratings so you know who you're meeting" },
+            { icon: "⚡", title: "Instant groups", desc: "Create or join a hangout group in under 30 seconds" },
+          ].map((f) => (
+            <div key={f.title} className="flex items-center gap-3">
+              <div className="border-2 border-black w-10 h-10 flex items-center justify-center text-xl flex-shrink-0 bg-[#F2F1EB]">{f.icon}</div>
+              <div>
+                <p className="text-sm font-black text-black uppercase tracking-wide">{f.title}</p>
+                <p className="text-xs text-black/50 mt-0.5 leading-relaxed">{f.desc}</p>
+              </div>
             </div>
-          </div>
-        ))}
+          ))}
+        </div>
       </div>
     </div>
   );

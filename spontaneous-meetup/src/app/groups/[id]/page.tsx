@@ -94,10 +94,13 @@ export default function GroupPage() {
 
   if (!group) {
     return (
-      <div className="max-w-2xl mx-auto px-4 py-12 text-center text-gray-400">
-        <p className="text-4xl mb-3">😕</p>
-        <p>Group not found</p>
-        <button onClick={() => router.push("/explore")} className="mt-4 text-blue-600 font-medium hover:underline">
+      <div className="min-h-screen bg-[#F2F1EB] flex flex-col items-center justify-center px-4">
+        <p className="text-6xl font-black uppercase mb-4 text-black">404</p>
+        <p className="text-xl font-black uppercase mb-6 text-black">Group Not Found</p>
+        <button
+          onClick={() => router.push("/explore")}
+          className="bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide shadow-[3px_3px_0_#0A0A0A] px-4 py-2 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all"
+        >
           Back to Explore
         </button>
       </div>
@@ -162,292 +165,359 @@ export default function GroupPage() {
 
   return (
     <>
-      <div className="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-4">
-        {/* Group header card */}
-        <div className="bg-white border border-gray-200 rounded-2xl p-4">
-          <div className="flex items-start justify-between gap-3 mb-3">
-            <div>
-              <div className="flex items-center gap-2 flex-wrap mb-1">
-                <h1 className="text-lg font-bold text-gray-900">{group.name}</h1>
-                {group.femaleOnly && (
-                  <span className="px-2 py-0.5 bg-pink-50 border border-pink-200 text-pink-600 text-xs rounded-full font-medium">♀ Women only</span>
-                )}
-                <span className="px-2 py-0.5 bg-green-50 border border-green-200 text-green-700 text-xs rounded-full font-medium">🌍 Public</span>
-              </div>
-              <p className="text-sm text-gray-500">{group.neighborhood}</p>
-            </div>
-            <div className="flex items-center gap-2">
-              <InterestBadge interest={group.topic} size="md" />
-              {currentUser && (
-                <button onClick={() => setReportTarget({ id: group.id, name: group.name, type: "group" })}
-                  title="Report group" className="w-8 h-8 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 text-sm">
-                  🚩
-                </button>
-              )}
-            </div>
-          </div>
+      <div className="min-h-screen bg-[#F2F1EB]">
+        <div className="max-w-2xl mx-auto px-4 py-6 flex flex-col gap-4">
 
-          {/* Safe location banner */}
-          {safeLocation && (
-            <div className="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-xl px-3 py-2.5 mb-3">
-              <span className="text-lg">{SAFE_LOCATION_ICONS[safeLocation.type]}</span>
-              <div className="flex-1">
-                <p className="text-xs font-semibold text-emerald-800">{safeLocation.name}</p>
-                <p className="text-xs text-emerald-600 capitalize">{safeLocation.type} · Verified safe location ✓</p>
-              </div>
-            </div>
-          )}
-
-          {/* Low trust warning banner */}
-          {badTrustMembers.length > 0 && (
-            <div className="flex items-start gap-2 bg-red-50 border border-red-200 rounded-xl px-3 py-2.5 mb-3">
-              <span className="text-base mt-0.5">⚠️</span>
+          {/* Group header card */}
+          <div className="border-2 border-black bg-white shadow-[4px_4px_0_#0A0A0A]">
+            {/* Yellow header strip */}
+            <div className="bg-[#FFE500] border-b-2 border-black px-4 py-3 flex items-start justify-between gap-3">
               <div>
-                <p className="text-xs font-semibold text-red-700 mb-0.5">Low trust score alert</p>
-                <p className="text-xs text-red-600">
-                  {badTrustMembers.map((m) => m.name).join(", ")} {badTrustMembers.length === 1 ? "has" : "have"} a low community trust score based on past reviews. Exercise caution.
-                </p>
-              </div>
-            </div>
-          )}
-
-          <div className="grid grid-cols-2 gap-2 text-sm text-gray-600 mb-4">
-            <div className="flex items-center gap-1.5"><span>🕐</span><span>{group.plannedTime}</span></div>
-            <div className="flex items-center gap-1.5"><span>⏱</span><span className="text-amber-600 font-medium">{timeLeft(group.expiresAt)}</span></div>
-            <div className="flex items-center gap-1.5"><span>👥</span><span>{group.members.length}/{group.maxMembers} members</span></div>
-            <div className="flex items-center gap-1.5"><span>🔓</span><span className="text-green-600 font-medium">Public meetup</span></div>
-          </div>
-
-          {/* Members with trust info */}
-          <div className="mb-4">
-            <p className="text-xs font-medium text-gray-500 uppercase tracking-wide mb-2">Members</p>
-            <div className="space-y-2">
-              {group.members.map((m) => (
-                <div key={m.id} className="flex items-center justify-between bg-gray-50 rounded-xl px-3 py-2">
-                  <div className="flex items-center gap-2.5">
-                    <div className="relative">
-                      <div className="w-8 h-8 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">{m.avatar.charAt(0)}</div>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-1">
-                        <span className="text-sm font-semibold text-gray-800">{m.name}</span>
-                        {m.isVerified && <span className="text-blue-500 text-xs" title="Verified">✓</span>}
-                        {m.collegeVerified && <span className="text-purple-500 text-xs" title="College Verified">🎓</span>}
-                        {m.showGender && m.gender && <span className="text-xs text-gray-400">{m.gender === "Female" ? "♀" : m.gender === "Male" ? "♂" : "⚧"}</span>}
-                        {m.trustScore > 0 && m.trustScore < 3.0 && m.reviewCount >= 3 && (
-                          <span className="text-xs font-semibold text-red-500 bg-red-50 border border-red-200 px-1.5 py-0.5 rounded-full" title="Low trust score">⚠️ Low trust</span>
-                        )}
-                      </div>
-                      {m.trustScore > 0 && (
-                        <p className={`text-xs font-medium ${m.trustScore < 3.0 && m.reviewCount >= 3 ? "text-red-500" : "text-amber-500"}`}>
-                          ⭐ {m.trustScore.toFixed(1)} · {m.reviewCount} reviews
-                        </p>
-                      )}
-                    </div>
-                  </div>
-                  {currentUser && m.id !== currentUser.id && (
-                    <div className="flex gap-1.5">
-                      {isMember && (
-                        <button onClick={() => setReviewTarget({ id: m.id, name: m.name })}
-                          className="text-xs px-2.5 py-1 bg-amber-50 border border-amber-200 text-amber-600 rounded-lg hover:bg-amber-100 transition-colors font-medium">
-                          ⭐ Review
-                        </button>
-                      )}
-                      <button onClick={() => setReportTarget({ id: m.id, name: m.name, type: "user" })}
-                        className="text-xs px-2.5 py-1 bg-gray-100 text-gray-500 rounded-lg hover:bg-gray-200 transition-colors">
-                        🚩
-                      </button>
-                    </div>
+                <div className="flex items-center gap-2 flex-wrap mb-1">
+                  <h1 className="text-2xl font-black uppercase">{group.name}</h1>
+                  {group.femaleOnly && (
+                    <span className="border-2 border-black bg-black text-[#FFE500] text-xs font-black uppercase px-2 py-0.5">♀ WOMEN ONLY</span>
                   )}
+                  <span className="border-2 border-black bg-black text-[#FFE500] text-xs font-black uppercase px-2 py-0.5">PUBLIC</span>
                 </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Auto-SOS timer countdown */}
-          {isMember && timerEnd && !timerFired && (
-            <div className="mb-3 flex items-center gap-2 bg-amber-50 border border-amber-200 rounded-xl px-3 py-2.5">
-              <span className="text-base">⏱️</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-amber-800">Safety timer: {fmtRemaining(timerRemaining)} remaining</p>
-                <p className="text-xs text-amber-600">Tap &quot;I&apos;m Safe&quot; or send your check-in to cancel</p>
+                <p className="text-sm font-black uppercase text-black/60">{group.neighborhood}</p>
               </div>
-              <button onClick={clearTimer} className="flex-shrink-0 text-xs text-amber-600 hover:text-amber-800 font-medium">Cancel</button>
-            </div>
-          )}
-
-          {/* Timer expired — urgent SOS */}
-          {isMember && timerFired && ec && !isSafeSent && (
-            <div className="mb-3 flex items-start gap-2 bg-red-50 border-2 border-red-400 rounded-xl px-3 py-3 animate-pulse">
-              <span className="text-lg mt-0.5">🚨</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-bold text-red-800 mb-0.5">Safety timer expired!</p>
-                <p className="text-xs text-red-600 mb-2">You haven&apos;t checked in. Alert {ec.name} now.</p>
-                <a
-                  href={smsLink(ec.phone, sosBody)}
-                  onClick={() => { setIsSafeSent(true); clearTimer(); }}
-                  className="inline-flex items-center gap-1.5 px-4 py-2 bg-red-500 text-white text-xs font-bold rounded-lg hover:bg-red-600 transition-colors"
-                >
-                  🆘 Send SOS now
-                </a>
-              </div>
-            </div>
-          )}
-
-          {/* "I'm Safe" check-in banner — shown after group expires */}
-          {isMember && isExpired && ec && !isSafeSent && (
-            <div className="mb-3 bg-green-50 border border-green-200 rounded-xl px-3 py-3 flex items-center gap-3">
-              <span className="text-xl">✅</span>
-              <div className="flex-1 min-w-0">
-                <p className="text-xs font-semibold text-green-800">Meetup ended — let {ec.name} know you&apos;re safe</p>
-                <p className="text-xs text-green-600 truncate">{ec.phone}</p>
-              </div>
-              <a
-                href={smsLink(ec.phone, safeBody)}
-                onClick={() => { setIsSafeSent(true); clearTimer(); }}
-                className="flex-shrink-0 px-3 py-1.5 bg-green-600 text-white text-xs font-semibold rounded-lg hover:bg-green-700 transition-colors"
-              >
-                Send ✓
-              </a>
-            </div>
-          )}
-          {isSafeSent && (
-            <div className="mb-3 bg-green-50 border border-green-200 rounded-xl px-3 py-2 flex items-center gap-2">
-              <span className="text-green-700 text-xs font-semibold">✓ &quot;I&apos;m safe&quot; message sent to {ec?.name}</span>
-            </div>
-          )}
-
-          {/* Join / Leave + SOS */}
-          {!currentUser && !isExpired && (
-            <button onClick={() => router.push("/auth")} className="w-full bg-blue-600 text-white py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors">
-              Sign in to join
-            </button>
-          )}
-          {currentUser && (
-            <div className="flex flex-col gap-2">
-
-              {/* Pre-join share prompt */}
-              {canJoin && joinStep === "share-prompt" && ec && (
-                <div className="bg-blue-50 border border-blue-200 rounded-xl px-3 py-3">
-                  <p className="text-xs font-semibold text-blue-800 mb-2">
-                    📱 Let {ec.name} know you&apos;re joining this meetup?
-                  </p>
-                  <div className="flex gap-2">
-                    <a
-                      href={smsLink(ec.phone, shareBody)}
-                      onClick={() => { setJoinStep("idle"); setTimeout(() => doJoin(), 200); }}
-                      className="flex-1 text-center py-2 bg-blue-600 text-white text-xs font-semibold rounded-lg hover:bg-blue-700 transition-colors"
-                    >
-                      Share &amp; Join
-                    </a>
-                    <button
-                      onClick={() => { doJoin(); setJoinStep("idle"); }}
-                      className="flex-1 py-2 bg-gray-100 text-gray-700 text-xs font-semibold rounded-lg hover:bg-gray-200 transition-colors"
-                    >
-                      Skip &amp; Join
-                    </button>
-                  </div>
-                </div>
-              )}
-
-              <div className="flex gap-2">
-                {canJoin && joinStep === "idle" && (
-                  <button onClick={handleJoin} className="flex-1 bg-blue-600 text-white py-2 rounded-xl text-sm font-semibold hover:bg-blue-700 transition-colors">
-                    Join Group
+              <div className="flex items-center gap-2">
+                <InterestBadge interest={group.topic} size="md" />
+                {currentUser && (
+                  <button
+                    onClick={() => setReportTarget({ id: group.id, name: group.name, type: "group" })}
+                    title="Report group"
+                    className="w-8 h-8 border-2 border-black bg-white flex items-center justify-center text-sm shadow-[2px_2px_0_#0A0A0A] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all"
+                  >
+                    🚩
                   </button>
                 )}
-                {!canJoin && !isMember && group.femaleOnly && currentUser.gender !== "Female" && (
-                  <div className="flex-1 bg-pink-50 text-pink-500 py-2 rounded-xl text-sm font-medium text-center border border-pink-200">
-                    ♀ Women-only group
+              </div>
+            </div>
+
+            <div className="p-4 flex flex-col gap-3">
+              {/* Safe location banner */}
+              {safeLocation && (
+                <div className="border-2 border-black bg-[#00C44A] text-black px-3 py-2.5 flex items-center gap-2">
+                  <span className="text-lg">{SAFE_LOCATION_ICONS[safeLocation.type]}</span>
+                  <div className="flex-1">
+                    <p className="text-xs font-black uppercase">{safeLocation.name}</p>
+                    <p className="text-xs font-bold capitalize">{safeLocation.type} · VERIFIED SAFE LOCATION ✓</p>
                   </div>
-                )}
-                {!canJoin && !isMember && isFull && (
-                  <div className="flex-1 bg-gray-100 text-gray-500 py-2 rounded-xl text-sm font-medium text-center">Group is full</div>
-                )}
-                {isMember && (
-                  <>
-                    {ec && !isExpired && (
-                      <a
-                        href={smsLink(ec.phone, sosBody)}
-                        className="flex items-center gap-1.5 px-3 py-2 bg-red-500 text-white text-xs font-bold rounded-xl hover:bg-red-600 transition-colors"
-                        title={`SOS — alert ${ec.name}`}
-                      >
-                        🆘 SOS
-                      </a>
-                    )}
-                    <button
-                      onClick={() => { setShowFakeCall(true); setFakeCallAccepted(false); }}
-                      className="flex items-center gap-1.5 px-3 py-2 bg-gray-800 text-white text-xs font-bold rounded-xl hover:bg-gray-900 transition-colors"
-                      title="Fake incoming call to exit safely"
-                    >
-                      📞 Call
-                    </button>
-                    <button onClick={() => { leaveGroup(group.id); router.push("/explore"); }}
-                      className="px-4 py-2 border border-red-200 text-red-500 rounded-xl text-sm font-medium hover:bg-red-50 transition-colors">
-                      Leave
-                    </button>
-                  </>
-                )}
+                </div>
+              )}
+
+              {/* Low trust warning banner */}
+              {badTrustMembers.length > 0 && (
+                <div className="border-2 border-black bg-[#FF2D2D] text-white px-3 py-2.5 flex items-start gap-2">
+                  <span className="text-base mt-0.5">⚠️</span>
+                  <div>
+                    <p className="text-xs font-black uppercase mb-0.5">LOW TRUST SCORE ALERT</p>
+                    <p className="text-xs font-bold">
+                      {badTrustMembers.map((m) => m.name).join(", ")} {badTrustMembers.length === 1 ? "has" : "have"} a low community trust score based on past reviews. Exercise caution.
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* Meta grid */}
+              <div className="grid grid-cols-2 gap-2">
+                <div className="border-2 border-black bg-white px-3 py-2 flex items-center gap-1.5">
+                  <span>🕐</span>
+                  <span className="text-sm font-black">{group.plannedTime}</span>
+                </div>
+                <div className="border-2 border-black bg-[#FFE500] px-3 py-2 flex items-center gap-1.5">
+                  <span>⏱</span>
+                  <span className="text-sm font-black uppercase">{timeLeft(group.expiresAt)}</span>
+                </div>
+                <div className="border-2 border-black bg-white px-3 py-2 flex items-center gap-1.5">
+                  <span>👥</span>
+                  <span className="text-sm font-black">{group.members.length}/{group.maxMembers} MEMBERS</span>
+                </div>
+                <div className="border-2 border-black bg-white px-3 py-2 flex items-center gap-1.5">
+                  <span>🔓</span>
+                  <span className="text-sm font-black uppercase text-[#00C44A]">Public</span>
+                </div>
               </div>
 
-              {/* No emergency contact nudge */}
-              {(canJoin || isMember) && !ec && (
-                <p className="text-xs text-gray-400 text-center">
-                  Add an <a href="/profile" className="text-blue-500 underline">emergency contact</a> in your profile to enable SOS and check-in features
-                </p>
+              {/* Members section */}
+              <div>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 mb-2">Members</p>
+                <div className="space-y-2">
+                  {group.members.map((m) => (
+                    <div key={m.id} className="border-2 border-black bg-white px-3 py-2 flex items-center justify-between">
+                      <div className="flex items-center gap-2.5">
+                        <div className="relative">
+                          <div className="w-8 h-8 rounded-full bg-[#FFE500] text-black border-2 border-black text-xs font-black flex items-center justify-center">
+                            {m.avatar.charAt(0)}
+                          </div>
+                        </div>
+                        <div>
+                          <div className="flex items-center gap-1 flex-wrap">
+                            <span className="text-sm font-black uppercase">{m.name}</span>
+                            {m.isVerified && <span className="text-black text-xs font-black" title="Verified">✓</span>}
+                            {m.collegeVerified && <span className="text-xs" title="College Verified">🎓</span>}
+                            {m.showGender && m.gender && (
+                              <span className="text-xs font-bold text-black/50">
+                                {m.gender === "Female" ? "♀" : m.gender === "Male" ? "♂" : "⚧"}
+                              </span>
+                            )}
+                            {m.trustScore > 0 && m.trustScore < 3.0 && m.reviewCount >= 3 && (
+                              <span className="text-xs font-black border-2 border-black bg-[#FF2D2D] text-white px-1.5 py-0.5 uppercase" title="Low trust score">
+                                ⚠️ LOW TRUST
+                              </span>
+                            )}
+                          </div>
+                          {m.trustScore > 0 && (
+                            <p className={`text-xs font-black ${m.trustScore < 3.0 && m.reviewCount >= 3 ? "text-[#FF2D2D]" : "text-black"}`}>
+                              ⭐ {m.trustScore.toFixed(1)} · {m.reviewCount} REVIEWS
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                      {currentUser && m.id !== currentUser.id && (
+                        <div className="flex gap-1.5">
+                          {isMember && (
+                            <button
+                              onClick={() => setReviewTarget({ id: m.id, name: m.name })}
+                              className="text-xs px-2.5 py-1 bg-[#FFE500] border-2 border-black text-black font-black uppercase shadow-[2px_2px_0_#0A0A0A] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all"
+                            >
+                              ⭐ REVIEW
+                            </button>
+                          )}
+                          <button
+                            onClick={() => setReportTarget({ id: m.id, name: m.name, type: "user" })}
+                            className="text-xs px-2.5 py-1 border-2 border-black bg-white font-black shadow-[2px_2px_0_#0A0A0A] active:shadow-none active:translate-x-[2px] active:translate-y-[2px] transition-all"
+                          >
+                            🚩
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              </div>
+
+              {/* Auto-SOS timer countdown */}
+              {isMember && timerEnd && !timerFired && (
+                <div className="border-2 border-black bg-[#FFE500] text-black px-3 py-2.5 flex items-center gap-2">
+                  <span className="text-base">⏱️</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-black uppercase">SAFETY TIMER: {fmtRemaining(timerRemaining)} REMAINING</p>
+                    <p className="text-xs font-bold">Tap &quot;I&apos;m Safe&quot; or send your check-in to cancel</p>
+                  </div>
+                  <button
+                    onClick={clearTimer}
+                    className="flex-shrink-0 text-xs font-black uppercase border-2 border-black bg-black text-[#FFE500] px-2 py-1"
+                  >
+                    CANCEL
+                  </button>
+                </div>
+              )}
+
+              {/* Timer expired — urgent SOS */}
+              {isMember && timerFired && ec && !isSafeSent && (
+                <div className="border-2 border-black bg-[#FF2D2D] text-white px-3 py-3 flex items-start gap-2 animate-pulse">
+                  <span className="text-lg mt-0.5">🚨</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-black uppercase mb-0.5">SAFETY TIMER EXPIRED!</p>
+                    <p className="text-xs font-bold mb-2">You haven&apos;t checked in. Alert {ec.name} now.</p>
+                    <a
+                      href={smsLink(ec.phone, sosBody)}
+                      onClick={() => { setIsSafeSent(true); clearTimer(); }}
+                      className="inline-flex items-center gap-1.5 px-4 py-2 bg-black border-2 border-white text-[#FFE500] text-xs font-black uppercase shadow-[3px_3px_0_rgba(255,255,255,0.3)] active:shadow-none transition-all"
+                    >
+                      🆘 SEND SOS NOW
+                    </a>
+                  </div>
+                </div>
+              )}
+
+              {/* "I'm Safe" check-in banner — shown after group expires */}
+              {isMember && isExpired && ec && !isSafeSent && (
+                <div className="border-2 border-black bg-[#00C44A] text-black px-3 py-3 flex items-center gap-3">
+                  <span className="text-xl">✅</span>
+                  <div className="flex-1 min-w-0">
+                    <p className="text-xs font-black uppercase">MEETUP ENDED — LET {ec.name.toUpperCase()} KNOW YOU&apos;RE SAFE</p>
+                    <p className="text-xs font-bold truncate">{ec.phone}</p>
+                  </div>
+                  <a
+                    href={smsLink(ec.phone, safeBody)}
+                    onClick={() => { setIsSafeSent(true); clearTimer(); }}
+                    className="flex-shrink-0 bg-black border-2 border-black text-[#FFE500] font-black uppercase px-4 py-2 text-xs shadow-[3px_3px_0_#0A0A0A] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all"
+                  >
+                    SEND ✓
+                  </a>
+                </div>
+              )}
+
+              {isSafeSent && (
+                <div className="border-2 border-black bg-[#00C44A] text-black px-3 py-2 flex items-center gap-2">
+                  <span className="text-xs font-black uppercase">✓ &quot;I&apos;M SAFE&quot; MESSAGE SENT TO {ec?.name?.toUpperCase()}</span>
+                </div>
+              )}
+
+              {/* Divider */}
+              <div className="border-t-2 border-black" />
+
+              {/* Join / Leave + SOS */}
+              {!currentUser && !isExpired && (
+                <button
+                  onClick={() => router.push("/auth")}
+                  className="w-full bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide shadow-[3px_3px_0_#0A0A0A] px-4 py-2 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all"
+                >
+                  SIGN IN TO JOIN
+                </button>
+              )}
+
+              {currentUser && (
+                <div className="flex flex-col gap-2">
+
+                  {/* Pre-join share prompt */}
+                  {canJoin && joinStep === "share-prompt" && ec && (
+                    <div className="border-2 border-black bg-white px-3 py-3 shadow-[4px_4px_0_#0A0A0A]">
+                      <p className="text-xs font-black uppercase mb-2">
+                        📱 LET {ec.name.toUpperCase()} KNOW YOU&apos;RE JOINING THIS MEETUP?
+                      </p>
+                      <div className="flex gap-2">
+                        <a
+                          href={smsLink(ec.phone, shareBody)}
+                          onClick={() => { setJoinStep("idle"); setTimeout(() => doJoin(), 200); }}
+                          className="flex-1 text-center py-2 bg-[#FFE500] border-2 border-black text-black text-xs font-black uppercase shadow-[3px_3px_0_#0A0A0A] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all"
+                        >
+                          SHARE &amp; JOIN
+                        </a>
+                        <button
+                          onClick={() => { doJoin(); setJoinStep("idle"); }}
+                          className="flex-1 py-2 border-2 border-black bg-white text-black text-xs font-black uppercase shadow-[3px_3px_0_#0A0A0A] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all"
+                        >
+                          SKIP &amp; JOIN
+                        </button>
+                      </div>
+                    </div>
+                  )}
+
+                  <div className="flex gap-2">
+                    {canJoin && joinStep === "idle" && (
+                      <button
+                        onClick={handleJoin}
+                        className="flex-1 bg-[#00C44A] border-2 border-black text-black font-black uppercase px-4 py-2 shadow-[3px_3px_0_#0A0A0A] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all"
+                      >
+                        JOIN GROUP
+                      </button>
+                    )}
+                    {!canJoin && !isMember && group.femaleOnly && currentUser.gender !== "Female" && (
+                      <div className="flex-1 border-2 border-black bg-black text-[#FFE500] py-2 text-sm font-black uppercase text-center">
+                        ♀ WOMEN-ONLY GROUP
+                      </div>
+                    )}
+                    {!canJoin && !isMember && isFull && (
+                      <div className="flex-1 border-2 border-black bg-white text-black py-2 text-sm font-black uppercase text-center">
+                        GROUP IS FULL
+                      </div>
+                    )}
+                    {isMember && (
+                      <>
+                        {ec && !isExpired && (
+                          <a
+                            href={smsLink(ec.phone, sosBody)}
+                            className="flex items-center gap-1.5 bg-[#FF2D2D] border-2 border-black text-white font-black uppercase px-4 py-2 shadow-[3px_3px_0_#0A0A0A] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all text-xs"
+                            title={`SOS — alert ${ec.name}`}
+                          >
+                            🆘 SOS
+                          </a>
+                        )}
+                        <button
+                          onClick={() => { setShowFakeCall(true); setFakeCallAccepted(false); }}
+                          className="flex items-center gap-1.5 bg-black border-2 border-black text-[#FFE500] font-black uppercase px-4 py-2 text-xs active:opacity-80 transition-all"
+                          title="Fake incoming call to exit safely"
+                        >
+                          📞 CALL
+                        </button>
+                        <button
+                          onClick={() => { leaveGroup(group.id); router.push("/explore"); }}
+                          className="px-4 py-2 bg-[#FF2D2D] border-2 border-black text-white font-black uppercase shadow-[3px_3px_0_#0A0A0A] active:shadow-none active:translate-x-[3px] active:translate-y-[3px] transition-all text-sm"
+                        >
+                          LEAVE
+                        </button>
+                      </>
+                    )}
+                  </div>
+
+                  {/* No emergency contact nudge */}
+                  {(canJoin || isMember) && !ec && (
+                    <p className="text-xs font-bold uppercase text-black/50 text-center">
+                      Add an{" "}
+                      <a href="/profile" className="text-black underline font-black">
+                        emergency contact
+                      </a>{" "}
+                      in your profile to enable SOS and check-in features
+                    </p>
+                  )}
+                </div>
               )}
             </div>
-          )}
-        </div>
-
-        {/* Chat */}
-        <div className="bg-white border border-gray-200 rounded-2xl flex flex-col overflow-hidden">
-          <div className="px-4 py-3 border-b border-gray-100">
-            <p className="text-sm font-semibold text-gray-900">Group chat</p>
-            {!isMember && <p className="text-xs text-gray-400">Join to send messages</p>}
           </div>
 
-          <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[240px] max-h-[360px]">
-            {messages.length === 0 ? (
-              <div className="text-center py-8 text-gray-400">
-                <p className="text-2xl mb-1">💬</p>
-                <p className="text-sm">No messages yet. Say something!</p>
-              </div>
-            ) : (
-              messages.map((msg) => {
-                const isMe = msg.userId === currentUser?.id;
-                return (
-                  <div key={msg.id} className={`flex gap-2 ${isMe ? "flex-row-reverse" : ""}`}>
-                    <div className="w-7 h-7 flex-shrink-0 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center">
-                      {msg.userAvatar.charAt(0)}
-                    </div>
-                    <div className={`max-w-[75%] flex flex-col gap-0.5 ${isMe ? "items-end" : "items-start"}`}>
-                      {!isMe && <span className="text-xs text-gray-400">{msg.userName}</span>}
-                      <div className={`px-3 py-2 rounded-2xl text-sm ${isMe ? "bg-blue-600 text-white rounded-tr-sm" : "bg-gray-100 text-gray-900 rounded-tl-sm"}`}>
-                        {msg.text}
-                      </div>
-                      <span className="text-xs text-gray-400">{timeAgo(msg.timestamp)}</span>
-                    </div>
-                  </div>
-                );
-              })
-            )}
-            <div ref={messagesEndRef} />
-          </div>
-
-          {isMember && currentUser ? (
-            <form onSubmit={handleSend} className="p-3 border-t border-gray-100 flex gap-2">
-              <input value={text} onChange={(e) => setText(e.target.value)} placeholder="Type a message..."
-                className="flex-1 border border-gray-200 rounded-xl px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500" />
-              <button type="submit" disabled={!text.trim()} className="px-4 py-2 bg-blue-600 text-white rounded-xl text-sm font-medium disabled:opacity-40 hover:bg-blue-700 transition-colors">
-                Send
-              </button>
-            </form>
-          ) : (
-            <div className="p-3 border-t border-gray-100 text-center">
-              <p className="text-xs text-gray-400">Join the group to chat</p>
+          {/* Chat */}
+          <div className="border-2 border-black bg-white shadow-[4px_4px_0_#0A0A0A] flex flex-col overflow-hidden">
+            <div className="bg-[#FFE500] border-b-2 border-black px-4 py-3">
+              <p className="text-sm font-black uppercase">Group Chat</p>
+              {!isMember && <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50">Join to send messages</p>}
             </div>
-          )}
+
+            <div className="flex-1 overflow-y-auto p-4 space-y-3 min-h-[240px] max-h-[360px] bg-[#F2F1EB]">
+              {messages.length === 0 ? (
+                <div className="text-center py-8">
+                  <p className="text-2xl mb-1">💬</p>
+                  <p className="text-sm font-black uppercase text-black/50">No messages yet. Say something!</p>
+                </div>
+              ) : (
+                messages.map((msg) => {
+                  const isMe = msg.userId === currentUser?.id;
+                  return (
+                    <div key={msg.id} className={`flex gap-2 ${isMe ? "flex-row-reverse" : ""}`}>
+                      <div className="w-7 h-7 flex-shrink-0 rounded-full bg-[#FFE500] text-black border-2 border-black text-xs font-black flex items-center justify-center">
+                        {msg.userAvatar.charAt(0)}
+                      </div>
+                      <div className={`max-w-[75%] flex flex-col gap-0.5 ${isMe ? "items-end" : "items-start"}`}>
+                        {!isMe && <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50">{msg.userName}</span>}
+                        <div className={`px-4 py-2 text-sm font-medium ${isMe ? "bg-black text-[#FFE500] border-2 border-black" : "bg-white border-2 border-black text-black"}`}>
+                          {msg.text}
+                        </div>
+                        <span className="text-[10px] font-black uppercase text-black/40">{timeAgo(msg.timestamp)}</span>
+                      </div>
+                    </div>
+                  );
+                })
+              )}
+              <div ref={messagesEndRef} />
+            </div>
+
+            {isMember && currentUser ? (
+              <form onSubmit={handleSend} className="p-3 border-t-2 border-black flex gap-2 bg-white">
+                <input
+                  value={text}
+                  onChange={(e) => setText(e.target.value)}
+                  placeholder="TYPE A MESSAGE..."
+                  className="flex-1 border-2 border-black bg-white px-4 py-3 font-medium focus:outline-none focus:shadow-[3px_3px_0_#0A0A0A] text-sm uppercase placeholder:font-black placeholder:text-black/30"
+                />
+                <button
+                  type="submit"
+                  disabled={!text.trim()}
+                  className="bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide shadow-[3px_3px_0_#0A0A0A] px-4 py-2 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all disabled:opacity-40 disabled:cursor-not-allowed"
+                >
+                  SEND
+                </button>
+              </form>
+            ) : (
+              <div className="p-3 border-t-2 border-black text-center bg-white">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50">Join the group to chat</p>
+              </div>
+            )}
+          </div>
+
         </div>
       </div>
 
@@ -461,8 +531,10 @@ export default function GroupPage() {
 
       {/* Fake safety call overlay */}
       {showFakeCall && (
-        <div className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
-          style={{ background: "linear-gradient(180deg,#0f0f1a 0%,#1a1a2e 100%)" }}>
+        <div
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center"
+          style={{ background: "linear-gradient(180deg,#0f0f1a 0%,#1a1a2e 100%)" }}
+        >
           {!fakeCallAccepted ? (
             <div className="text-center px-8 w-full max-w-xs">
               <div className="w-24 h-24 rounded-full bg-gradient-to-br from-blue-500 to-violet-600 flex items-center justify-center text-4xl font-bold text-white mx-auto mb-5 shadow-2xl shadow-blue-500/40 animate-pulse">

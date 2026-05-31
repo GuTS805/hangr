@@ -46,12 +46,12 @@ const AVATAR_COLORS = [
 function ChatAvatar({ initials, idx, size = 48, isOnline }: { initials: string; idx: number; size?: number; isOnline?: boolean }) {
   return (
     <div className="relative flex-shrink-0">
-      <div className="rounded-full flex items-center justify-center text-white font-bold"
+      <div className="rounded-full flex items-center justify-center text-white font-bold border-2 border-black"
         style={{ width: size, height: size, fontSize: size * 0.35, background: AVATAR_COLORS[idx % AVATAR_COLORS.length] }}>
         {initials}
       </div>
       {isOnline && (
-        <span className="absolute bottom-0 right-0 w-3 h-3 bg-green-400 rounded-full border-2 border-white" />
+        <span className="absolute bottom-0 right-0 w-3 h-3 bg-[#00C44A] rounded-full border-2 border-black" />
       )}
     </div>
   );
@@ -72,10 +72,10 @@ function ChatDetail({ chat, onBack }: { chat: MockChat; onBack: () => void }) {
   }
 
   return (
-    <div className="flex flex-col h-screen sm:h-[calc(100vh-0px)]">
+    <div className="flex flex-col h-screen bg-[#F2F1EB]">
       {/* Header */}
-      <div className="flex items-center gap-3 px-4 py-3 border-b border-gray-100 bg-white sticky top-0 z-10">
-        <button onClick={onBack} className="w-9 h-9 flex items-center justify-center rounded-full hover:bg-gray-100 transition-colors text-gray-600">
+      <div className="flex items-center gap-3 px-4 py-3 border-b-2 border-black bg-[#FFE500] sticky top-0 z-10">
+        <button onClick={onBack} className="w-9 h-9 flex items-center justify-center border-2 border-black bg-white shadow-[2px_2px_0_#0A0A0A] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all text-black">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <polyline points="15 18 9 12 15 6" />
           </svg>
@@ -83,49 +83,47 @@ function ChatDetail({ chat, onBack }: { chat: MockChat; onBack: () => void }) {
         <ChatAvatar initials={chat.avatar} idx={MOCK_CHATS.indexOf(chat)} size={38} isOnline={chat.isOnline} />
         <div className="flex-1 min-w-0">
           <div className="flex items-center gap-1.5">
-            <p className="font-bold text-gray-900 text-sm">{chat.name}</p>
+            <p className="font-black text-black text-sm uppercase tracking-tight">{chat.name}</p>
             {chat.isVerified && (
-              <svg width="13" height="13" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#3b82f6"/><polyline points="8 12 11 15 16 9" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+              <span className="border-2 border-black bg-black text-[#FFE500] text-[10px] font-black uppercase px-2 py-0.5">VERIFIED</span>
             )}
           </div>
-          <p className="text-xs text-gray-400">{chat.isOnline ? "Online" : "Offline"}</p>
+          <p className="text-xs font-bold text-black/60 uppercase">{chat.isOnline ? "Online" : "Offline"}</p>
         </div>
       </div>
 
       {/* Messages */}
-      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3 bg-gray-50">
+      <div className="flex-1 overflow-y-auto px-4 py-4 space-y-3">
         {messages.map(m => (
           <div key={m.id} className={`flex ${m.from === "me" ? "justify-end" : "justify-start"}`}>
-            <div className={`max-w-[72%] px-4 py-2.5 rounded-2xl text-sm leading-relaxed ${
+            <div className={`max-w-[72%] px-4 py-2.5 text-sm leading-relaxed border-2 border-black ${
               m.from === "me"
-                ? "text-white rounded-br-sm"
-                : "bg-white text-gray-900 rounded-bl-sm border border-gray-100"
-            }`}
-              style={m.from === "me" ? { background: "linear-gradient(135deg,#2563eb,#7c3aed)" } : {}}>
+                ? "bg-black text-[#FFE500] shadow-[3px_3px_0_#FFE500]"
+                : "bg-white text-black shadow-[3px_3px_0_#0A0A0A]"
+            }`}>
               {m.text}
             </div>
           </div>
         ))}
         {!currentUser && (
           <div className="text-center py-6">
-            <p className="text-sm text-gray-400">Sign in to send messages</p>
+            <p className="text-sm font-bold text-black/50 uppercase">Sign in to send messages</p>
           </div>
         )}
       </div>
 
       {/* Input */}
       {currentUser && (
-        <div className="px-4 py-3 bg-white border-t border-gray-100 flex items-center gap-3">
+        <div className="px-4 py-3 bg-white border-t-2 border-black flex items-center gap-3">
           <input
             value={msg}
             onChange={e => setMsg(e.target.value)}
             onKeyDown={e => { if (e.key === "Enter") send(); }}
             placeholder="Message likhoo..."
-            className="flex-1 bg-gray-100 rounded-full px-4 py-2.5 text-sm outline-none text-gray-800 placeholder-gray-400"
+            className="flex-1 border-2 border-black bg-white px-4 py-3 font-medium focus:outline-none focus:shadow-[3px_3px_0_#0A0A0A] transition-shadow text-sm"
           />
           <button onClick={send} disabled={!msg.trim()}
-            className="w-10 h-10 rounded-full flex items-center justify-center text-white transition-all active:scale-95 disabled:opacity-40 flex-shrink-0"
-            style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
+            className="w-10 h-10 flex items-center justify-center bg-[#FFE500] border-2 border-black text-black shadow-[3px_3px_0_#0A0A0A] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all disabled:opacity-40 flex-shrink-0">
             <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
               <line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/>
             </svg>
@@ -151,21 +149,21 @@ export default function ChatsPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F2F1EB]">
       {/* Sticky header */}
-      <div className="sticky top-0 z-30 bg-white border-b border-gray-100">
+      <div className="sticky top-0 z-30 bg-white border-b-2 border-black">
         <div className="max-w-xl mx-auto px-4 py-4">
-          <h1 className="text-xl font-bold text-gray-900 mb-3">Chats</h1>
+          <h1 className="text-3xl font-black uppercase tracking-tight text-black mb-3">Chats</h1>
           {/* Search */}
-          <div className="flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2.5">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 flex-shrink-0">
+          <div className="flex items-center gap-2 border-2 border-black bg-white px-4 py-2.5 focus-within:shadow-[3px_3px_0_#0A0A0A] transition-shadow">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-black/50 flex-shrink-0">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search chats..."
-              className="flex-1 bg-transparent text-sm outline-none text-gray-800 placeholder-gray-400"
+              className="flex-1 bg-transparent text-sm outline-none text-black placeholder-black/40 font-medium"
             />
           </div>
         </div>
@@ -174,65 +172,67 @@ export default function ChatsPage() {
       <div className="max-w-xl mx-auto">
         {/* Guest prompt */}
         {!currentUser && (
-          <div className="mx-4 mt-4 p-4 rounded-2xl border-2 flex items-center gap-3"
-            style={{ background: "rgba(37,99,235,0.06)", borderColor: "rgba(37,99,235,0.18)" }}>
-            <span className="text-2xl flex-shrink-0">💬</span>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-gray-800">Sign in to chat</p>
-              <p className="text-xs text-gray-500 mt-0.5">Connect with people you met at hangouts</p>
+          <div className="mx-4 mt-4 border-2 border-black bg-white shadow-[4px_4px_0_#0A0A0A]">
+            <div className="bg-[#FFE500] border-b-2 border-black px-4 py-3">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50">GUEST</span>
             </div>
-            <button onClick={() => router.push("/auth")}
-              className="px-3 py-1.5 rounded-full text-xs font-bold text-white flex-shrink-0"
-              style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
-              Sign in
-            </button>
+            <div className="px-4 py-3 flex items-center gap-3">
+              <span className="text-2xl flex-shrink-0">💬</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-black text-black uppercase">Sign in to chat</p>
+                <p className="text-xs text-black/50 mt-0.5 font-medium">Connect with people you met at hangouts</p>
+              </div>
+              <button onClick={() => router.push("/auth")}
+                className="bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide shadow-[3px_3px_0_#0A0A0A] px-4 py-2 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all text-xs flex-shrink-0">
+                Sign in
+              </button>
+            </div>
           </div>
         )}
 
         {/* Online now strip */}
         <div className="px-4 pt-4 pb-2">
-          <p className="text-xs font-bold text-gray-400 uppercase tracking-widest mb-3">Online now</p>
+          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 mb-3">Online now</p>
           <div className="flex gap-4 overflow-x-auto pb-2" style={{ scrollbarWidth: "none" }}>
             {MOCK_CHATS.filter(c => c.isOnline).map((c, i) => (
               <button key={c.id} onClick={() => setActiveChat(c)}
                 className="flex flex-col items-center gap-1.5 flex-shrink-0 active:opacity-70 transition-opacity">
                 <ChatAvatar initials={c.avatar} idx={i} size={50} isOnline />
-                <span className="text-xs text-gray-600 font-medium w-14 text-center truncate">{c.name.split(" ")[0]}</span>
+                <span className="text-xs text-black font-black uppercase w-14 text-center truncate">{c.name.split(" ")[0]}</span>
               </button>
             ))}
           </div>
         </div>
 
         {/* Chat list */}
-        <div className="mt-2">
+        <div className="mt-2 mx-4 border-2 border-black bg-white shadow-[4px_4px_0_#0A0A0A]">
           {filtered.length === 0 ? (
-            <div className="text-center py-16 text-gray-400">
+            <div className="text-center py-16 text-black/40">
               <p className="text-4xl mb-3">💬</p>
-              <p className="font-semibold">No chats found</p>
+              <p className="font-black uppercase">No chats found</p>
             </div>
           ) : (
-            <div className="divide-y divide-gray-100">
+            <div>
               {filtered.map((chat, idx) => (
                 <button key={chat.id} onClick={() => setActiveChat(chat)}
-                  className="w-full flex items-center gap-3 px-4 py-3.5 hover:bg-white transition-colors text-left active:bg-gray-100">
+                  className={`w-full flex items-center gap-3 px-4 py-3.5 hover:bg-[#FFE500] transition-colors text-left active:bg-[#FFE500] ${idx < filtered.length - 1 ? "border-b-2 border-black" : ""}`}>
                   <ChatAvatar initials={chat.avatar} idx={idx} size={50} isOnline={chat.isOnline} />
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between mb-0.5">
                       <div className="flex items-center gap-1.5">
-                        <span className={`text-sm font-bold ${chat.unread > 0 ? "text-gray-900" : "text-gray-700"}`}>{chat.name}</span>
+                        <span className={`text-sm font-black uppercase ${chat.unread > 0 ? "text-black" : "text-black/70"}`}>{chat.name}</span>
                         {chat.isVerified && (
-                          <svg width="13" height="13" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#3b82f6"/><polyline points="8 12 11 15 16 9" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+                          <span className="border-2 border-black bg-black text-[#FFE500] text-[10px] font-black uppercase px-2 py-0.5">VERIFIED</span>
                         )}
                       </div>
-                      <span className="text-xs text-gray-400 flex-shrink-0">{timeAgo(chat.timestamp)}</span>
+                      <span className="text-xs font-bold text-black/40 flex-shrink-0">{timeAgo(chat.timestamp)}</span>
                     </div>
                     <div className="flex items-center justify-between">
-                      <p className={`text-sm truncate ${chat.unread > 0 ? "text-gray-800 font-medium" : "text-gray-400"}`}>
+                      <p className={`text-sm truncate font-medium ${chat.unread > 0 ? "text-black" : "text-black/40"}`}>
                         {chat.lastMessage}
                       </p>
                       {chat.unread > 0 && (
-                        <span className="ml-2 flex-shrink-0 w-5 h-5 rounded-full text-white text-[11px] font-bold flex items-center justify-center"
-                          style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
+                        <span className="ml-2 flex-shrink-0 w-5 h-5 bg-[#FF2D2D] text-white border-2 border-black text-[11px] font-bold flex items-center justify-center">
                           {chat.unread}
                         </span>
                       )}

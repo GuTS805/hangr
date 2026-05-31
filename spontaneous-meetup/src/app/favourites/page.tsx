@@ -48,16 +48,16 @@ function AvatarStack({ avatars, names }: { avatars: string[]; names: string[] })
         const isUrl = av?.startsWith("http") || av?.startsWith("data:");
         return isUrl ? (
           <img key={i} src={av} alt={names[i]} referrerPolicy="no-referrer"
-            className="w-7 h-7 rounded-full object-cover border-2 border-white" />
+            className="w-7 h-7 rounded-full object-cover border-2 border-black" />
         ) : (
-          <div key={i} className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold border-2 border-white"
+          <div key={i} className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold border-2 border-black"
             style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
             {av?.slice(0, 2) ?? names[i]?.slice(0, 2).toUpperCase() ?? "?"}
           </div>
         );
       })}
       {avatars.length > 4 && (
-        <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold border-2 border-white bg-gray-400">
+        <div className="w-7 h-7 rounded-full flex items-center justify-center text-white text-[10px] font-bold border-2 border-black bg-black">
           +{avatars.length - 4}
         </div>
       )}
@@ -66,23 +66,24 @@ function AvatarStack({ avatars, names }: { avatars: string[]; names: string[] })
 }
 
 function FavouriteCard({ group, onRemove }: { group: SavedGroup; onRemove: () => void }) {
-  const grad = TOPIC_GRADIENTS[group.topic] ?? "from-gray-500 to-gray-700";
   const location = SAFE_LOCATIONS.find(l => l.id === group.safeLocationId);
 
   return (
-    <div className="bg-white rounded-3xl overflow-hidden border border-gray-100 shadow-sm hover:shadow-md transition-shadow">
-      {/* Gradient header */}
-      <div className={`bg-gradient-to-br ${grad} p-5 relative`}>
+    <div className="border-2 border-black bg-white shadow-[4px_4px_0_#0A0A0A]">
+      {/* Flat yellow header */}
+      <div className="bg-[#FFE500] border-b-2 border-black px-4 py-3 relative flex items-start justify-between gap-2">
+        <div>
+          <div className="text-3xl mb-1">{INTEREST_EMOJI[group.topic] ?? "🏘️"}</div>
+          <p className="text-black font-black text-base uppercase leading-tight">{group.name}</p>
+          <p className="text-black/60 text-[10px] mt-0.5 font-black uppercase tracking-[0.2em]">{group.topic}</p>
+        </div>
         <button onClick={onRemove}
-          className="absolute top-3 right-3 w-8 h-8 rounded-full bg-black/20 hover:bg-black/40 flex items-center justify-center text-white transition-colors"
+          className="w-8 h-8 flex-shrink-0 flex items-center justify-center bg-black text-[#FFE500] border-2 border-black shadow-[2px_2px_0_#FFE500] active:translate-x-[2px] active:translate-y-[2px] active:shadow-none transition-all"
           title="Remove from favourites">
           <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
             <line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/>
           </svg>
         </button>
-        <div className="text-4xl mb-2">{INTEREST_EMOJI[group.topic] ?? "🏘️"}</div>
-        <p className="text-white font-extrabold text-lg leading-tight">{group.name}</p>
-        <p className="text-white/70 text-xs mt-1 font-semibold uppercase tracking-wide">{group.topic}</p>
       </div>
 
       {/* Details */}
@@ -90,26 +91,26 @@ function FavouriteCard({ group, onRemove }: { group: SavedGroup; onRemove: () =>
         {/* Members */}
         <div className="flex items-center gap-2">
           <AvatarStack avatars={group.memberAvatars} names={group.memberNames} />
-          <div className="text-xs text-gray-500 min-w-0">
-            <span className="font-semibold text-gray-700">{group.memberNames.slice(0, 2).join(", ")}</span>
-            {group.memberCount > 2 && <span className="text-gray-400"> +{group.memberCount - 2} more</span>}
+          <div className="text-xs text-black/50 min-w-0">
+            <span className="font-black text-black uppercase">{group.memberNames.slice(0, 2).join(", ")}</span>
+            {group.memberCount > 2 && <span className="text-black/40"> +{group.memberCount - 2} more</span>}
           </div>
         </div>
 
         {/* Location */}
         {location && (
-          <div className="flex items-center gap-2 text-xs text-gray-500">
+          <div className="flex items-center gap-2 text-xs text-black/50">
             <span className="text-base">📍</span>
-            <span className="truncate">{location.name}</span>
+            <span className="truncate font-medium">{location.name}</span>
           </div>
         )}
 
         {/* Footer */}
-        <div className="flex items-center justify-between pt-2 border-t border-gray-50">
-          <div className="text-xs text-gray-400">
-            <span className="font-semibold">Ended</span> {timeAgo(group.endedAt)}
+        <div className="flex items-center justify-between pt-2 border-t-2 border-black">
+          <div className="text-xs text-black/50 font-medium">
+            <span className="font-black text-black uppercase">Ended</span> {timeAgo(group.endedAt)}
           </div>
-          <div className="flex items-center gap-1 text-xs text-gray-400">
+          <div className="flex items-center gap-1 text-xs text-black/50 font-medium">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
               <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/>
               <path d="M23 21v-2a4 4 0 0 0-3-3.87"/><path d="M16 3.13a4 4 0 0 1 0 7.75"/>
@@ -142,13 +143,14 @@ export default function FavouritesPage() {
 
   if (!currentUser) {
     return (
-      <div className="min-h-screen flex flex-col items-center justify-center gap-4 px-6 text-center">
-        <p className="text-5xl">⭐</p>
-        <p className="text-xl font-bold text-gray-800">Your Favourites</p>
-        <p className="text-gray-400 text-sm">Sign in to save group memories</p>
+      <div className="min-h-screen bg-[#F2F1EB] flex flex-col items-center justify-center gap-4 px-6 text-center">
+        <div className="border-2 border-black bg-[#FFE500] w-20 h-20 flex items-center justify-center shadow-[4px_4px_0_#0A0A0A]">
+          <span className="text-4xl">⭐</span>
+        </div>
+        <p className="text-3xl font-black uppercase tracking-tight text-black">Your Favourites</p>
+        <p className="text-black/50 text-sm font-medium">Sign in to save group memories</p>
         <button onClick={() => router.push("/auth")}
-          className="px-6 py-2.5 rounded-full text-sm font-bold text-white"
-          style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
+          className="bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide shadow-[3px_3px_0_#0A0A0A] px-4 py-2 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all">
           Sign in
         </button>
       </div>
@@ -156,16 +158,19 @@ export default function FavouritesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F2F1EB]">
       {/* Header */}
-      <div className="sticky top-0 z-30 bg-white/90 backdrop-blur-md border-b border-gray-100">
+      <div className="sticky top-0 z-30 bg-white border-b-2 border-black">
         <div className="max-w-3xl mx-auto px-5 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-xl font-bold text-gray-900">Favourites ⭐</h1>
-            <p className="text-sm text-gray-400 mt-0.5">
+            <h1 className="text-3xl font-black uppercase tracking-tight text-black">Favourites</h1>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 mt-0.5">
               {favourites.length === 0 ? "Your saved group memories" : `${favourites.length} saved group${favourites.length > 1 ? "s" : ""}`}
             </p>
           </div>
+          <span className="border-2 border-black bg-[#FFE500] text-black text-[10px] font-black uppercase px-2 py-0.5 shadow-[2px_2px_0_#0A0A0A]">
+            ⭐ {favourites.length}
+          </span>
         </div>
       </div>
 
@@ -173,17 +178,15 @@ export default function FavouritesPage() {
         {favourites.length === 0 ? (
           /* Empty state */
           <div className="flex flex-col items-center justify-center py-24 text-center px-8">
-            <div className="w-24 h-24 rounded-3xl flex items-center justify-center text-5xl mb-6"
-              style={{ background: "linear-gradient(135deg,#fef9c3,#fef08a)" }}>
+            <div className="w-24 h-24 border-2 border-black bg-[#FFE500] flex items-center justify-center text-5xl mb-6 shadow-[4px_4px_0_#0A0A0A]">
               ⭐
             </div>
-            <h2 className="text-xl font-bold text-gray-800 mb-2">No favourites yet</h2>
-            <p className="text-gray-400 text-sm leading-relaxed max-w-xs">
+            <h2 className="text-xl font-black uppercase text-black mb-2">No favourites yet</h2>
+            <p className="text-black/50 text-sm leading-relaxed max-w-xs font-medium">
               When a group session ends, you'll get the option to save it here as a memory.
             </p>
             <button onClick={() => router.push("/explore")}
-              className="mt-6 px-6 py-2.5 rounded-full text-sm font-bold text-white"
-              style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
+              className="mt-6 bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide shadow-[3px_3px_0_#0A0A0A] px-4 py-2 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all text-sm">
               Find a group →
             </button>
           </div>

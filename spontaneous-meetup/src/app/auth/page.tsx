@@ -13,132 +13,6 @@ function isEmail(v: string) { return v.includes("@"); }
 function isPhone(v: string) { return /^\d{10}$/.test(v.replace(/\s/g, "")); }
 function formatPhone(v: string) { return `+91${v.replace(/\D/g, "").slice(-10)}`; }
 
-/* ── Clay tokens ─────────────────────────────────────────────────────────── */
-const C = {
-  bg:        "linear-gradient(145deg,#ede0ff 0%,#ffd6f0 35%,#d0eaff 70%,#d0ffe8 100%)",
-  card:      "rgba(255,255,255,0.72)",
-  cardShadow:"0 32px 80px rgba(120,80,255,0.18), 0 8px 24px rgba(0,0,0,0.06), inset 0 1.5px 0 rgba(255,255,255,0.95)",
-  inputBg:   "rgba(228,216,255,0.45)",
-  inputShadow:"inset 3px 4px 10px rgba(100,60,200,0.14), inset -2px -3px 8px rgba(255,255,255,0.92)",
-  inputFocus:"inset 3px 4px 10px rgba(100,60,200,0.22), inset -2px -3px 8px rgba(255,255,255,0.88)",
-  btnPrimary:"linear-gradient(145deg,#b48cff,#7c3aed)",
-  btnPrimaryShadow:"0 10px 28px rgba(124,58,237,0.42), 0 3px 8px rgba(0,0,0,0.08), inset 0 2px 4px rgba(255,255,255,0.3)",
-  btnPrimaryActive:"0 4px 12px rgba(124,58,237,0.3), inset 0 2px 4px rgba(255,255,255,0.2)",
-  btnGoogle: "linear-gradient(145deg,#ffffff,#f4f0ff)",
-  btnGoogleShadow:"0 8px 24px rgba(0,0,0,0.09), 0 2px 6px rgba(0,0,0,0.04), inset 0 2px 0 rgba(255,255,255,0.95)",
-  pill:      "rgba(255,255,255,0.6)",
-  pillShadow:"0 4px 16px rgba(120,80,255,0.12), inset 0 1px 0 rgba(255,255,255,0.9)",
-  txt:       "#3b1f72",
-  txtMid:    "#7c5cac",
-  txtLight:  "#b8a0d8",
-};
-
-/* ── Shared component styles ─────────────────────────────────────────────── */
-function ClayInput({ style, ...props }: React.InputHTMLAttributes<HTMLInputElement>) {
-  const [focused, setFocused] = useState(false);
-  return (
-    <input
-      {...props}
-      onFocus={e => { setFocused(true); props.onFocus?.(e); }}
-      onBlur={e => { setFocused(false); props.onBlur?.(e); }}
-      style={{
-        width: "100%", border: "none", outline: "none",
-        padding: "15px 20px", fontSize: 15, fontWeight: 500,
-        borderRadius: 18, color: C.txt, fontFamily: "inherit",
-        background: C.inputBg,
-        boxShadow: focused ? C.inputFocus : C.inputShadow,
-        transition: "box-shadow 0.2s",
-        ...style,
-      }}
-    />
-  );
-}
-
-function ClayBtn({ children, variant = "primary", style, onClick, disabled, type = "button" }:
-  { children: React.ReactNode; variant?: "primary"|"google"|"ghost"; style?: React.CSSProperties; onClick?: ()=>void; disabled?: boolean; type?: "button"|"submit" }) {
-  const [pressed, setPressed] = useState(false);
-  const base: React.CSSProperties = {
-    width: "100%", border: "none", borderRadius: 22, padding: "16px 24px",
-    fontSize: 15, fontWeight: 700, cursor: disabled ? "not-allowed" : "pointer",
-    display: "flex", alignItems: "center", justifyContent: "center", gap: 10,
-    fontFamily: "inherit", transition: "transform 0.12s, box-shadow 0.12s",
-    transform: pressed ? "translateY(3px) scale(0.98)" : "translateY(0) scale(1)",
-    opacity: disabled ? 0.5 : 1,
-  };
-  if (variant === "primary") return (
-    <button type={type} onClick={onClick} disabled={disabled}
-      onMouseDown={() => setPressed(true)} onMouseUp={() => setPressed(false)} onMouseLeave={() => setPressed(false)}
-      style={{ ...base, background: C.btnPrimary, color: "#fff", boxShadow: pressed ? C.btnPrimaryActive : C.btnPrimaryShadow, ...style }}>
-      {children}
-    </button>
-  );
-  if (variant === "google") return (
-    <button type={type} onClick={onClick} disabled={disabled}
-      onMouseDown={() => setPressed(true)} onMouseUp={() => setPressed(false)} onMouseLeave={() => setPressed(false)}
-      style={{ ...base, background: C.btnGoogle, color: C.txt, boxShadow: pressed ? "0 2px 8px rgba(0,0,0,0.08)" : C.btnGoogleShadow, ...style }}>
-      {children}
-    </button>
-  );
-  return (
-    <button type={type} onClick={onClick} disabled={disabled}
-      style={{ ...base, background: "transparent", color: C.txtMid, boxShadow: "none", fontSize: 13, ...style }}>
-      {children}
-    </button>
-  );
-}
-
-function ClayCard({ children, style }: { children: React.ReactNode; style?: React.CSSProperties }) {
-  return (
-    <div style={{
-      background: C.card, borderRadius: 36, backdropFilter: "blur(24px)",
-      boxShadow: C.cardShadow, padding: "44px 36px", ...style,
-    }}>
-      {children}
-    </div>
-  );
-}
-
-function ClayPage({ children }: { children: React.ReactNode }) {
-  return (
-    <div style={{ background: C.bg, minHeight: "100vh", display: "flex", alignItems: "center", justifyContent: "center", padding: 20, position: "relative", overflow: "hidden" }}>
-      {/* Floating clay blobs */}
-      <div style={{ position: "fixed", top: "-15%", left: "-10%", width: 500, height: 500, borderRadius: "50%", background: "rgba(180,140,255,0.25)", filter: "blur(60px)", pointerEvents: "none" }} />
-      <div style={{ position: "fixed", bottom: "-20%", right: "-10%", width: 600, height: 600, borderRadius: "50%", background: "rgba(255,180,220,0.2)", filter: "blur(70px)", pointerEvents: "none" }} />
-      <div style={{ position: "fixed", top: "40%", left: "35%", width: 350, height: 350, borderRadius: "50%", background: "rgba(160,220,255,0.18)", filter: "blur(50px)", pointerEvents: "none" }} />
-      <div style={{ position: "relative", zIndex: 10, width: "100%", maxWidth: 420 }}>
-        {children}
-      </div>
-    </div>
-  );
-}
-
-function ErrorBanner({ msg }: { msg: string }) {
-  return (
-    <div style={{
-      background: "linear-gradient(145deg,#ffb4c8,#ff8fa3)",
-      borderRadius: 16, padding: "12px 18px", marginBottom: 16, fontSize: 13,
-      color: "#7a0020", fontWeight: 600,
-      boxShadow: "0 6px 20px rgba(255,100,130,0.3), inset 0 1px 0 rgba(255,255,255,0.5)",
-    }}>
-      {msg}
-    </div>
-  );
-}
-
-/* ── Logo bubble ─────────────────────────────────────────────────────────── */
-function LogoBubble() {
-  return (
-    <div style={{
-      width: 72, height: 72, borderRadius: 24, margin: "0 auto 16px",
-      background: "linear-gradient(145deg,#c4a0ff,#7c3aed)",
-      boxShadow: "0 14px 36px rgba(124,58,237,0.45), inset 0 2px 6px rgba(255,255,255,0.35), inset 0 -2px 6px rgba(0,0,0,0.15)",
-      display: "flex", alignItems: "center", justifyContent: "center", fontSize: 32,
-    }}>
-      🫧
-    </div>
-  );
-}
-
 /* ── Page component ──────────────────────────────────────────────────────── */
 export default function AuthPage() {
   const router = useRouter();
@@ -213,38 +87,50 @@ export default function AuthPage() {
   /* ── Onboarding: details (straight after login — no extra phone step) ── */
   if (currentUser && needsOnboarding) {
     return (
-      <ClayPage>
-        <ClayCard style={{ maxWidth: 480, margin: "0 auto" }}>
-          <div style={{ textAlign: "center", marginBottom: 24 }}>
-            <div style={{ fontSize: 40, marginBottom: 8 }}>✅</div>
-            <h2 style={{ fontSize: 22, fontWeight: 800, color: C.txt, margin: 0 }}>Almost done!</h2>
-            <p style={{ color: C.txtLight, fontSize: 14, marginTop: 6 }}>Welcome, {currentUser.name.split(" ")[0]}!</p>
+      <div className="min-h-screen bg-[#F2F1EB] flex items-center justify-center p-6">
+        <div className="w-full max-w-md border-2 border-black bg-white shadow-[6px_6px_0_#0A0A0A] p-8">
+          {/* Yellow header bar */}
+          <div className="bg-[#FFE500] border-b-2 border-black px-6 py-4 -mx-8 -mt-8 mb-6">
+            <h2 className="text-2xl font-black uppercase tracking-tight text-black">Almost done!</h2>
+            <p className="text-xs font-mono text-black/60 uppercase tracking-wider mt-1">
+              Welcome, {currentUser.name.split(" ")[0]}!
+            </p>
           </div>
-          <form onSubmit={handleOnboarding} style={{ display: "flex", flexDirection: "column", gap: 16 }}>
-            <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: 12 }}>
+
+          <form onSubmit={handleOnboarding} className="flex flex-col gap-4">
+            <div className="grid grid-cols-2 gap-3">
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: C.txtMid, display: "block", marginBottom: 6, letterSpacing: "0.06em" }}>AGE</label>
-                <ClayInput type="number" value={age} onChange={e => setAge(e.target.value)} placeholder="22" min={16} max={60} />
+                <label className="text-xs font-black uppercase tracking-wider text-black block mb-1.5">Age</label>
+                <input
+                  type="number"
+                  value={age}
+                  onChange={e => setAge(e.target.value)}
+                  placeholder="22"
+                  min={16}
+                  max={60}
+                  className="w-full border-2 border-black bg-white px-4 py-4 text-base font-medium focus:outline-none focus:shadow-[3px_3px_0_#0A0A0A] transition-shadow"
+                />
               </div>
               <div>
-                <label style={{ fontSize: 11, fontWeight: 700, color: C.txtMid, display: "block", marginBottom: 6, letterSpacing: "0.06em" }}>AREA</label>
-                <ClayInput type="text" value={neighborhood} onChange={e => setNeighborhood(e.target.value)} placeholder="Crossing Republik" />
+                <label className="text-xs font-black uppercase tracking-wider text-black block mb-1.5">Area</label>
+                <input
+                  type="text"
+                  value={neighborhood}
+                  onChange={e => setNeighborhood(e.target.value)}
+                  placeholder="Crossing Republik"
+                  className="w-full border-2 border-black bg-white px-4 py-4 text-base font-medium focus:outline-none focus:shadow-[3px_3px_0_#0A0A0A] transition-shadow"
+                />
               </div>
             </div>
 
             <div>
-              <label style={{ fontSize: 11, fontWeight: 700, color: C.txtMid, display: "block", marginBottom: 8, letterSpacing: "0.06em" }}>GENDER (optional)</label>
-              <div style={{ display: "flex", gap: 8 }}>
+              <label className="text-xs font-black uppercase tracking-wider text-black block mb-2">Gender (optional)</label>
+              <div className="flex gap-2">
                 {(["Male","Female","Other"] as Gender[]).map(g => (
                   <button key={g} type="button" onClick={() => setGender(gender === g ? "" : g)}
-                    style={{
-                      flex: 1, padding: "10px 8px", border: "none", borderRadius: 14, fontSize: 13,
-                      fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-                      background: gender === g ? "linear-gradient(145deg,#c4a0ff,#7c3aed)" : C.inputBg,
-                      color: gender === g ? "#fff" : C.txtMid,
-                      boxShadow: gender === g ? C.btnPrimaryShadow : C.inputShadow,
-                      transition: "all 0.15s",
-                    }}>
+                    className={`flex-1 py-2.5 text-sm font-black uppercase border-2 border-black transition-all cursor-pointer ${
+                      gender === g ? "bg-black text-[#FFE500]" : "bg-white text-black hover:bg-[#FFE500]"
+                    }`}>
                     {g === "Female" ? "♀" : g === "Male" ? "♂" : "⚧"} {g}
                   </button>
                 ))}
@@ -252,20 +138,15 @@ export default function AuthPage() {
             </div>
 
             <div>
-              <label style={{ fontSize: 11, fontWeight: 700, color: C.txtMid, display: "block", marginBottom: 8, letterSpacing: "0.06em" }}>INTERESTS — pick at least 2</label>
-              <div style={{ display: "flex", flexWrap: "wrap", gap: 8 }}>
+              <label className="text-xs font-black uppercase tracking-wider text-black block mb-2">Interests — pick at least 2</label>
+              <div className="flex flex-wrap gap-2">
                 {INTERESTS.map(i => {
                   const sel = selected.includes(i as Interest);
                   return (
                     <button key={i} type="button" onClick={() => toggleInterest(i as Interest)}
-                      style={{
-                        padding: "7px 14px", border: "none", borderRadius: 12, fontSize: 12,
-                        fontWeight: 700, cursor: "pointer", fontFamily: "inherit",
-                        background: sel ? "linear-gradient(145deg,#c4a0ff,#7c3aed)" : C.inputBg,
-                        color: sel ? "#fff" : C.txtMid,
-                        boxShadow: sel ? "0 6px 18px rgba(124,58,237,0.35), inset 0 1px 0 rgba(255,255,255,0.25)" : C.inputShadow,
-                        transition: "all 0.15s",
-                      }}>
+                      className={`border-2 border-black text-xs font-bold uppercase px-3 py-1.5 transition-all cursor-pointer ${
+                        sel ? "bg-black text-[#FFE500]" : "bg-white text-black hover:bg-[#FFE500]"
+                      }`}>
                       {INTEREST_EMOJI[i]} {i}
                     </button>
                   );
@@ -273,63 +154,86 @@ export default function AuthPage() {
               </div>
             </div>
 
-            {detailsError && <ErrorBanner msg={detailsError} />}
-            <ClayBtn type="submit" variant="primary" disabled={detailsLoading}>
-              {detailsLoading ? <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : "Let's go! 🚀"}
-            </ClayBtn>
+            {detailsError && (
+              <div className="border-2 border-black bg-[#FF2D2D] text-white font-bold px-4 py-3 text-sm">
+                {detailsError}
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={detailsLoading}
+              className="w-full bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide py-4 shadow-[4px_4px_0_#0A0A0A] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+              {detailsLoading ? "..." : "Let's Go!"}
+            </button>
           </form>
-        </ClayCard>
-      </ClayPage>
+        </div>
+      </div>
     );
   }
 
   /* ── Main login ──────────────────────────────────────────────────────────── */
   return (
-    <ClayPage>
-      <ClayCard>
-        {/* Brand */}
-        <div style={{ textAlign: "center", marginBottom: 32 }}>
-          <LogoBubble />
-          <h1 style={{ fontSize: 38, fontWeight: 900, color: C.txt, margin: "0 0 6px", letterSpacing: "-0.02em", lineHeight: 1 }}>hangr</h1>
-          <p style={{ color: C.txtLight, fontSize: 15 }}>meet people. right now. ✨</p>
+    <div className="min-h-screen bg-[#F2F1EB] flex items-center justify-center p-6">
+      <div className="w-full max-w-md border-2 border-black bg-white shadow-[6px_6px_0_#0A0A0A] p-8">
 
-          {/* Pill badge */}
-          <div style={{ display: "inline-flex", alignItems: "center", gap: 6, marginTop: 12, padding: "7px 16px", borderRadius: 999, background: C.pill, boxShadow: C.pillShadow, fontSize: 12, fontWeight: 600, color: C.txtMid }}>
+        {/* Brand */}
+        <div className="text-center mb-8">
+          {/* Logo */}
+          <div className="w-16 h-16 border-2 border-black bg-[#FFE500] flex items-center justify-center text-3xl mb-4 shadow-[3px_3px_0_#0A0A0A] mx-auto">
+            ⚡
+          </div>
+          <h1 className="text-4xl font-black uppercase tracking-tight text-black leading-none mb-1">hangr</h1>
+          <p className="text-sm font-mono text-black/50 uppercase tracking-wider">meet people. right now.</p>
+
+          {/* Badge pill */}
+          <div className="mt-3 inline-flex items-center gap-1 border-2 border-black bg-black text-[#FFE500] text-xs font-black uppercase px-3 py-1">
             <span>🛡️</span> Verified spots only
           </div>
         </div>
 
-        {loginError && <ErrorBanner msg={loginError} />}
+        {loginError && (
+          <div className="border-2 border-black bg-[#FF2D2D] text-white font-bold px-4 py-3 text-sm mb-4">
+            {loginError}
+          </div>
+        )}
 
         {loginStep === "idle" ? (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <ClayInput
-              type="text"
-              value={loginInput}
-              onChange={e => setLoginInput(e.target.value)}
-              onKeyDown={e => e.key === "Enter" && sendLoginOtp()}
-              placeholder="Phone number or email"
-            />
-            {loginInput && (
-              <p style={{ fontSize: 12, color: C.txtLight, paddingLeft: 4, marginTop: -4 }}>
-                {isEmail(loginInput) ? "📧 Email OTP" : isPhone(loginInput.replace(/\D/g, "")) ? "📱 SMS OTP" : "Enter email or 10-digit number"}
-              </p>
-            )}
-            <ClayBtn variant="primary" onClick={sendLoginOtp}
-              disabled={loginLoading || (!isEmail(loginInput.trim()) && !isPhone(loginInput.trim().replace(/\D/g, "")))}>
-              {loginLoading
-                ? <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" />
-                : "Let's Go →"}
-            </ClayBtn>
-
-            {/* OR divider */}
-            <div style={{ display: "flex", alignItems: "center", gap: 12, margin: "4px 0" }}>
-              <div style={{ flex: 1, height: 1, background: "rgba(140,100,220,0.2)" }} />
-              <span style={{ fontSize: 12, fontWeight: 600, color: C.txtLight }}>or chill with</span>
-              <div style={{ flex: 1, height: 1, background: "rgba(140,100,220,0.2)" }} />
+          <div className="flex flex-col gap-3">
+            <div>
+              <input
+                type="text"
+                value={loginInput}
+                onChange={e => setLoginInput(e.target.value)}
+                onKeyDown={e => e.key === "Enter" && sendLoginOtp()}
+                placeholder="Phone number or email"
+                className="w-full border-2 border-black bg-white px-4 py-4 text-base font-medium focus:outline-none focus:shadow-[3px_3px_0_#0A0A0A] transition-shadow"
+              />
+              {loginInput && (
+                <p className="text-xs font-mono text-black/40 mt-1 uppercase">
+                  {isEmail(loginInput) ? "Email OTP" : isPhone(loginInput.replace(/\D/g, "")) ? "SMS OTP" : "Enter email or 10-digit number"}
+                </p>
+              )}
             </div>
 
-            <ClayBtn variant="google" onClick={signInWithGoogle} disabled={loginLoading}>
+            <button
+              onClick={sendLoginOtp}
+              disabled={loginLoading || (!isEmail(loginInput.trim()) && !isPhone(loginInput.trim().replace(/\D/g, "")))}
+              className="w-full bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide py-4 shadow-[4px_4px_0_#0A0A0A] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+              {loginLoading ? "SENDING..." : "Let's Go →"}
+            </button>
+
+            {/* OR divider */}
+            <div className="flex items-center gap-0 my-1">
+              <div className="flex-1 border-t-2 border-black" />
+              <span className="bg-white px-3 font-black text-xs uppercase -mt-[2px]">or</span>
+              <div className="flex-1 border-t-2 border-black" />
+            </div>
+
+            <button
+              onClick={signInWithGoogle}
+              disabled={loginLoading}
+              className="w-full bg-white border-2 border-black text-black font-black uppercase tracking-wide py-4 shadow-[4px_4px_0_#0A0A0A] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all flex items-center justify-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed">
               <svg width="18" height="18" viewBox="0 0 48 48">
                 <path fill="#FFC107" d="M43.6 20H24v8h11.3c-1.6 4.4-5.8 7.5-11.3 7.5a12.5 12.5 0 010-25c3.2 0 6.1 1.2 8.3 3.2l5.7-5.7A21 21 0 0024 3C12.4 3 3 12.4 3 24s9.4 21 21 21c12.2 0 20.4-8.5 20.4-20.5 0-1.4-.1-2.4-.4-3.5z"/>
                 <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8A12.4 12.4 0 0124 11.5c3.2 0 6.1 1.2 8.3 3.2l5.7-5.7A21 21 0 006.3 14.7z"/>
@@ -337,34 +241,44 @@ export default function AuthPage() {
                 <path fill="#1976D2" d="M43.6 20H24v8h11.3a12.5 12.5 0 01-4.7 5.8l6.6 5.4c-.4.3 6.2-4.5 6.2-15.2 0-1.4-.1-2.4-.4-3.5z"/>
               </svg>
               Continue with Google
-            </ClayBtn>
+            </button>
           </div>
         ) : (
-          <div style={{ display: "flex", flexDirection: "column", gap: 12 }}>
-            <p style={{ textAlign: "center", fontSize: 13, color: C.txtLight }}>
-              Code sent to <span style={{ color: C.txtMid, fontWeight: 700 }}>{loginInput}</span>
+          <div className="flex flex-col gap-3">
+            <p className="text-center text-sm font-mono text-black/50 uppercase">
+              Code sent to <span className="text-black font-black">{loginInput}</span>
             </p>
-            <ClayInput
-              type="number" value={loginOtp}
+
+            <input
+              type="number"
+              value={loginOtp}
               onChange={e => setLoginOtp(e.target.value.slice(0, 6))}
               onKeyDown={e => e.key === "Enter" && verifyLoginOtp()}
               placeholder="• • • • • •"
-              style={{ textAlign: "center", fontSize: 28, fontWeight: 900, letterSpacing: "0.45em" }}
               maxLength={6}
+              className="w-full border-2 border-black bg-white px-4 py-4 text-center text-4xl font-black tracking-[0.5em] focus:outline-none focus:shadow-[3px_3px_0_#0A0A0A] transition-shadow"
             />
-            <ClayBtn variant="primary" onClick={verifyLoginOtp} disabled={loginLoading || loginOtp.length < 4}>
-              {loginLoading ? <span className="w-4 h-4 rounded-full border-2 border-white/30 border-t-white animate-spin" /> : "Verify ✓"}
-            </ClayBtn>
-            <ClayBtn variant="ghost" onClick={() => { setLoginStep("idle"); setLoginOtp(""); setLoginError(""); }}>
+
+            <button
+              onClick={verifyLoginOtp}
+              disabled={loginLoading || loginOtp.length < 4}
+              className="w-full bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide py-4 shadow-[4px_4px_0_#0A0A0A] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all disabled:opacity-40 disabled:cursor-not-allowed">
+              {loginLoading ? "VERIFYING..." : "Verify ✓"}
+            </button>
+
+            <button
+              onClick={() => { setLoginStep("idle"); setLoginOtp(""); setLoginError(""); }}
+              className="w-full border-2 border-black bg-transparent text-black font-bold uppercase py-3 hover:bg-black hover:text-[#FFE500] transition-colors">
               ← Go back
-            </ClayBtn>
+            </button>
           </div>
         )}
 
-        <p style={{ textAlign: "center", marginTop: 20, fontSize: 11, color: C.txtLight }}>
-          By continuing you agree to our <span style={{ fontWeight: 700, cursor: "pointer" }}>Terms & Privacy Policy</span>
+        <p className="text-xs text-center text-black/40 font-mono mt-4 uppercase">
+          By continuing you agree to our{" "}
+          <span className="font-black cursor-pointer underline">Terms & Privacy Policy</span>
         </p>
-      </ClayCard>
-    </ClayPage>
+      </div>
+    </div>
   );
 }

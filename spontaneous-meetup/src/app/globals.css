@@ -119,6 +119,18 @@ html.dark {
   opacity: 0.5;
 }
 
+/* ── Page transitions ───────────────────────────────────────────────────── */
+@keyframes page-in {
+  from { opacity: 0; transform: translateY(7px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.page-animate {
+  animation: page-in 0.22s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+@media (prefers-reduced-motion: reduce) {
+  .page-animate { animation: none; }
+}
+
 /* ── Animations ─────────────────────────────────────────────────────────── */
 @keyframes duo-float {
   0%, 100% { transform: translateY(0px); }
@@ -204,9 +216,22 @@ html.dark {
 }
 
 /* ── Mobile / PWA ────────────────────────────────────────────────────────── */
+html {
+  scroll-behavior: smooth;
+}
 html, body {
   overscroll-behavior: none;
   -webkit-overflow-scrolling: touch;
+  text-rendering: optimizeSpeed;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* Promote fixed navbar to its own compositing layer — eliminates paint on scroll */
+header, aside, nav {
+  will-change: transform;
+  transform: translateZ(0);
+  backface-visibility: hidden;
 }
 
 .mobile-top-bar {

@@ -177,10 +177,11 @@ export default function Navbar() {
     return () => document.removeEventListener("mousedown", handler);
   }, []);
 
-  function handleLogout() {
+  async function handleLogout() {
     setShowDropdown(false);
-    logout();
-    router.push("/auth");
+    await logout();
+    // Hard reload so middleware re-evaluates the cleared session cookie
+    window.location.href = "/auth";
   }
 
   return (
@@ -321,8 +322,8 @@ export default function Navbar() {
           })}
         </nav>
 
-        {/* Bottom: notifications + dark mode toggle */}
-        <div className="px-3 pb-5 space-y-1 flex-shrink-0" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
+        {/* Bottom: pings + dark mode + user profile */}
+        <div className="px-3 pb-4 flex-shrink-0" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
           {currentUser && (
             <div className="pt-3 flex items-center gap-4 px-4 py-1">
               <NotificationsPanel sidebarMode />
@@ -331,7 +332,7 @@ export default function Navbar() {
           )}
           <button
             onClick={toggleDarkMode}
-            className="flex items-center gap-4 px-4 py-3 rounded-2xl text-[15px] font-semibold w-full text-left transition-all"
+            className="flex items-center gap-4 px-4 py-3 text-[15px] font-semibold w-full text-left transition-all"
             style={{ color: "rgba(255,255,255,0.55)" }}
             onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.90)"; }}
             onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.color = "rgba(255,255,255,0.55)"; }}
@@ -339,63 +340,81 @@ export default function Navbar() {
             {darkMode ? <SunIcon /> : <MoonIcon />}
             {darkMode ? "Light mode" : "Dark mode"}
           </button>
+
+          {/* User profile row — dropdown opens upward */}
+          {currentUser ? (
+            <div className="relative mt-1" ref={dropdownRef}>
+              <button
+                onClick={() => setShowDropdown((v) => !v)}
+                className="w-full flex items-center gap-3 px-3 py-2.5 transition-all"
+                style={{
+                  background: showDropdown ? "#FFE500" : "rgba(255,255,255,0.06)",
+                  border: "2px solid",
+                  borderColor: showDropdown ? "#FFE500" : "rgba(255,255,255,0.10)",
+                }}
+                onMouseEnter={(e) => { if (!showDropdown) (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.22)"; }}
+                onMouseLeave={(e) => { if (!showDropdown) (e.currentTarget as HTMLElement).style.borderColor = "rgba(255,255,255,0.10)"; }}
+              >
+                <UserAvatar user={currentUser} size={32} />
+                <div className="flex-1 min-w-0 text-left">
+                  <p className="text-sm font-bold truncate uppercase tracking-wide leading-tight"
+                    style={{ color: showDropdown ? "#0A0A0A" : "#fff" }}>
+                    {currentUser.name.split(" ")[0]}
+                  </p>
+                  <p className="text-xs truncate leading-tight"
+                    style={{ color: showDropdown ? "#555" : "rgba(255,255,255,0.4)" }}>
+                    {currentUser.neighborhood || currentUser.city}
+                  </p>
+                </div>
+                <svg width="12" height="12" viewBox="0 0 24 24" fill="none"
+                  stroke={showDropdown ? "#555" : "rgba(255,255,255,0.4)"}
+                  strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"
+                  style={{ transform: showDropdown ? "rotate(180deg)" : "rotate(0deg)", transition: "transform 0.15s" }}>
+                  <polyline points="6 9 12 15 18 9" />
+                </svg>
+              </button>
+
+              {/* Dropdown opens UPWARD so it never overlaps page content */}
+              {showDropdown && (
+                <div
+                  className="absolute left-0 right-0 bottom-full mb-2 z-[200]"
+                  style={{ background: "#FAFAF5", border: "2px solid #0A0A0A", boxShadow: "0 -4px 0 #0A0A0A" }}
+                >
+                  <Link
+                    href="/profile"
+                    onClick={() => setShowDropdown(false)}
+                    className="flex items-center gap-3 px-4 py-3 text-sm font-bold uppercase tracking-wide w-full transition-colors"
+                    style={{ color: "#0A0A0A", borderBottom: "2px solid #0A0A0A" }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#FFE500"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                  >
+                    <ProfileIcon active={false} />
+                    Profile
+                  </Link>
+                  <button
+                    onClick={handleLogout}
+                    className="flex items-center gap-3 px-4 py-3 text-sm font-bold uppercase tracking-wide w-full text-left transition-colors"
+                    style={{ color: "#FF2D2D" }}
+                    onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#FF2D2D22"; }}
+                    onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "transparent"; }}
+                  >
+                    <LogoutIcon />
+                    Log out
+                  </button>
+                </div>
+              )}
+            </div>
+          ) : (
+            <Link
+              href="/auth"
+              className="mt-1 flex items-center justify-center px-4 py-2.5 text-sm font-bold uppercase tracking-wide transition-all"
+              style={{ background: "#FFE500", color: "#0A0A0A", border: "2px solid #FFE500" }}
+            >
+              Sign in
+            </Link>
+          )}
         </div>
       </aside>
-
-      {/* ─────────────────────────────────────────────────
-          DESKTOP: top-right profile pill (fixed)
-      ───────────────────────────────────────────────── */}
-      <div className="hidden sm:block fixed top-4 right-4 z-[60]" ref={dropdownRef}>
-        {currentUser ? (
-          <>
-            <button
-              onClick={() => setShowDropdown((v) => !v)}
-              className="flex items-center gap-2.5 pl-1.5 pr-4 py-1.5 transition-all hover:opacity-90 active:scale-95"
-              style={{ background: "#FFE500", border: "2px solid #0A0A0A", boxShadow: "3px 3px 0 #0A0A0A", borderRadius: 0 }}
-            >
-              <UserAvatar user={currentUser} size={30} />
-              <span className="text-[13px] font-bold max-w-[90px] truncate uppercase tracking-wide" style={{ color: "#0A0A0A" }}>
-                {currentUser.name.split(" ")[0]}
-              </span>
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#666"
-                strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
-                <polyline points="6 9 12 15 18 9" />
-              </svg>
-            </button>
-
-            {showDropdown && (
-              <div className="absolute right-0 top-full mt-2 z-[100] min-w-[190px]" style={{ background: "#FAFAF5", border: "2px solid #0A0A0A", boxShadow: "4px 4px 0 #0A0A0A" }}>
-                <div className="px-4 py-3" style={{ borderBottom: "2px solid #0A0A0A" }}>
-                  <p className="text-sm font-bold uppercase tracking-wide truncate" style={{ color: "#0A0A0A" }}>{currentUser.name}</p>
-                  <p className="text-xs mt-0.5 truncate" style={{ color: "#555" }}>{currentUser.neighborhood || currentUser.city}</p>
-                </div>
-                <Link href="/profile" onClick={() => setShowDropdown(false)}
-                  className="flex items-center gap-3 px-4 py-3 text-sm font-bold uppercase tracking-wide transition-colors w-full"
-                  style={{ color: "#0A0A0A" }}
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "#FFE500"}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}>
-                  <ProfileIcon active={false} />Profile
-                </Link>
-                <button onClick={handleLogout}
-                  className="flex items-center gap-3 px-4 py-3 text-sm font-bold uppercase tracking-wide w-full text-left transition-colors"
-                  style={{ color: "#FF2D2D", borderTop: "2px solid #0A0A0A" }}
-                  onMouseEnter={e => (e.currentTarget as HTMLElement).style.background = "#FF2D2D22"}
-                  onMouseLeave={e => (e.currentTarget as HTMLElement).style.background = "transparent"}>
-                  <LogoutIcon />Log out
-                </button>
-              </div>
-            )}
-          </>
-        ) : (
-          <Link
-            href="/auth"
-            className="px-5 py-2 rounded-full text-[13px] font-bold shadow-xl transition-all hover:opacity-90 active:scale-95"
-            style={{ background: "#fff", color: "#111" }}
-          >
-            Sign in
-          </Link>
-        )}
-      </div>
     </>
   );
 }

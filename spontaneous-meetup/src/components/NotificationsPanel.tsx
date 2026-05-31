@@ -50,8 +50,13 @@ export default function NotificationsPanel({ sidebarMode = false }: { sidebarMod
   useEffect(() => {
     if (!currentUser) return;
 
-    // Use a unique channel name every mount so we never hit an already-subscribed channel
-    const channelName = `pings_inbox_${currentUser.id}_${Date.now()}`;
+    const channelName = `pings_inbox_${currentUser.id}`;
+
+    // Remove any stale channel with this name before subscribing (prevents StrictMode double-invoke error)
+    supabase.getChannels()
+      .filter((c) => c.topic === `realtime:${channelName}`)
+      .forEach((c) => supabase.removeChannel(c));
+
     const channel = supabase
       .channel(channelName)
       .on("postgres_changes", {

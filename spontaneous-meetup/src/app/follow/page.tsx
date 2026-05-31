@@ -51,7 +51,7 @@ const AVATAR_COLORS = [
 
 function UserAvatar({ initials, idx, size = 48 }: { initials: string; idx: number; size?: number }) {
   return (
-    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0"
+    <div className="rounded-full flex items-center justify-center text-white font-bold flex-shrink-0 border-2 border-black"
       style={{ width: size, height: size, fontSize: size * 0.35, background: AVATAR_COLORS[idx % AVATAR_COLORS.length] }}>
       {initials}
     </div>
@@ -68,24 +68,23 @@ function UserCard({ user, idx, isFollowing, onToggle }: {
   const router = useRouter();
 
   return (
-    <div className="bg-white border-b border-gray-100 px-4 py-3.5 flex items-center gap-3">
+    <div className="bg-white border-b-2 border-black px-4 py-3.5 flex items-center gap-3 hover:bg-[#F2F1EB] transition-colors">
       <button onClick={() => router.push(`/profile/${user.id}`)} className="flex-shrink-0 active:opacity-70 transition-opacity">
         <UserAvatar initials={user.avatar} idx={idx} size={48} />
       </button>
 
       <button onClick={() => router.push(`/profile/${user.id}`)} className="flex-1 min-w-0 text-left">
         <div className="flex items-center gap-1.5 flex-wrap">
-          <span className="font-bold text-sm text-gray-900 hover:underline">{user.name}</span>
+          <span className="font-black text-sm text-black uppercase">{user.name}</span>
           {user.isVerified && (
-            <svg width="13" height="13" viewBox="0 0 24 24"><circle cx="12" cy="12" r="10" fill="#3b82f6"/><polyline points="8 12 11 15 16 9" fill="none" stroke="white" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/></svg>
+            <span className="border-2 border-black bg-black text-[#FFE500] text-[10px] font-black uppercase px-2 py-0.5">VERIFIED</span>
           )}
-          <span className="text-xs text-amber-500 font-semibold">⭐ {user.trustScore}</span>
+          <span className="border-2 border-black bg-[#FFE500] text-black text-[10px] font-black uppercase px-2 py-0.5">⭐ {user.trustScore}</span>
         </div>
-        <p className="text-xs text-gray-400 mt-0.5">📍 {user.neighborhood} · {user.mutualCount} mutual</p>
+        <p className="text-xs text-black/50 mt-0.5 font-medium">📍 {user.neighborhood} · {user.mutualCount} mutual</p>
         <div className="flex flex-wrap gap-1 mt-1.5">
           {user.interests.slice(0, 3).map(i => (
-            <span key={i} className="text-[10px] px-2 py-0.5 rounded-full font-semibold"
-              style={{ background: "rgba(124,58,237,0.08)", color: "#7c3aed" }}>
+            <span key={i} className="border-2 border-black bg-[#FFE500] text-black text-[10px] font-black uppercase px-2 py-0.5">
               {INTEREST_EMOJI[i as Interest]} {i}
             </span>
           ))}
@@ -94,12 +93,11 @@ function UserCard({ user, idx, isFollowing, onToggle }: {
 
       <button
         onClick={() => { if (!currentUser) { router.push("/auth"); return; } onToggle(); }}
-        className={`flex-shrink-0 px-4 py-1.5 rounded-full text-xs font-bold transition-all active:scale-95 ${
+        className={`flex-shrink-0 font-black uppercase tracking-wide px-4 py-2 border-2 border-black text-xs transition-all active:translate-x-[2px] active:translate-y-[2px] ${
           isFollowing
-            ? "border border-gray-300 text-gray-600 hover:border-red-300 hover:text-red-500 hover:bg-red-50"
-            : "text-white"
-        }`}
-        style={isFollowing ? {} : { background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
+            ? "bg-white text-black shadow-[2px_2px_0_#0A0A0A] hover:bg-[#FF2D2D] hover:text-white active:shadow-none"
+            : "bg-[#FFE500] text-black shadow-[3px_3px_0_#0A0A0A] active:shadow-none"
+        }`}>
         {isFollowing ? "Following" : "Follow"}
       </button>
     </div>
@@ -129,7 +127,7 @@ export default function FollowPage() {
   const tabs: { key: Tab; label: string; count: number }[] = [
     { key: "following",    label: "Following",    count: followingSet.size },
     { key: "followers",    label: "Followers",    count: MOCK_FOLLOWERS.length },
-    { key: "suggestions",  label: "Suggestions",  count: MOCK_SUGGESTIONS.length },
+    { key: "suggestions",  label: "Suggest",      count: MOCK_SUGGESTIONS.length },
   ];
 
   const lists: Record<Tab, MockUser[]> = {
@@ -144,37 +142,37 @@ export default function FollowPage() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-[#F2F1EB]">
       {/* Sticky header */}
-      <div className="sticky top-0 z-30 bg-white border-b border-gray-100">
+      <div className="sticky top-0 z-30 bg-white border-b-2 border-black">
         <div className="max-w-xl mx-auto px-4 pt-4 pb-0">
-          <h1 className="text-xl font-bold text-gray-900 mb-3">People</h1>
+          <h1 className="text-3xl font-black uppercase tracking-tight text-black mb-3">People</h1>
 
           {/* Search */}
-          <div className="flex items-center gap-2 bg-gray-100 rounded-full px-4 py-2.5 mb-3">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-gray-400 flex-shrink-0">
+          <div className="flex items-center gap-2 border-2 border-black bg-white px-4 py-2.5 mb-3 focus-within:shadow-[3px_3px_0_#0A0A0A] transition-shadow">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-black/40 flex-shrink-0">
               <circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/>
             </svg>
             <input
               value={search}
               onChange={e => setSearch(e.target.value)}
               placeholder="Search people..."
-              className="flex-1 bg-transparent text-sm outline-none text-gray-800 placeholder-gray-400"
+              className="flex-1 bg-transparent text-sm outline-none text-black placeholder-black/40 font-medium"
             />
           </div>
 
           {/* Tabs */}
-          <div className="flex gap-1">
-            {tabs.map(t => (
+          <div className="flex gap-0 border-2 border-black">
+            {tabs.map((t, i) => (
               <button key={t.key} onClick={() => setTab(t.key)}
-                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-sm font-bold transition-all border-b-2 ${
+                className={`flex-1 flex items-center justify-center gap-1.5 py-2.5 text-xs font-black uppercase tracking-wide transition-all ${
                   tab === t.key
-                    ? "border-blue-600 text-blue-600"
-                    : "border-transparent text-gray-400 hover:text-gray-600"
-                }`}>
+                    ? "bg-black text-[#FFE500]"
+                    : "bg-transparent text-black hover:bg-[#FFE500] transition-colors"
+                } ${i < tabs.length - 1 ? "border-r-2 border-black" : ""}`}>
                 {t.label}
-                <span className={`text-[11px] px-1.5 py-0.5 rounded-full font-bold ${
-                  tab === t.key ? "bg-blue-100 text-blue-600" : "bg-gray-100 text-gray-400"
+                <span className={`text-[11px] px-1.5 py-0.5 border border-current font-black ${
+                  tab === t.key ? "border-[#FFE500] text-[#FFE500]" : "border-black text-black"
                 }`}>{t.count}</span>
               </button>
             ))}
@@ -185,46 +183,48 @@ export default function FollowPage() {
       <div className="max-w-xl mx-auto">
         {/* Guest banner */}
         {!currentUser && (
-          <div className="mx-4 mt-4 p-4 rounded-2xl border-2 flex items-center gap-3"
-            style={{ background: "rgba(37,99,235,0.06)", borderColor: "rgba(37,99,235,0.18)" }}>
-            <span className="text-2xl flex-shrink-0">👥</span>
-            <div className="flex-1 min-w-0">
-              <p className="text-sm font-bold text-gray-800">Sign in to follow people</p>
-              <p className="text-xs text-gray-500 mt-0.5">Build your hangout crew</p>
+          <div className="mx-4 mt-4 border-2 border-black bg-white shadow-[4px_4px_0_#0A0A0A]">
+            <div className="bg-[#FFE500] border-b-2 border-black px-4 py-3">
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50">GUEST</span>
             </div>
-            <button onClick={() => router.push("/auth")}
-              className="px-3 py-1.5 rounded-full text-xs font-bold text-white flex-shrink-0"
-              style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
-              Sign in
-            </button>
+            <div className="px-4 py-3 flex items-center gap-3">
+              <span className="text-2xl flex-shrink-0">👥</span>
+              <div className="flex-1 min-w-0">
+                <p className="text-sm font-black text-black uppercase">Sign in to follow people</p>
+                <p className="text-xs text-black/50 mt-0.5 font-medium">Build your hangout crew</p>
+              </div>
+              <button onClick={() => router.push("/auth")}
+                className="bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide shadow-[3px_3px_0_#0A0A0A] px-4 py-2 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all text-xs flex-shrink-0">
+                Sign in
+              </button>
+            </div>
           </div>
         )}
 
         {tab === "suggestions" && (
-          <p className="px-4 pt-4 text-xs text-gray-400 font-semibold">
+          <p className="px-4 pt-4 text-[10px] font-black uppercase tracking-[0.2em] text-black/50">
             People with similar interests near you
           </p>
         )}
 
         {filtered.length === 0 ? (
-          <div className="text-center py-16 text-gray-400">
+          <div className="text-center py-16 px-4">
             <p className="text-4xl mb-3">{tab === "following" ? "🤝" : tab === "followers" ? "👥" : "✨"}</p>
-            <p className="font-semibold text-gray-600">
+            <p className="font-black uppercase text-black text-xl mb-1">
               {tab === "following" ? "Not following anyone yet" : tab === "followers" ? "No followers yet" : "No suggestions"}
             </p>
-            <p className="text-sm mt-1 text-gray-400">
+            <p className="text-sm font-medium text-black/50 mt-1">
               {tab === "following" ? "Check suggestions to find people" : "Go free to get discovered!"}
             </p>
             {tab === "following" && (
               <button onClick={() => setTab("suggestions")}
-                className="mt-4 px-5 py-2 rounded-full text-sm font-bold text-white"
-                style={{ background: "linear-gradient(135deg,#2563eb,#7c3aed)" }}>
+                className="mt-4 bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide shadow-[3px_3px_0_#0A0A0A] px-4 py-2 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all text-sm">
                 Find people →
               </button>
             )}
           </div>
         ) : (
-          <div className="mt-2">
+          <div className="mt-4 mx-4 border-2 border-black bg-white shadow-[4px_4px_0_#0A0A0A]">
             {filtered.map((user, idx) => (
               <UserCard
                 key={user.id}

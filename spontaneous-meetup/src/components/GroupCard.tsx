@@ -29,7 +29,10 @@ function ExpiryBadge({ expiresAt }: { expiresAt: number }) {
   void tick;
   const { label, urgent, critical } = timeLeft(expiresAt);
   return (
-    <span className={`font-medium ${critical ? "text-red-600 animate-pulse" : urgent ? "text-orange-500" : "text-amber-600"}`}>
+    <span
+      className="font-black text-xs uppercase"
+      style={{ color: critical ? "#FF2D2D" : urgent ? "#FF6B00" : "#0A0A0A" }}
+    >
       {label}
     </span>
   );
@@ -101,145 +104,203 @@ export default function GroupCard({ group, onRepost, showRepost }: Props) {
 
   return (
     <>
-      <div className={`bg-white border rounded-xl p-4 hover:border-gray-300 hover:shadow-sm transition-all ${isExpired ? "opacity-60" : "border-gray-200"}`}>
-
-        {/* Header */}
-        <div className="flex items-start justify-between gap-3 mb-2">
+      <div
+        className="bg-white mb-3 transition-all"
+        style={{
+          border: "2px solid #0A0A0A",
+          boxShadow: isExpired ? "none" : "4px 4px 0 #0A0A0A",
+          opacity: isExpired ? 0.55 : 1,
+        }}
+      >
+        {/* Yellow header bar */}
+        <div
+          className="flex items-center justify-between px-4 py-3"
+          style={{ borderBottom: "2px solid #0A0A0A", background: "#FFE500" }}
+        >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-xl bg-gray-100 flex items-center justify-center text-xl flex-shrink-0">
+            <div
+              className="w-9 h-9 flex items-center justify-center text-xl flex-shrink-0"
+              style={{ border: "2px solid #0A0A0A", background: "#fff" }}
+            >
               {INTEREST_EMOJI[group.topic] ?? "✨"}
             </div>
             <div>
-              <div className="flex items-center gap-1.5 flex-wrap">
-                <h3 className="font-semibold text-gray-900 text-sm">{group.name}</h3>
+              <div className="flex items-center gap-2 flex-wrap">
+                <h3 className="font-black text-sm uppercase tracking-wide text-black">{group.name}</h3>
                 {group.femaleOnly && (
-                  <span className="px-1.5 py-0.5 bg-pink-50 border border-pink-200 text-pink-600 text-xs rounded-full font-medium">♀ Women only</span>
+                  <span className="text-[10px] font-black uppercase px-1.5 py-0.5"
+                    style={{ border: "2px solid #0A0A0A", background: "#0A0A0A", color: "#FFE500" }}>
+                    ♀ Women only
+                  </span>
                 )}
-                <span className="px-1.5 py-0.5 bg-green-50 border border-green-200 text-green-700 text-xs rounded-full font-medium">🌍 Public</span>
+                <span className="text-[10px] font-black uppercase px-1.5 py-0.5"
+                  style={{ border: "2px solid #0A0A0A", background: "#00C44A", color: "#0A0A0A" }}>
+                  🌍 Public
+                </span>
               </div>
-              <p className="text-xs text-gray-500">{group.neighborhood}</p>
+              <p className="text-xs font-mono text-black/50 mt-0.5">{group.neighborhood}</p>
             </div>
           </div>
-          <div className="flex items-center gap-1.5 flex-shrink-0">
+          <div className="flex items-center gap-2 flex-shrink-0">
             <InterestBadge interest={group.topic} />
             {currentUser && !isMember && (
               <button onClick={() => setShowReport(true)} title="Report group"
-                className="w-6 h-6 rounded-full hover:bg-gray-100 flex items-center justify-center text-gray-400 text-xs">🚩</button>
-            )}
-          </div>
-        </div>
-
-        {/* Safe location */}
-        {safeLocation && (
-          <div className="flex items-center gap-1.5 text-xs text-gray-600 mb-2 bg-gray-50 rounded-lg px-2.5 py-1.5">
-            <span>{SAFE_LOCATION_ICONS[safeLocation.type]}</span>
-            <span className="font-medium">{safeLocation.name}</span>
-            <span className="ml-auto px-1.5 py-0.5 bg-emerald-100 text-emerald-700 rounded text-xs font-medium">Safe place ✓</span>
-          </div>
-        )}
-
-        {/* Low trust score warning */}
-        {badTrustMembers.length > 0 && (
-          <div className="flex items-center gap-1.5 mb-2 bg-red-50 border border-red-200 rounded-lg px-2.5 py-1.5">
-            <span className="text-xs">⚠️</span>
-            <span className="text-xs text-red-700 font-medium">
-              {badTrustMembers.length === 1
-                ? `${badTrustMembers[0].name} has a low trust score (${badTrustMembers[0].trustScore.toFixed(1)})`
-                : `${badTrustMembers.length} members have low trust scores`}
-            </span>
-          </div>
-        )}
-
-        {/* Friend vouching */}
-        {vouchedBy.length > 0 && (
-          <div className="flex items-center gap-1.5 mb-2 bg-indigo-50 border border-indigo-100 rounded-lg px-2.5 py-1.5">
-            <span className="text-xs">🤝</span>
-            <span className="text-xs text-indigo-700 font-medium">
-              {vouchedBy[0].name}{vouchedBy.length > 1 ? ` +${vouchedBy.length - 1}` : ""} you know {vouchedBy.length > 1 ? "are" : "is"} in this group
-            </span>
-          </div>
-        )}
-
-        {/* Time */}
-        <div className="flex items-center gap-3 text-xs text-gray-500 mb-3">
-          <span>🕐 {group.plannedTime}</span>
-          <span>⏱ <ExpiryBadge expiresAt={group.expiresAt} /></span>
-        </div>
-
-        {/* Vibe reactions */}
-        <div className="flex items-center gap-1.5 mb-3">
-          {REACTIONS.map((emoji) => (
-            <button key={emoji} onClick={() => handleReaction(emoji)}
-              className={`flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border transition-all ${
-                myReaction === emoji
-                  ? "bg-blue-100 border-blue-300 text-blue-700"
-                  : "bg-gray-50 border-gray-200 text-gray-600 hover:bg-gray-100"
-              }`}>
-              {emoji} {reactions[emoji] > 0 && <span>{reactions[emoji]}</span>}
-            </button>
-          ))}
-          <button onClick={copyInvite}
-            className="ml-auto flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border border-gray-200 bg-gray-50 text-gray-500 hover:bg-gray-100 transition-colors">
-            {copied ? "✓ Copied" : "🔗 Invite"}
-          </button>
-        </div>
-
-        {/* Attendance confirmation banner */}
-        {needsConfirmation && (
-          <div className="mb-3 bg-orange-50 border border-orange-200 rounded-xl px-3 py-2.5 flex items-center gap-2">
-            <span className="text-base">⏰</span>
-            <p className="text-xs text-orange-800 flex-1 font-medium">Meet-up is soon — are you still coming?</p>
-            <button onClick={() => setConfirmed(true)}
-              className="px-2.5 py-1 bg-orange-500 text-white text-xs font-semibold rounded-lg hover:bg-orange-600 transition-colors">
-              I&apos;m coming ✓
-            </button>
-          </div>
-        )}
-        {confirmed && isMember && (
-          <div className="mb-3 bg-green-50 border border-green-200 rounded-xl px-3 py-2 flex items-center gap-2">
-            <span className="text-green-600 text-xs font-medium">✓ You confirmed attendance</span>
-          </div>
-        )}
-
-        {/* Footer */}
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-2">
-            <div className="flex -space-x-1">
-              {group.members.slice(0, 4).map((m) => (
-                <div key={m.id} title={m.name}
-                  className="w-6 h-6 rounded-full bg-blue-600 text-white text-xs font-bold flex items-center justify-center border-2 border-white overflow-hidden">
-                  {m.avatar?.startsWith("http") ? (
-                    <img src={m.avatar} referrerPolicy="no-referrer" className="w-full h-full object-cover" alt="" />
-                  ) : (
-                    <span>{m.avatar?.charAt(0)}</span>
-                  )}
-                </div>
-              ))}
-            </div>
-            <span className="text-xs text-gray-500">{group.members.length}/{group.maxMembers}</span>
-          </div>
-
-          <div className="flex items-center gap-2">
-            {isExpired && showRepost && onRepost && (
-              <button onClick={() => onRepost(group)}
-                className="px-3 py-1 bg-violet-600 text-white text-xs font-medium rounded-lg hover:bg-violet-700 transition-colors">
-                🔁 Repost
+                className="w-6 h-6 flex items-center justify-center text-xs hover:opacity-70"
+                style={{ border: "2px solid #0A0A0A", background: "#fff" }}>
+                🚩
               </button>
             )}
-            <Link href={`/groups/${group.id}`} className="text-xs text-blue-600 hover:underline font-medium">Open →</Link>
-            {canJoin && !isExpired && (
-              <button onClick={() => joinGroup(group.id)}
-                className="px-3 py-1 bg-blue-600 text-white text-xs font-medium rounded-lg hover:bg-blue-700 transition-colors">Join</button>
-            )}
-            {isMember && (
-              <span className="px-3 py-1 bg-green-100 text-green-700 text-xs font-medium rounded-lg">Joined ✓</span>
-            )}
-            {!canJoin && !isMember && group.femaleOnly && currentUser?.gender !== "Female" && (
-              <span className="px-2 py-1 bg-pink-50 text-pink-500 text-xs font-medium rounded-lg">♀ Only</span>
-            )}
-            {isFull && !isMember && (
-              <span className="px-3 py-1 bg-gray-100 text-gray-500 text-xs font-medium rounded-lg">Full</span>
-            )}
+          </div>
+        </div>
+
+        {/* Body */}
+        <div className="px-4 py-3 space-y-2">
+
+          {/* Safe location */}
+          {safeLocation && (
+            <div className="flex items-center gap-2 px-3 py-2"
+              style={{ border: "2px solid #0A0A0A", background: "#F2F1EB" }}>
+              <span>{SAFE_LOCATION_ICONS[safeLocation.type]}</span>
+              <span className="text-xs font-bold uppercase text-black flex-1">{safeLocation.name}</span>
+              <span className="text-[10px] font-black uppercase px-2 py-0.5"
+                style={{ border: "2px solid #0A0A0A", background: "#00C44A", color: "#0A0A0A" }}>
+                Safe ✓
+              </span>
+            </div>
+          )}
+
+          {/* Low trust warning */}
+          {badTrustMembers.length > 0 && (
+            <div className="flex items-center gap-2 px-3 py-2"
+              style={{ border: "2px solid #FF2D2D", background: "#FF2D2D11" }}>
+              <span className="text-xs">⚠️</span>
+              <span className="text-xs font-bold text-[#FF2D2D] uppercase">
+                {badTrustMembers.length === 1
+                  ? `${badTrustMembers[0].name} has low trust (${badTrustMembers[0].trustScore.toFixed(1)})`
+                  : `${badTrustMembers.length} members have low trust scores`}
+              </span>
+            </div>
+          )}
+
+          {/* Friend vouching */}
+          {vouchedBy.length > 0 && (
+            <div className="flex items-center gap-2 px-3 py-2"
+              style={{ border: "2px solid #0038FF", background: "#0038FF11" }}>
+              <span className="text-xs">🤝</span>
+              <span className="text-xs font-bold uppercase" style={{ color: "#0038FF" }}>
+                {vouchedBy[0].name}{vouchedBy.length > 1 ? ` +${vouchedBy.length - 1}` : ""} you know {vouchedBy.length > 1 ? "are" : "is"} in this group
+              </span>
+            </div>
+          )}
+
+          {/* Time row */}
+          <div className="flex items-center gap-4 text-xs font-mono text-black/60">
+            <span>🕐 {group.plannedTime}</span>
+            <span>⏱ <ExpiryBadge expiresAt={group.expiresAt} /></span>
+          </div>
+
+          {/* Reactions */}
+          <div className="flex items-center gap-1.5">
+            {REACTIONS.map((emoji) => (
+              <button key={emoji} onClick={() => handleReaction(emoji)}
+                className="flex items-center gap-1 px-2 py-1 text-xs font-bold uppercase transition-all"
+                style={myReaction === emoji
+                  ? { border: "2px solid #0A0A0A", background: "#0A0A0A", color: "#FFE500" }
+                  : { border: "2px solid #0A0A0A", background: "#fff", color: "#0A0A0A" }}>
+                {emoji} {reactions[emoji] > 0 && <span>{reactions[emoji]}</span>}
+              </button>
+            ))}
+            <button onClick={copyInvite}
+              className="ml-auto flex items-center gap-1 px-2 py-1 text-xs font-bold uppercase transition-all"
+              style={{ border: "2px solid #0A0A0A", background: copied ? "#00C44A" : "#fff", color: "#0A0A0A" }}>
+              {copied ? "✓ Copied" : "🔗 Invite"}
+            </button>
+          </div>
+
+          {/* Attendance confirmation */}
+          {needsConfirmation && (
+            <div className="flex items-center gap-2 px-3 py-2"
+              style={{ border: "2px solid #FF6B00", background: "#FF6B0011" }}>
+              <span className="text-sm">⏰</span>
+              <p className="text-xs font-bold uppercase text-black flex-1">Meet-up is soon — still coming?</p>
+              <button onClick={() => setConfirmed(true)}
+                className="px-2 py-1 text-xs font-black uppercase transition-all"
+                style={{ border: "2px solid #0A0A0A", background: "#FFE500", color: "#0A0A0A", boxShadow: "2px 2px 0 #0A0A0A" }}>
+                I&apos;m in ✓
+              </button>
+            </div>
+          )}
+          {confirmed && isMember && (
+            <div className="px-3 py-2"
+              style={{ border: "2px solid #00C44A", background: "#00C44A22" }}>
+              <span className="text-xs font-black uppercase text-black">✓ Attendance confirmed</span>
+            </div>
+          )}
+
+          {/* Footer */}
+          <div className="flex items-center justify-between pt-1">
+            {/* Member avatars */}
+            <div className="flex items-center gap-2">
+              <div className="flex -space-x-1">
+                {group.members.slice(0, 4).map((m) => (
+                  <div key={m.id} title={m.name}
+                    className="w-6 h-6 rounded-full flex items-center justify-center text-[10px] font-black overflow-hidden flex-shrink-0"
+                    style={{ border: "2px solid #0A0A0A", background: "#FFE500", color: "#0A0A0A" }}>
+                    {m.avatar?.startsWith("http") ? (
+                      <img src={m.avatar} referrerPolicy="no-referrer" className="w-full h-full object-cover" alt="" />
+                    ) : (
+                      <span>{m.avatar?.charAt(0)}</span>
+                    )}
+                  </div>
+                ))}
+              </div>
+              <span className="text-xs font-black uppercase text-black/50">
+                {group.members.length}/{group.maxMembers}
+              </span>
+            </div>
+
+            {/* Action buttons */}
+            <div className="flex items-center gap-2">
+              {isExpired && showRepost && onRepost && (
+                <button onClick={() => onRepost(group)}
+                  className="px-3 py-1 text-xs font-black uppercase transition-all"
+                  style={{ border: "2px solid #0A0A0A", background: "#0A0A0A", color: "#FFE500", boxShadow: "2px 2px 0 #FFE500" }}>
+                  🔁 Repost
+                </button>
+              )}
+              <Link href={`/groups/${group.id}`}
+                className="px-3 py-1 text-xs font-black uppercase transition-all"
+                style={{ border: "2px solid #0A0A0A", background: "#fff", color: "#0A0A0A" }}
+                onMouseEnter={(e) => { (e.currentTarget as HTMLElement).style.background = "#FFE500"; }}
+                onMouseLeave={(e) => { (e.currentTarget as HTMLElement).style.background = "#fff"; }}>
+                Open →
+              </Link>
+              {canJoin && !isExpired && (
+                <button onClick={() => joinGroup(group.id)}
+                  className="px-3 py-1 text-xs font-black uppercase transition-all"
+                  style={{ border: "2px solid #0A0A0A", background: "#FFE500", color: "#0A0A0A", boxShadow: "2px 2px 0 #0A0A0A" }}>
+                  Join
+                </button>
+              )}
+              {isMember && (
+                <span className="px-3 py-1 text-xs font-black uppercase"
+                  style={{ border: "2px solid #00C44A", background: "#00C44A22", color: "#0A0A0A" }}>
+                  Joined ✓
+                </span>
+              )}
+              {!canJoin && !isMember && group.femaleOnly && currentUser?.gender !== "Female" && (
+                <span className="px-2 py-1 text-xs font-black uppercase"
+                  style={{ border: "2px solid #0A0A0A", background: "#F2F1EB", color: "#0A0A0A" }}>
+                  ♀ Only
+                </span>
+              )}
+              {isFull && !isMember && (
+                <span className="px-3 py-1 text-xs font-black uppercase"
+                  style={{ border: "2px solid #0A0A0A", background: "#F2F1EB", color: "#0A0A0A" }}>
+                  Full
+                </span>
+              )}
+            </div>
           </div>
         </div>
       </div>

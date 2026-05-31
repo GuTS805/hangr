@@ -175,41 +175,43 @@ export default function ExplorePage() {
 
   return (
     <>
-      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6">
+      <div className="max-w-4xl mx-auto px-3 sm:px-4 py-4 sm:py-6 bg-[#F2F1EB] min-h-screen">
         {/* Header */}
         <div className="flex items-center justify-between mb-4">
           <div>
-            <h1 className="text-lg sm:text-xl font-bold text-gray-900">Who&apos;s nearby?</h1>
-            <p className="text-xs sm:text-sm text-gray-500">
+            <h1 className="text-2xl font-black uppercase tracking-tight text-black">Who&apos;s nearby?</h1>
+            <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 mt-1">
               {activePeople.length} {activePeople.length === 1 ? "person" : "people"} free within {radius === 99 ? "any distance" : `${radius} km`}
             </p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={() => { if (!currentUser) { router.push("/auth"); return; } setShowQuickRoom(true); }}
-              className="px-3 py-1.5 bg-violet-600 text-white text-xs font-semibold rounded-xl hover:bg-violet-700 transition-colors"
+              className="bg-black border-2 border-black text-[#FFE500] font-black uppercase px-4 py-2 shadow-[3px_3px_0_#FFE500]"
             >
-              ⚡ Quick
+              ⚡ QUICK
             </button>
             <button
               onClick={() => { if (!currentUser) { router.push("/auth"); return; } setPrefilledLoc(null); setShowCreate(true); }}
-              className="px-3 py-1.5 sm:px-4 sm:py-2 bg-blue-600 text-white text-sm font-semibold rounded-xl hover:bg-blue-700 transition-colors"
+              className="bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide shadow-[3px_3px_0_#0A0A0A] px-4 py-2 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all"
             >
-              + Group
+              + GROUP
             </button>
           </div>
         </div>
 
         {/* Tabs */}
-        <div className="flex bg-gray-100 rounded-xl p-1 mb-4 gap-1">
+        <div className="flex gap-0 mb-4 border-2 border-black">
           {(["people", "groups", "map"] as Tab[]).map((t) => (
             <button key={t} onClick={() => setTab(t)}
-              className={`flex-1 py-2 rounded-lg text-xs sm:text-sm font-medium transition-all ${
-                tab === t ? "bg-white text-gray-900 shadow-sm" : "text-gray-500 hover:text-gray-700"
+              className={`flex-1 py-2 text-xs sm:text-sm font-black uppercase tracking-wide transition-all ${
+                tab === t
+                  ? "bg-black text-[#FFE500] border-r-2 border-black"
+                  : "bg-white text-black border-r-2 border-black hover:bg-[#FFE500] transition-colors last:border-r-0"
               }`}>
-              {t === "people" ? `👥 ${activePeople.length}`
-                : t === "groups" ? `🏘️ ${groups.length}`
-                : "📍 Map"}
+              {t === "people" ? `PEOPLE ${activePeople.length}`
+                : t === "groups" ? `GROUPS ${groups.length}`
+                : "MAP"}
             </button>
           ))}
         </div>
@@ -218,12 +220,20 @@ export default function ExplorePage() {
         {tab !== "map" && (
           <div className="flex gap-2 overflow-x-auto pb-2 mb-4 scrollbar-none">
             <button onClick={() => setFilter("All")}
-              className={`flex-shrink-0 px-3 py-1 rounded-full text-sm font-medium transition-colors ${filter === "All" ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}>
+              className={`flex-shrink-0 px-3 py-1 text-xs font-bold uppercase transition-colors ${
+                filter === "All"
+                  ? "bg-black text-[#FFE500] border-2 border-black"
+                  : "border-2 border-black text-black bg-white hover:bg-[#FFE500] transition-colors"
+              }`}>
               All
             </button>
             {INTERESTS.map((i) => (
               <button key={i} onClick={() => setFilter(filter === i ? "All" : i as Interest)}
-                className={`flex-shrink-0 px-3 py-1 rounded-full text-sm font-medium transition-colors ${filter === i ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"}`}>
+                className={`flex-shrink-0 px-3 py-1 text-xs font-bold uppercase transition-colors ${
+                  filter === i
+                    ? "bg-black text-[#FFE500] border-2 border-black"
+                    : "border-2 border-black text-black bg-white hover:bg-[#FFE500] transition-colors"
+                }`}>
                 {INTEREST_EMOJI[i]} {i}
               </button>
             ))}
@@ -234,9 +244,13 @@ export default function ExplorePage() {
         {tab === "groups" && (
           <div className="space-y-2">
             {filteredGroups.length === 0 ? (
-              <div className="text-center py-12 text-gray-400">
-                <p className="text-4xl mb-3">😕</p><p>No groups yet</p>
-                <button onClick={() => setShowCreate(true)} className="mt-3 text-blue-600 font-medium text-sm hover:underline">Create one →</button>
+              <div className="border-2 border-black bg-white shadow-[4px_4px_0_#0A0A0A] text-center py-12">
+                <p className="text-4xl mb-3">😕</p>
+                <p className="font-black uppercase text-black">No groups yet</p>
+                <button onClick={() => setShowCreate(true)}
+                  className="mt-3 bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide shadow-[3px_3px_0_#0A0A0A] px-4 py-2 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all">
+                  Create one →
+                </button>
               </div>
             ) : filteredGroups.map((g) => (
               <GroupCard key={g.id} group={g} onRepost={handleRepost} showRepost />
@@ -249,15 +263,15 @@ export default function ExplorePage() {
           <div className="space-y-3">
             {/* Radius filter */}
             <div className="flex items-center gap-2">
-              <span className="text-xs text-gray-400 font-medium flex-shrink-0">Within</span>
+              <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 flex-shrink-0">Within</span>
               {([0.5, 1, 2, 99] as RadiusFilter[]).map((r) => (
                 <button
                   key={r}
                   onClick={() => setRadius(r)}
-                  className={`flex-shrink-0 px-3 py-1 rounded-full text-xs font-semibold transition-colors ${
+                  className={`flex-shrink-0 px-3 py-1 text-xs font-bold uppercase transition-colors ${
                     radius === r
-                      ? "bg-green-600 text-white"
-                      : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+                      ? "bg-black text-[#FFE500] border-2 border-black"
+                      : "border-2 border-black text-black bg-white hover:bg-[#FFE500] transition-colors"
                   }`}
                 >
                   {r === 99 ? "Any" : r < 1 ? `${r * 1000}m` : `${r} km`}
@@ -266,14 +280,14 @@ export default function ExplorePage() {
             </div>
 
             {filteredPeople.length === 0 ? (
-              <div className="text-center py-12 text-gray-400">
+              <div className="border-2 border-black bg-white shadow-[4px_4px_0_#0A0A0A] text-center py-12">
                 <p className="text-4xl mb-3">👀</p>
-                <p className="text-sm font-medium text-gray-500">No one free within {radius === 99 ? "range" : radius < 1 ? `${radius * 1000}m` : `${radius} km`}</p>
-                <p className="text-xs text-gray-400 mt-1">Try expanding the radius</p>
+                <p className="font-black uppercase text-black">No one free within {radius === 99 ? "range" : radius < 1 ? `${radius * 1000}m` : `${radius} km`}</p>
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 mt-1">Try expanding the radius</p>
                 {radius !== 99 && (
                   <button
                     onClick={() => setRadius(99)}
-                    className="mt-3 text-blue-600 font-medium text-sm hover:underline"
+                    className="mt-3 bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide shadow-[3px_3px_0_#0A0A0A] px-4 py-2 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all"
                   >
                     Show everyone →
                   </button>
@@ -288,19 +302,24 @@ export default function ExplorePage() {
             {/* Neighborhood leaderboard */}
             {leaderboard.length > 0 && (
               <div className="mt-4">
-                <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">🏆 Most active nearby</p>
-                <div className="bg-white border border-gray-200 rounded-2xl overflow-hidden divide-y divide-gray-100">
+                <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 mb-3">Most active nearby</p>
+                <div className="border-2 border-black bg-white shadow-[4px_4px_0_#0A0A0A]">
+                  <div className="bg-[#FFE500] border-b-2 border-black px-4 py-3">
+                    <span className="font-black uppercase tracking-wide text-black text-sm">Leaderboard</span>
+                  </div>
                   {leaderboard.map((u, i) => (
-                    <div key={u.id} className="flex items-center gap-3 px-4 py-3">
-                      <span className="text-sm font-bold text-gray-400 w-4">{i + 1}</span>
-                      <div className="w-8 h-8 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white text-xs font-bold flex-shrink-0 overflow-hidden">
+                    <div key={u.id} className="flex items-center gap-3 px-4 py-3 border-b-2 border-black last:border-b-0">
+                      <span className="w-7 h-7 bg-[#FFE500] border-2 border-black flex items-center justify-center text-xs font-black text-black flex-shrink-0">
+                        {i + 1}
+                      </span>
+                      <div className="w-8 h-8 rounded-full bg-black flex items-center justify-center text-[#FFE500] text-xs font-black flex-shrink-0 overflow-hidden">
                         {u.avatar?.startsWith("http")
                           ? <img src={u.avatar} referrerPolicy="no-referrer" className="w-full h-full object-cover" alt="" />
                           : <span>{u.avatar?.slice(0, 1)}</span>}
                       </div>
                       <div className="flex-1 min-w-0">
-                        <p className="text-sm font-semibold text-gray-900 truncate">{u.name}</p>
-                        <p className="text-xs text-gray-400">{u.totalMeetups} meetups · ⭐ {u.trustScore.toFixed(1)}</p>
+                        <p className="text-sm font-black uppercase text-black truncate">{u.name}</p>
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50">{u.totalMeetups} meetups · {u.trustScore.toFixed(1)} ★</p>
                       </div>
                       {i === 0 && <span className="text-lg">🥇</span>}
                       {i === 1 && <span className="text-lg">🥈</span>}
@@ -318,21 +337,27 @@ export default function ExplorePage() {
           <div className="space-y-4">
 
             {/* GPS status bar */}
-            <div className="flex items-center justify-between bg-white border border-gray-200 rounded-2xl px-4 py-3">
+            <div className="flex items-center justify-between border-2 border-black bg-white shadow-[3px_3px_0_#0A0A0A] px-4 py-3">
               <div className="flex items-center gap-2.5">
                 {geoState.status === "loading" && (
-                  <div className="w-4 h-4 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin" />
+                  <div className="w-4 h-4 border-2 border-black border-t-[#FFE500] animate-spin flex-shrink-0" />
                 )}
-                {geoState.status === "ok" && <span className="w-2.5 h-2.5 bg-green-500 rounded-full" />}
-                {geoState.status === "error" && <span className="w-2.5 h-2.5 bg-red-400 rounded-full" />}
-                {geoState.status === "idle" && <span className="w-2.5 h-2.5 bg-gray-300 rounded-full" />}
+                {geoState.status === "ok" && (
+                  <span className="w-3 h-3 bg-[#00C44A] border-2 border-black inline-block flex-shrink-0" />
+                )}
+                {geoState.status === "error" && (
+                  <span className="w-3 h-3 bg-black border-2 border-black inline-block flex-shrink-0" />
+                )}
+                {geoState.status === "idle" && (
+                  <span className="w-3 h-3 bg-white border-2 border-black inline-block flex-shrink-0" />
+                )}
 
-                <p className="text-sm text-gray-700 font-medium">
+                <p className="text-sm text-black font-black uppercase">
                   {geoState.status === "loading" && "Getting your location…"}
-                  {geoState.status === "ok" && overpassLoading && "📍 Found you · Searching nearby places…"}
-                  {geoState.status === "ok" && !overpassLoading && overpassLocs.length > 0 && `📍 ${overpassLocs.length} places found near you · ±${Math.round(userAccuracy)}m`}
-                  {geoState.status === "ok" && !overpassLoading && overpassLocs.length === 0 && overpassFetched && `📍 No places via OSM · ±${Math.round(userAccuracy)}m — drop a pin on map`}
-                  {geoState.status === "ok" && !overpassLoading && !overpassFetched && `📍 Located · ±${Math.round(userAccuracy)}m`}
+                  {geoState.status === "ok" && overpassLoading && "Found you · Searching nearby places…"}
+                  {geoState.status === "ok" && !overpassLoading && overpassLocs.length > 0 && `${overpassLocs.length} places found · ±${Math.round(userAccuracy)}m`}
+                  {geoState.status === "ok" && !overpassLoading && overpassLocs.length === 0 && overpassFetched && `No places via OSM · ±${Math.round(userAccuracy)}m — drop a pin`}
+                  {geoState.status === "ok" && !overpassLoading && !overpassFetched && `Located · ±${Math.round(userAccuracy)}m`}
                   {geoState.status === "error"   && `Location unavailable — ${geoState.message}`}
                   {geoState.status === "idle"    && "Location not yet detected"}
                 </p>
@@ -340,19 +365,19 @@ export default function ExplorePage() {
               <button
                 onClick={locateMe}
                 disabled={geoState.status === "loading"}
-                className="flex items-center gap-1.5 px-3 py-1.5 bg-blue-600 text-white text-xs font-semibold rounded-xl hover:bg-blue-700 disabled:opacity-50 transition-colors"
+                className="bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide shadow-[3px_3px_0_#0A0A0A] px-4 py-2 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all disabled:opacity-50"
               >
                 {geoState.status === "loading"
                   ? "Locating…"
-                  : geoState.status === "ok" ? "🔄 Refresh" : "📍 Locate me"}
+                  : geoState.status === "ok" ? "Refresh" : "Locate me"}
               </button>
             </div>
 
             {/* Hint banner */}
-            <div className="flex items-center gap-2 bg-blue-50 border border-blue-100 rounded-xl px-4 py-2.5">
-              <span className="text-blue-500 text-sm">ℹ️</span>
-              <p className="text-xs text-blue-700">
-                <strong>Tap a marker</strong> to select a safe location · <strong>Tap anywhere on the map</strong> to drop a custom meeting point
+            <div className="border-2 border-black bg-black text-white px-4 py-3">
+              <p className="text-xs font-black uppercase">
+                <strong className="text-[#FFE500]">Tap a marker</strong> to select a safe location ·{" "}
+                <strong className="text-[#FFE500]">Tap anywhere on the map</strong> to drop a custom meeting point
               </p>
             </div>
 
@@ -360,87 +385,94 @@ export default function ExplorePage() {
             <div className="flex gap-2 overflow-x-auto pb-1 scrollbar-none">
               {(["all","cafe","mall","park","library","sports"] as LocationFilter[]).map((t) => (
                 <button key={t} onClick={() => setLocFilter(t)}
-                  className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
-                    locFilter === t ? "bg-gray-900 text-white" : "bg-gray-100 text-gray-700 hover:bg-gray-200"
+                  className={`flex-shrink-0 flex items-center gap-1.5 px-3 py-1 text-xs font-bold uppercase transition-colors ${
+                    locFilter === t
+                      ? "bg-black text-[#FFE500] border-2 border-black"
+                      : "border-2 border-black text-black bg-white hover:bg-[#FFE500] transition-colors"
                   }`}>
-                  {t === "all" ? "🗺️ All" : `${SAFE_LOCATION_ICONS[t]} ${t.charAt(0).toUpperCase() + t.slice(1)}s`}
+                  {t === "all" ? "All" : `${SAFE_LOCATION_ICONS[t]} ${t.charAt(0).toUpperCase() + t.slice(1)}s`}
                 </button>
               ))}
             </div>
 
             {/* Map */}
-            <MapView
-              locations={filteredLocs}
-              selectedId={selectedLocId}
-              userPosition={userPos}
-              userAccuracy={userAccuracy}
-              customPin={customPin}
-              flyToUser={flyToUser}
-              onSelect={(loc) => { setSelectedLocId(loc.id); setCustomPin(null); setCustomPinName(""); }}
-              onCustomPin={handleCustomPin}
-              height="460px"
-            />
+            <div className="border-2 border-black shadow-[4px_4px_0_#0A0A0A]">
+              <MapView
+                locations={filteredLocs}
+                selectedId={selectedLocId}
+                userPosition={userPos}
+                userAccuracy={userAccuracy}
+                customPin={customPin}
+                flyToUser={flyToUser}
+                onSelect={(loc) => { setSelectedLocId(loc.id); setCustomPin(null); setCustomPinName(""); }}
+                onCustomPin={handleCustomPin}
+                height="460px"
+              />
+            </div>
 
             {/* ── Bottom selection panel ── */}
             {(selectedLoc || customPin) && (
-              <div className={`rounded-2xl border-2 p-4 transition-all ${
-                customPin && !selectedLoc ? "border-blue-400 bg-blue-50" : "border-emerald-400 bg-emerald-50"
-              }`}>
+              <div className={`border-2 border-black bg-white shadow-[4px_4px_0_#0A0A0A] p-4 transition-all`}>
                 {customPin && !selectedLoc ? (
                   /* Custom pin panel */
                   <div>
-                    <div className="flex items-center justify-between mb-3">
+                    <div className="bg-[#FFE500] border-b-2 border-black px-4 py-3 -mx-4 -mt-4 mb-4 flex items-center justify-between">
                       <div className="flex items-center gap-2.5">
-                        <span className="text-2xl">📌</span>
+                        <span className="text-xl">📌</span>
                         <div>
-                          <p className="font-bold text-gray-900 text-sm">Custom meeting point</p>
-                          <p className="text-xs text-gray-500">
+                          <p className="font-black uppercase text-black text-sm">Custom meeting point</p>
+                          <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50">
                             {customPin.lat.toFixed(5)}, {customPin.lng.toFixed(5)} · Drag pin to adjust
                           </p>
                         </div>
                       </div>
-                      <button onClick={clearCustomPin} className="text-gray-400 hover:text-red-500 text-xl leading-none transition-colors">×</button>
+                      <button onClick={clearCustomPin} className="bg-black text-[#FFE500] font-black border-2 border-black w-7 h-7 flex items-center justify-center text-lg leading-none">×</button>
                     </div>
                     <div className="flex gap-2">
                       <input
                         value={customPinName}
                         onChange={(e) => setCustomPinName(e.target.value)}
                         placeholder='Name this spot — e.g. "Near Metro Gate 2"'
-                        className="flex-1 border border-blue-200 bg-white rounded-xl px-3 py-2.5 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        className="flex-1 border-2 border-black bg-white px-4 py-3 font-medium focus:outline-none focus:shadow-[3px_3px_0_#0A0A0A] text-sm"
                       />
                       <button onClick={meetAtCustomPin}
-                        className="px-5 py-2.5 bg-blue-600 text-white text-sm font-bold rounded-xl hover:bg-blue-700 transition-colors whitespace-nowrap">
+                        className="bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide shadow-[3px_3px_0_#0A0A0A] px-4 py-2 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all whitespace-nowrap">
                         Meet here →
                       </button>
                     </div>
                   </div>
                 ) : selectedLoc && (
                   /* Safe location panel */
-                  <div className="flex items-center gap-4">
-                    <span className={`w-12 h-12 rounded-xl flex items-center justify-center text-2xl border flex-shrink-0 ${SAFE_LOCATION_COLORS[selectedLoc.type]}`}>
-                      {SAFE_LOCATION_ICONS[selectedLoc.type]}
-                    </span>
-                    <div className="flex-1 min-w-0">
-                      <p className="font-bold text-gray-900">{selectedLoc.name}</p>
-                      <div className="flex items-center gap-2 flex-wrap mt-0.5">
-                        <span className="text-xs text-gray-500 capitalize">{selectedLoc.type} · {selectedLoc.neighborhood}</span>
-                        {selectedLoc.distanceKm !== undefined && (
-                          <span className="text-xs text-blue-600 font-semibold">
-                            📍 {fmtDistance(selectedLoc.distanceKm)} away
-                          </span>
-                        )}
-                        <span className="text-xs text-emerald-600 font-semibold bg-emerald-100 px-2 py-0.5 rounded-full">✓ Safe place</span>
-                      </div>
+                  <div>
+                    <div className="bg-[#FFE500] border-b-2 border-black px-4 py-3 -mx-4 -mt-4 mb-4">
+                      <span className="font-black uppercase text-black text-sm">Selected location</span>
                     </div>
-                    <div className="flex flex-col gap-1.5 flex-shrink-0">
-                      <button onClick={() => meetAtSafeLoc(selectedLoc)}
-                        className="px-5 py-2.5 bg-emerald-600 text-white text-sm font-bold rounded-xl hover:bg-emerald-700 transition-colors">
-                        Meet here →
-                      </button>
-                      <button onClick={() => setSelectedLocId(null)}
-                        className="text-xs text-center text-gray-400 hover:text-gray-600">
-                        Dismiss
-                      </button>
+                    <div className="flex items-center gap-4">
+                      <span className="w-12 h-12 border-2 border-black bg-white flex items-center justify-center text-2xl flex-shrink-0">
+                        {SAFE_LOCATION_ICONS[selectedLoc.type]}
+                      </span>
+                      <div className="flex-1 min-w-0">
+                        <p className="font-black uppercase text-black">{selectedLoc.name}</p>
+                        <div className="flex items-center gap-2 flex-wrap mt-0.5">
+                          <span className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 capitalize">{selectedLoc.type} · {selectedLoc.neighborhood}</span>
+                          {selectedLoc.distanceKm !== undefined && (
+                            <span className="text-xs font-black uppercase text-black">
+                              {fmtDistance(selectedLoc.distanceKm)} away
+                            </span>
+                          )}
+                          <span className="border-2 border-black bg-[#00C44A] text-black text-[10px] font-black uppercase px-2 py-0.5">Safe ✓</span>
+                        </div>
+                      </div>
+                      <div className="flex flex-col gap-1.5 flex-shrink-0">
+                        <button onClick={() => meetAtSafeLoc(selectedLoc)}
+                          className="bg-[#00C44A] border-2 border-black text-black font-black uppercase px-4 py-2 shadow-[3px_3px_0_#0A0A0A]">
+                          Meet here →
+                        </button>
+                        <button onClick={() => setSelectedLocId(null)}
+                          className="text-xs text-center font-black uppercase text-black/50 hover:text-black">
+                          Dismiss
+                        </button>
+                      </div>
                     </div>
                   </div>
                 )}
@@ -449,45 +481,50 @@ export default function ExplorePage() {
 
             {/* Nearby locations list */}
             <div>
-              <p className="text-xs font-semibold text-gray-500 uppercase tracking-wide mb-3">
+              <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 mb-3">
                 {geoState.status === "ok" ? "Nearest to you" : "All locations"}
               </p>
 
               {/* Loading state */}
               {overpassLoading && (
-                <div className="flex items-center gap-3 py-6 px-4 bg-white border border-gray-200 rounded-2xl mb-3">
-                  <div className="w-5 h-5 border-2 border-blue-300 border-t-blue-600 rounded-full animate-spin flex-shrink-0" />
+                <div className="flex items-center gap-3 py-6 px-4 border-2 border-black bg-white shadow-[3px_3px_0_#0A0A0A] mb-3">
+                  <div className="w-5 h-5 border-2 border-black border-t-[#FFE500] animate-spin flex-shrink-0" />
                   <div>
-                    <p className="text-sm text-gray-700 font-medium">Searching cafes, parks &amp; spots near you…</p>
-                    <p className="text-xs text-gray-400 mt-0.5">Trying multiple servers, this may take a few seconds</p>
+                    <p className="text-sm text-black font-black uppercase">Searching cafes, parks &amp; spots near you…</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 mt-0.5">Trying multiple servers, this may take a few seconds</p>
                   </div>
                 </div>
               )}
 
               {/* Empty state after all retries — drop a pin */}
               {!overpassLoading && overpassFetched && filteredLocs.length === 0 && (
-                <div className="text-center py-10 bg-white border border-gray-200 rounded-2xl mb-3">
-                  <p className="text-3xl mb-2">📌</p>
-                  <p className="text-sm font-semibold text-gray-700 mb-1">No places found via OpenStreetMap</p>
-                  <p className="text-xs text-gray-400 mb-4">
-                    OSM data might be sparse in your area.<br />
-                    <strong>Drop a custom pin on the map</strong> to set any meeting spot.
-                  </p>
-                  <button
-                    onClick={() => {
-                      if (!userPos) return;
-                      setOverpassLoading(true);
-                      setOverpassFetched(false);
-                      fetchNearbyPlaces(userPos.lat, userPos.lng, 50000).then((places) => {
-                        setOverpassLocs(places);
-                        setOverpassLoading(false);
-                        setOverpassFetched(true);
-                      });
-                    }}
-                    className="px-4 py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl hover:bg-blue-700 transition-colors"
-                  >
-                    Retry with 50 km radius →
-                  </button>
+                <div className="border-2 border-black bg-white shadow-[4px_4px_0_#0A0A0A] mb-3">
+                  <div className="bg-[#FFE500] border-b-2 border-black px-4 py-3">
+                    <span className="font-black uppercase text-black text-sm">No places found</span>
+                  </div>
+                  <div className="text-center py-10 px-4">
+                    <p className="text-3xl mb-2">📌</p>
+                    <p className="text-sm font-black uppercase text-black mb-1">No places found via OpenStreetMap</p>
+                    <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 mb-4">
+                      OSM data might be sparse in your area.<br />
+                      Drop a custom pin on the map to set any meeting spot.
+                    </p>
+                    <button
+                      onClick={() => {
+                        if (!userPos) return;
+                        setOverpassLoading(true);
+                        setOverpassFetched(false);
+                        fetchNearbyPlaces(userPos.lat, userPos.lng, 50000).then((places) => {
+                          setOverpassLocs(places);
+                          setOverpassLoading(false);
+                          setOverpassFetched(true);
+                        });
+                      }}
+                      className="bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide shadow-[3px_3px_0_#0A0A0A] px-4 py-2 active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all"
+                    >
+                      Retry with 50 km radius →
+                    </button>
+                  </div>
                 </div>
               )}
 
@@ -498,43 +535,42 @@ export default function ExplorePage() {
                   return (
                     <div key={loc.id}
                       onClick={() => { setSelectedLocId(isSelected ? null : loc.id); setCustomPin(null); }}
-                      className={`rounded-2xl border p-4 cursor-pointer transition-all ${
+                      className={`border-2 border-black cursor-pointer transition-all ${
                         isSelected
-                          ? "border-emerald-400 bg-emerald-50 shadow-sm"
-                          : "border-gray-200 bg-white hover:border-gray-300 hover:shadow-sm"
+                          ? "shadow-none translate-x-[3px] translate-y-[3px] bg-[#FFE500]"
+                          : "bg-white shadow-[3px_3px_0_#0A0A0A] hover:shadow-none hover:translate-x-[3px] hover:translate-y-[3px]"
                       }`}>
-                      <div className="flex items-start gap-3 mb-3">
-                        <span className={`w-10 h-10 rounded-xl flex items-center justify-center text-xl border flex-shrink-0 ${SAFE_LOCATION_COLORS[loc.type]}`}>
-                          {SAFE_LOCATION_ICONS[loc.type]}
-                        </span>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-gray-900 text-sm leading-tight">{loc.name}</p>
-                          <p className="text-xs text-gray-500 capitalize mt-0.5">{loc.type} · {loc.neighborhood}</p>
-                          {loc.distanceKm !== undefined && (
-                            <p className="text-xs text-blue-600 font-semibold mt-0.5">
-                              📍 {fmtDistance(loc.distanceKm)} away
-                            </p>
-                          )}
+                      {/* Card header */}
+                      <div className={`border-b-2 border-black px-4 py-3 flex items-center justify-between ${isSelected ? "bg-[#FFE500]" : "bg-[#FFE500]"}`}>
+                        <div className="flex items-center gap-2">
+                          <span className="text-xl">{SAFE_LOCATION_ICONS[loc.type]}</span>
+                          <p className="font-black uppercase text-black text-sm leading-tight">{loc.name}</p>
                         </div>
-                        <span className="text-xs text-emerald-600 bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full font-medium flex-shrink-0">
-                          Safe ✓
-                        </span>
+                        <span className="border-2 border-black bg-[#00C44A] text-black text-[10px] font-black uppercase px-2 py-0.5 flex-shrink-0">Safe ✓</span>
                       </div>
-                      {groupsHere.length > 0 && (
-                        <div className="flex flex-wrap gap-1 mb-2">
-                          {groupsHere.map((g) => (
-                            <span key={g.id} className="text-xs bg-gray-100 text-gray-600 px-2 py-0.5 rounded-full">
-                              {INTEREST_EMOJI[g.topic]} {g.name}
-                            </span>
-                          ))}
-                        </div>
-                      )}
-                      <button
-                        onClick={(e) => { e.stopPropagation(); meetAtSafeLoc(loc); }}
-                        className="w-full py-2 bg-blue-600 text-white text-xs font-semibold rounded-xl hover:bg-blue-700 transition-colors"
-                      >
-                        + Meet here
-                      </button>
+                      <div className="p-4">
+                        <p className="text-[10px] font-black uppercase tracking-[0.2em] text-black/50 capitalize mb-1">{loc.type} · {loc.neighborhood}</p>
+                        {loc.distanceKm !== undefined && (
+                          <p className="text-xs font-black uppercase text-black mb-2">
+                            {fmtDistance(loc.distanceKm)} away
+                          </p>
+                        )}
+                        {groupsHere.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mb-3">
+                            {groupsHere.map((g) => (
+                              <span key={g.id} className="text-xs border-2 border-black bg-white text-black font-bold uppercase px-2 py-0.5">
+                                {INTEREST_EMOJI[g.topic]} {g.name}
+                              </span>
+                            ))}
+                          </div>
+                        )}
+                        <button
+                          onClick={(e) => { e.stopPropagation(); meetAtSafeLoc(loc); }}
+                          className="w-full py-2 bg-black border-2 border-black text-[#FFE500] font-black uppercase text-xs shadow-[3px_3px_0_#FFE500] active:translate-x-[3px] active:translate-y-[3px] active:shadow-none transition-all"
+                        >
+                          + Meet here
+                        </button>
+                      </div>
                     </div>
                   );
                 })}
