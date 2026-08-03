@@ -1,13 +1,25 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { supabase } from "@/lib/supabase";
 import { Interest, Gender } from "@/types";
 import { INTERESTS, INTEREST_EMOJI } from "@/lib/mock-data";
 
-type LoginStep   = "idle" | "otp";
+type Step       = "details" | "credentials";
+type LoginStep  = "idle" | "otp";
+
+const PENDING_KEY = "hangr_pending_onboarding";
+
+type PendingDetails = {
+  name: string;
+  age: number;
+  gender?: Gender;
+  neighborhood?: string;
+  city?: string;
+  interests: Interest[];
+};
 
 function isEmail(v: string) { return v.includes("@"); }
 function isPhone(v: string) { return /^\d{10}$/.test(v.replace(/\s/g, "")); }
@@ -18,20 +30,79 @@ export default function AuthPage() {
   const router = useRouter();
   const { currentUser, needsOnboarding, completeOnboarding } = useStore();
 
+  const [step, setStep] = useState<Step>("details");
+
+  // Pre-auth details (collected before email/phone/Google)
+  const [name, setName]                 = useState("");
+  const [age, setAge]                   = useState("");
+  const [gender, setGender]             = useState<Gender | "">("");
+  const [selected, setSelected]         = useState<Interest[]>([]);
+  const [city, setCity]                 = useState("");
+  const [neighborhood, setNeighborhood] = useState("");
+  const [detailsError, setDetailsError] = useState("");
+
   const [loginStep, setLoginStep]       = useState<LoginStep>("idle");
   const [loginInput, setLoginInput]     = useState("");
   const [loginOtp, setLoginOtp]         = useState("");
   const [loginLoading, setLoginLoading] = useState(false);
   const [loginError, setLoginError]     = useState("");
 
-  const [age, setAge]                   = useState("");
-  const [gender, setGender]             = useState<Gender | "">("");
-  const [selected, setSelected]         = useState<Interest[]>([]);
-  const [neighborhood, setNeighborhood] = useState("");
-  const [detailsLoading, setDetailsLoading] = useState(false);
-  const [detailsError, setDetailsError]     = useState("");
+  const [autoCompleting, setAutoCompleting] = useState(false);
+  const [hasPending] = useState(
+    () => typeof window !== "undefined" && !!sessionStorage.getItem(PENDING_KEY)
+  );
+
+  // Once auth succeeds, finish onboarding with the details collected up-front
+  useEffect(() => {
+    if (!currentUser || !needsOnboarding || autoCompleting) return;
+    const raw = sessionStorage.getItem(PENDING_KEY);
+    if (!raw) return;
+    setAutoCompleting(true);
+    const details = JSON.parse(raw) as PendingDetails;
+    completeOnboarding(details).then(() => {
+      sessionStorage.removeItem(PENDING_KEY);
+      router.push("/");
+    });
+  }, [currentUser, needsOnboarding, autoCompleting, completeOnboarding, router]);
 
   if (currentUser && !needsOnboarding) { router.replace("/"); return null; }
+
+  function toggleInterest(i: Interest) {
+    setSelected(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i]);
+  }
+
+  function validateDetails(): PendingDetails | null {
+    if (!name.trim()) { setDetailsError("Naam daalo"); return null; }
+    if (!age || parseInt(age) < 16 || parseInt(age) > 60) { setDetailsError("Valid age daalo (16–60)"); return null; }
+    if (selected.length < 2) { setDetailsError("Kam se kam 2 interests choose karo"); return null; }
+    return {
+      name: name.trim(),
+      age: parseInt(age),
+      gender: (gender as Gender) || undefined,
+      city: city.trim() || undefined,
+      neighborhood: neighborhood.trim() || undefined,
+      interests: selected,
+    };
+  }
+
+  function goToCredentials(e: React.FormEvent) {
+    e.preventDefault();
+    setDetailsError("");
+    const details = validateDetails();
+    if (!details) return;
+    sessionStorage.setItem(PENDING_KEY, JSON.stringify(details));
+    setStep("credentials");
+  }
+
+  // Fallback path (e.g. session storage got cleared mid-flow) — finish onboarding directly
+  async function submitDetailsFallback(e: React.FormEvent) {
+    e.preventDefault();
+    setDetailsError("");
+    const details = validateDetails();
+    if (!details) return;
+    await completeOnboarding(details);
+    router.push("/");
+  }
 
   /* ── Auth actions ── */
   async function sendLoginOtp() {
@@ -71,100 +142,121 @@ export default function AuthPage() {
     if (error) { setLoginError(error.message); setLoginLoading(false); }
   }
 
-  async function handleOnboarding(e: React.FormEvent) {
-    e.preventDefault();
-    if (!age || parseInt(age) < 16 || parseInt(age) > 60) return setDetailsError("Valid age daalo (16–60)");
-    if (selected.length < 2) return setDetailsError("Kam se kam 2 interests choose karo");
-    setDetailsLoading(true);
-    await completeOnboarding(parseInt(age), selected, gender as Gender || undefined, neighborhood.trim() || undefined);
-    router.push("/");
+  /* ── Post-auth: waiting for auto-onboarding to finish ── */
+  if (currentUser && needsOnboarding && hasPending) {
+    return (
+      <div className="min-h-screen bg-[#F2F1EB] flex items-center justify-center p-6">
+        <div className="w-full max-w-md border-2 border-black bg-white shadow-[6px_6px_0_#0A0A0A] p-8 text-center">
+          <p className="text-sm font-mono text-black/50 uppercase tracking-wider">Setting things up…</p>
+        </div>
+      </div>
+    );
   }
 
-  function toggleInterest(i: Interest) {
-    setSelected(prev => prev.includes(i) ? prev.filter(x => x !== i) : [...prev, i]);
-  }
+  const detailsFields = (
+    <>
+      <div>
+        <label className="text-xs font-black uppercase tracking-wider text-black block mb-1.5">Name</label>
+        <input
+          type="text"
+          value={name}
+          onChange={e => setName(e.target.value)}
+          placeholder="Your name"
+          className="w-full border-2 border-black bg-white px-4 py-4 text-base font-medium focus:outline-none focus:shadow-[3px_3px_0_#0A0A0A] transition-shadow"
+        />
+      </div>
 
-  /* ── Onboarding: details (straight after login — no extra phone step) ── */
+      <div className="grid grid-cols-2 gap-3">
+        <div>
+          <label className="text-xs font-black uppercase tracking-wider text-black block mb-1.5">Age</label>
+          <input
+            type="number"
+            value={age}
+            onChange={e => setAge(e.target.value)}
+            placeholder="22"
+            min={16}
+            max={60}
+            className="w-full border-2 border-black bg-white px-4 py-4 text-base font-medium focus:outline-none focus:shadow-[3px_3px_0_#0A0A0A] transition-shadow"
+          />
+        </div>
+        <div>
+          <label className="text-xs font-black uppercase tracking-wider text-black block mb-1.5">City</label>
+          <input
+            type="text"
+            value={city}
+            onChange={e => setCity(e.target.value)}
+            placeholder="Ghaziabad"
+            className="w-full border-2 border-black bg-white px-4 py-4 text-base font-medium focus:outline-none focus:shadow-[3px_3px_0_#0A0A0A] transition-shadow"
+          />
+        </div>
+      </div>
+
+      <div>
+        <label className="text-xs font-black uppercase tracking-wider text-black block mb-1.5">Area / Neighborhood</label>
+        <input
+          type="text"
+          value={neighborhood}
+          onChange={e => setNeighborhood(e.target.value)}
+          placeholder="Crossing Republik"
+          className="w-full border-2 border-black bg-white px-4 py-4 text-base font-medium focus:outline-none focus:shadow-[3px_3px_0_#0A0A0A] transition-shadow"
+        />
+      </div>
+
+      <div>
+        <label className="text-xs font-black uppercase tracking-wider text-black block mb-2">Gender (optional)</label>
+        <div className="flex gap-2">
+          {(["Male","Female","Other"] as Gender[]).map(g => (
+            <button key={g} type="button" onClick={() => setGender(gender === g ? "" : g)}
+              className={`flex-1 py-2.5 text-sm font-black uppercase border-2 border-black transition-all cursor-pointer ${
+                gender === g ? "bg-black text-[#FFE500]" : "bg-white text-black hover:bg-[#FFE500]"
+              }`}>
+              {g === "Female" ? "♀" : g === "Male" ? "♂" : "⚧"} {g}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      <div>
+        <label className="text-xs font-black uppercase tracking-wider text-black block mb-2">Interests — pick at least 2</label>
+        <div className="flex flex-wrap gap-2">
+          {INTERESTS.map(i => {
+            const sel = selected.includes(i as Interest);
+            return (
+              <button key={i} type="button" onClick={() => toggleInterest(i as Interest)}
+                className={`border-2 border-black text-xs font-bold uppercase px-3 py-1.5 transition-all cursor-pointer ${
+                  sel ? "bg-black text-[#FFE500]" : "bg-white text-black hover:bg-[#FFE500]"
+                }`}>
+                {INTEREST_EMOJI[i]} {i}
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {detailsError && (
+        <div className="border-2 border-black bg-[#FF2D2D] text-white font-bold px-4 py-3 text-sm">
+          {detailsError}
+        </div>
+      )}
+    </>
+  );
+
+  /* ── Post-auth fallback: pending details were lost, finish here ── */
   if (currentUser && needsOnboarding) {
     return (
       <div className="min-h-screen bg-[#F2F1EB] flex items-center justify-center p-6">
         <div className="w-full max-w-md border-2 border-black bg-white shadow-[6px_6px_0_#0A0A0A] p-8">
-          {/* Yellow header bar */}
           <div className="bg-[#FFE500] border-b-2 border-black px-6 py-4 -mx-8 -mt-8 mb-6">
             <h2 className="text-2xl font-black uppercase tracking-tight text-black">Almost done!</h2>
-            <p className="text-xs font-mono text-black/60 uppercase tracking-wider mt-1">
-              Welcome, {currentUser.name.split(" ")[0]}!
-            </p>
+            <p className="text-xs font-mono text-black/60 uppercase tracking-wider mt-1">A few details to finish up</p>
           </div>
 
-          <form onSubmit={handleOnboarding} className="flex flex-col gap-4">
-            <div className="grid grid-cols-2 gap-3">
-              <div>
-                <label className="text-xs font-black uppercase tracking-wider text-black block mb-1.5">Age</label>
-                <input
-                  type="number"
-                  value={age}
-                  onChange={e => setAge(e.target.value)}
-                  placeholder="22"
-                  min={16}
-                  max={60}
-                  className="w-full border-2 border-black bg-white px-4 py-4 text-base font-medium focus:outline-none focus:shadow-[3px_3px_0_#0A0A0A] transition-shadow"
-                />
-              </div>
-              <div>
-                <label className="text-xs font-black uppercase tracking-wider text-black block mb-1.5">Area</label>
-                <input
-                  type="text"
-                  value={neighborhood}
-                  onChange={e => setNeighborhood(e.target.value)}
-                  placeholder="Crossing Republik"
-                  className="w-full border-2 border-black bg-white px-4 py-4 text-base font-medium focus:outline-none focus:shadow-[3px_3px_0_#0A0A0A] transition-shadow"
-                />
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-black uppercase tracking-wider text-black block mb-2">Gender (optional)</label>
-              <div className="flex gap-2">
-                {(["Male","Female","Other"] as Gender[]).map(g => (
-                  <button key={g} type="button" onClick={() => setGender(gender === g ? "" : g)}
-                    className={`flex-1 py-2.5 text-sm font-black uppercase border-2 border-black transition-all cursor-pointer ${
-                      gender === g ? "bg-black text-[#FFE500]" : "bg-white text-black hover:bg-[#FFE500]"
-                    }`}>
-                    {g === "Female" ? "♀" : g === "Male" ? "♂" : "⚧"} {g}
-                  </button>
-                ))}
-              </div>
-            </div>
-
-            <div>
-              <label className="text-xs font-black uppercase tracking-wider text-black block mb-2">Interests — pick at least 2</label>
-              <div className="flex flex-wrap gap-2">
-                {INTERESTS.map(i => {
-                  const sel = selected.includes(i as Interest);
-                  return (
-                    <button key={i} type="button" onClick={() => toggleInterest(i as Interest)}
-                      className={`border-2 border-black text-xs font-bold uppercase px-3 py-1.5 transition-all cursor-pointer ${
-                        sel ? "bg-black text-[#FFE500]" : "bg-white text-black hover:bg-[#FFE500]"
-                      }`}>
-                      {INTEREST_EMOJI[i]} {i}
-                    </button>
-                  );
-                })}
-              </div>
-            </div>
-
-            {detailsError && (
-              <div className="border-2 border-black bg-[#FF2D2D] text-white font-bold px-4 py-3 text-sm">
-                {detailsError}
-              </div>
-            )}
-
+          <form onSubmit={submitDetailsFallback} className="flex flex-col gap-4">
+            {detailsFields}
             <button
               type="submit"
-              disabled={detailsLoading}
-              className="w-full bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide py-4 shadow-[4px_4px_0_#0A0A0A] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-              {detailsLoading ? "..." : "Let's Go!"}
+              className="w-full bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide py-4 shadow-[4px_4px_0_#0A0A0A] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all">
+              Let&apos;s Go!
             </button>
           </form>
         </div>
@@ -172,21 +264,46 @@ export default function AuthPage() {
     );
   }
 
-  /* ── Main login ──────────────────────────────────────────────────────────── */
+  /* ── Step 1: details, before any auth ── */
+  if (step === "details") {
+    return (
+      <div className="min-h-screen bg-[#F2F1EB] flex items-center justify-center p-6">
+        <div className="w-full max-w-md border-2 border-black bg-white shadow-[6px_6px_0_#0A0A0A] p-8">
+          <div className="text-center mb-6">
+            <div className="w-16 h-16 border-2 border-black bg-[#FFE500] flex items-center justify-center text-3xl mb-4 shadow-[3px_3px_0_#0A0A0A] mx-auto">
+              ⚡
+            </div>
+            <h1 className="text-4xl font-black uppercase tracking-tight text-black leading-none mb-1">hangr</h1>
+            <p className="text-sm font-mono text-black/50 uppercase tracking-wider">meet people. right now.</p>
+          </div>
+
+          <form onSubmit={goToCredentials} className="flex flex-col gap-4">
+            {detailsFields}
+            <button
+              type="submit"
+              className="w-full bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide py-4 shadow-[4px_4px_0_#0A0A0A] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all">
+              Next →
+            </button>
+          </form>
+        </div>
+      </div>
+    );
+  }
+
+  /* ── Step 2: credentials (email/phone or Google) ── */
   return (
     <div className="min-h-screen bg-[#F2F1EB] flex items-center justify-center p-6">
       <div className="w-full max-w-md border-2 border-black bg-white shadow-[6px_6px_0_#0A0A0A] p-8">
 
-        {/* Brand */}
         <div className="text-center mb-8">
-          {/* Logo */}
           <div className="w-16 h-16 border-2 border-black bg-[#FFE500] flex items-center justify-center text-3xl mb-4 shadow-[3px_3px_0_#0A0A0A] mx-auto">
             ⚡
           </div>
-          <h1 className="text-4xl font-black uppercase tracking-tight text-black leading-none mb-1">hangr</h1>
-          <p className="text-sm font-mono text-black/50 uppercase tracking-wider">meet people. right now.</p>
+          <h1 className="text-2xl font-black uppercase tracking-tight text-black leading-none mb-1">
+            Hey {name.split(" ")[0]} 👋
+          </h1>
+          <p className="text-sm font-mono text-black/50 uppercase tracking-wider">how do we reach you?</p>
 
-          {/* Badge pill */}
           <div className="mt-3 inline-flex items-center gap-1 border-2 border-black bg-black text-[#FFE500] text-xs font-black uppercase px-3 py-1">
             <span>🛡️</span> Verified spots only
           </div>
@@ -223,7 +340,6 @@ export default function AuthPage() {
               {loginLoading ? "SENDING..." : "Let's Go →"}
             </button>
 
-            {/* OR divider */}
             <div className="flex items-center gap-0 my-1">
               <div className="flex-1 border-t-2 border-black" />
               <span className="bg-white px-3 font-black text-xs uppercase -mt-[2px]">or</span>
@@ -241,6 +357,12 @@ export default function AuthPage() {
                 <path fill="#1976D2" d="M43.6 20H24v8h11.3a12.5 12.5 0 01-4.7 5.8l6.6 5.4c-.4.3 6.2-4.5 6.2-15.2 0-1.4-.1-2.4-.4-3.5z"/>
               </svg>
               Continue with Google
+            </button>
+
+            <button
+              onClick={() => setStep("details")}
+              className="w-full border-2 border-black bg-transparent text-black font-bold uppercase py-3 hover:bg-black hover:text-[#FFE500] transition-colors">
+              ← Edit details
             </button>
           </div>
         ) : (

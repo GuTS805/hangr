@@ -212,7 +212,7 @@ interface AppState {
 
   // Auth
   initAuth: () => Promise<void>;
-  completeOnboarding: (age: number, interests: Interest[], gender?: Gender, neighborhood?: string) => Promise<void>;
+  completeOnboarding: (details: { name: string; age: number; interests: Interest[]; gender?: Gender; neighborhood?: string; city?: string }) => Promise<void>;
   logout: () => Promise<void>;
 
   // Free status
@@ -343,23 +343,33 @@ export const useStore = create<AppState>()((set, get) => ({
     set({ _groupsChannel: groupsChannel });
   },
 
-  completeOnboarding: async (age, interests, gender, neighborhood) => {
+  completeOnboarding: async ({ name, age, interests, gender, neighborhood, city }) => {
     const { currentUser } = get();
     if (!currentUser) return;
 
     await supabase
       .from("profiles")
       .update({
+        name,
         age,
         interests,
         gender: gender ?? null,
         neighborhood: neighborhood ?? "",
+        city: city ?? currentUser.city,
         onboarded: true,
       })
       .eq("id", currentUser.id);
 
     set({
-      currentUser: { ...currentUser, age, interests, gender, neighborhood: neighborhood ?? "" },
+      currentUser: {
+        ...currentUser,
+        name,
+        age,
+        interests,
+        gender,
+        neighborhood: neighborhood ?? "",
+        city: city ?? currentUser.city,
+      },
       needsOnboarding: false,
     });
   },
