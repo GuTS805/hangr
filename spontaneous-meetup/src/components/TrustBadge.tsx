@@ -38,11 +38,11 @@ export default function TrustBadge({
       {/* Verified badges */}
       {isVerified && (
         <span
-          title="Google Verified"
+          title="Photo Verified"
           className={`inline-flex items-center gap-1 font-black uppercase ${px}`}
           style={{ border: "2px solid #0038FF", background: "#0038FF", color: "#fff" }}
         >
-          ✓ Verified
+          📸 Verified
         </span>
       )}
       {collegeVerified && (

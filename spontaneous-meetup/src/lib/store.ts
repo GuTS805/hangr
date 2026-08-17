@@ -28,6 +28,7 @@ function mapProfile(row: ProfileRow): User {
     statusText: row.status_text ?? undefined,
     streakDays: row.streak_days ?? 0,
     totalMeetups: row.total_meetups ?? 0,
+    bio: row.bio ?? undefined,
   };
 }
 
@@ -252,7 +253,9 @@ interface AppState {
 
   // Profile
   updateGenderSettings: (gender: Gender | undefined, showGender: boolean) => void;
+  updateProfile: (updates: { name?: string; age?: number; interests?: Interest[]; neighborhood?: string; bio?: string; avatar?: string }) => Promise<void>;
   verifyCollege: () => void;
+  verifyPhoto: (selfieDataUrl: string) => Promise<void>;
   updateStatus: (text: string) => void;
   updateStreak: () => void;
 
@@ -926,6 +929,23 @@ export const useStore = create<AppState>()((set, get) => ({
       .eq("id", currentUser.id);
   },
 
+  updateProfile: async (updates) => {
+    const { currentUser } = get();
+    if (!currentUser) return;
+
+    set({ currentUser: { ...currentUser, ...updates } });
+
+    const dbUpdates: Record<string, unknown> = {};
+    if (updates.name !== undefined) dbUpdates.name = updates.name;
+    if (updates.age !== undefined) dbUpdates.age = updates.age;
+    if (updates.interests !== undefined) dbUpdates.interests = updates.interests;
+    if (updates.neighborhood !== undefined) dbUpdates.neighborhood = updates.neighborhood;
+    if (updates.bio !== undefined) dbUpdates.bio = updates.bio;
+    if (updates.avatar !== undefined) dbUpdates.avatar = updates.avatar;
+
+    await supabase.from("profiles").update(dbUpdates).eq("id", currentUser.id);
+  },
+
   verifyCollege: () => {
     const { currentUser } = get();
     if (!currentUser) return;
@@ -935,6 +955,35 @@ export const useStore = create<AppState>()((set, get) => ({
     supabase.from("profiles")
       .update({ college_verified: true })
       .eq("id", currentUser.id);
+  },
+
+  // Called only after the caller has already run a live face-match against
+  // the profile photo (see faceVerify.ts) — this just persists the result.
+  verifyPhoto: async (selfieDataUrl) => {
+    const { currentUser } = get();
+    if (!currentUser) return;
+
+    const path = `${currentUser.id}/${Date.now()}.jpg`;
+    let selfiePath: string | null = null;
+    try {
+      const blob = await fetch(selfieDataUrl).then((r) => r.blob());
+      const { error } = await supabase.storage
+        .from("verification-selfies")
+        .upload(path, blob, { contentType: "image/jpeg", upsert: false });
+      if (!error) selfiePath = path;
+    } catch {
+      // selfie upload is best-effort audit trail — don't block verification on it
+    }
+
+    set((s) => ({
+      currentUser: s.currentUser ? { ...s.currentUser, isVerified: true } : null,
+    }));
+
+    await supabase.from("profiles").update({
+      is_verified: true,
+      photo_verified_at: new Date().toISOString(),
+      verification_selfie_url: selfiePath,
+    }).eq("id", currentUser.id);
   },
 
   updateStatus: (text) => {

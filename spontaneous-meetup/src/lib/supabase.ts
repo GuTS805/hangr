@@ -34,6 +34,9 @@ export interface ProfileRow {
   streak_days: number | null;
   last_active_date: string | null;
   total_meetups: number | null;
+  photo_verified_at: string | null;
+  verification_selfie_url: string | null;
+  bio: string | null;
 }
 
 export interface GroupRow {

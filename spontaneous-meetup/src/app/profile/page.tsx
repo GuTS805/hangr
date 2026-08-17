@@ -3,12 +3,12 @@
 import { useState, useEffect, useRef, useMemo } from "react";
 import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
-import { supabase } from "@/lib/supabase";
 import { Interest, Gender, Post } from "@/types";
 import { INTERESTS, INTEREST_EMOJI } from "@/lib/mock-data";
 import TrustBadge from "@/components/TrustBadge";
 import { STATUS_PRESETS } from "@/components/UserCard";
 import ImageCropModal from "@/components/ImageCropModal";
+import PhotoVerificationModal from "@/components/PhotoVerificationModal";
 
 // ── Cover options ────────────────────────────────────────────────────────────
 
@@ -97,7 +97,7 @@ export default function ProfilePage() {
   const router = useRouter();
   const {
     currentUser, isFree, freeUntil, toggleFree, logout,
-    groups, blockedUserIds, unblockUser, updateGenderSettings, verifyCollege,
+    groups, blockedUserIds, unblockUser, updateGenderSettings, updateProfile, verifyCollege,
     nearbyUsers, updateStatus, posts, isAuthLoading,
   } = useStore();
 
@@ -106,8 +106,7 @@ export default function ProfilePage() {
   const [age, setAge]               = useState("");
   const [neighborhood, setNeighborhood] = useState("");
   const [selected, setSelected]     = useState<Interest[]>([]);
-  const [gender, setGender]         = useState<Gender | "">("");
-  const [showGender, setShowGender] = useState(true);
+  const [bio, setBio]               = useState("");
   const [rightTab, setRightTab]     = useState<RightTab>("status");
   const [collegeEmail, setCollegeEmail] = useState("");
   const [collegeMsg, setCollegeMsg] = useState("");
@@ -129,6 +128,7 @@ export default function ProfilePage() {
   const [loggingOut, setLoggingOut] = useState(false);
 
   const [cropModal, setCropModal] = useState<{ file: File; type: "avatar" | "cover" } | null>(null);
+  const [showPhotoVerify, setShowPhotoVerify] = useState(false);
 
   // Highlights
   const [highlightIds, setHighlightIds] = useState<string[]>([]);
@@ -252,19 +252,15 @@ export default function ProfilePage() {
     if (!name.trim() || !age) return;
     setSaving(true);
 
-    const updates: Record<string, unknown> = {
+    await updateProfile({
       name: name.trim(),
       age: parseInt(age),
       interests: selected,
-      gender: gender || null,
-      show_gender: showGender,
       neighborhood: neighborhood.trim(),
-    };
-    if (pendingAvatar) updates.avatar = pendingAvatar;
+      bio: bio.trim(),
+      ...(pendingAvatar ? { avatar: pendingAvatar } : {}),
+    });
 
-    await supabase.from("profiles").update(updates).eq("id", currentUser!.id);
-
-    updateGenderSettings(gender as Gender || undefined, showGender);
     if (pendingAvatar) setPendingAvatar(null);
     setSaving(false);
     setEditing(false);
@@ -300,8 +296,7 @@ export default function ProfilePage() {
     setAge(currentUser.age?.toString() ?? "");
     setNeighborhood(currentUser.neighborhood ?? "");
     setSelected(currentUser.interests);
-    setGender(currentUser.gender ?? "");
-    setShowGender(currentUser.showGender);
+    setBio(currentUser.bio ?? "");
     setPendingAvatar(null);
     setEditing(true);
   }
@@ -424,11 +419,13 @@ export default function ProfilePage() {
                 isVerified={currentUser.isVerified} collegeVerified={currentUser.collegeVerified} size="md" />
             </div>
 
-            <p className="text-sm text-black/60 mb-4 leading-relaxed font-mono">
+            <p className="text-sm text-black/60 mb-1 leading-relaxed font-mono">
               {currentUser.age} y/o · {currentUser.city}
               {currentUser.neighborhood && ` · ${currentUser.neighborhood}`}
               {currentUser.showGender && currentUser.gender && ` · ${currentUser.gender}`}
-              {" · "}Down to hang out anytime 🙌
+            </p>
+            <p className="text-sm text-black/70 mb-4 leading-relaxed font-mono">
+              {currentUser.bio || "Down to hang out anytime 🙌"}
             </p>
 
             {/* Stats */}
@@ -469,22 +466,19 @@ export default function ProfilePage() {
                     className="w-full border-2 border-black bg-white px-3 py-2 text-sm focus:outline-none focus:shadow-[2px_2px_0_#0A0A0A] transition-shadow" />
                 </div>
 
-                {/* Gender */}
                 <div>
-                  <label className="block text-xs font-black uppercase text-black mb-1.5">Gender</label>
-                  <div className="flex gap-2 mb-2">
-                    {(["Male", "Female", "Other"] as Gender[]).map((g) => (
-                      <button key={g} type="button" onClick={() => setGender(gender === g ? "" : g)}
-                        className={`flex-1 py-1.5 text-xs font-black uppercase border-2 border-black transition-all ${gender === g ? "bg-black text-[#FFE500]" : "bg-white text-black hover:bg-[#FFE500]"}`}>
-                        {g}
-                      </button>
-                    ))}
+                  <div className="flex items-center justify-between mb-1">
+                    <label className="block text-xs font-black uppercase text-black">Bio</label>
+                    <span className="text-xs font-mono text-black/40">{bio.length}/150</span>
                   </div>
-                  <label className="flex items-center gap-2 cursor-pointer">
-                    <input type="checkbox" checked={showGender} onChange={(e) => setShowGender(e.target.checked)} className="w-3.5 h-3.5 accent-black" />
-                    <span className="text-xs font-mono text-black/60 uppercase">Show gender on profile</span>
-                  </label>
+                  <textarea value={bio} onChange={(e) => setBio(e.target.value.slice(0, 150))}
+                    placeholder="A line about yourself…" rows={3}
+                    className="w-full border-2 border-black bg-white px-3 py-2 text-sm resize-none focus:outline-none focus:shadow-[2px_2px_0_#0A0A0A] transition-shadow" />
                 </div>
+
+                <p className="text-xs font-mono text-black/40 uppercase">
+                  Gender can&apos;t be edited here — see the Safety tab.
+                </p>
 
                 {/* Interests */}
                 <div>
@@ -634,15 +628,15 @@ export default function ProfilePage() {
                   <div className="space-y-2">
                     <div className={`flex items-center justify-between border-2 border-black px-4 py-3 ${currentUser.isVerified ? "bg-[#F2F1EB]" : "bg-white"}`}>
                       <div className="flex items-center gap-3">
-                        <span className="text-xl">🔵</span>
+                        <span className="text-xl">📸</span>
                         <div>
-                          <p className="text-sm font-black uppercase text-black">Google Account</p>
-                          <p className="text-xs font-mono text-black/40 uppercase">Sign in with Google to verify</p>
+                          <p className="text-sm font-black uppercase text-black">Photo Verification</p>
+                          <p className="text-xs font-mono text-black/40 uppercase">Live selfie matched to your profile photo</p>
                         </div>
                       </div>
                       {currentUser.isVerified
                         ? <span className="border-2 border-black bg-black text-[#FFE500] text-xs font-black uppercase px-2 py-0.5">✓ Verified</span>
-                        : <button className="border-2 border-black bg-black text-[#FFE500] text-xs font-black uppercase px-2 py-0.5 hover:bg-[#FFE500] hover:text-black transition-colors">Verify</button>
+                        : <button onClick={() => setShowPhotoVerify(true)} className="border-2 border-black bg-black text-[#FFE500] text-xs font-black uppercase px-2 py-0.5 hover:bg-[#FFE500] hover:text-black transition-colors cursor-pointer">Verify</button>
                       }
                     </div>
 
@@ -690,17 +684,29 @@ export default function ProfilePage() {
                 </div>
 
                 <div>
-                  <p className="text-sm font-black uppercase text-black mb-3">Gender Privacy</p>
+                  <p className="text-sm font-black uppercase text-black mb-3">Gender</p>
                   <div className="border-2 border-black bg-[#F2F1EB] px-4 py-3 space-y-3">
-                    <div className="flex gap-2">
-                      {(["Male", "Female", "Other"] as Gender[]).map((g) => (
-                        <button key={g} type="button"
-                          onClick={() => { const ng = currentUser.gender === g ? undefined : g; updateGenderSettings(ng, currentUser.showGender); }}
-                          className={`flex-1 py-1.5 text-xs font-black uppercase border-2 border-black transition-all ${currentUser.gender === g ? "bg-black text-[#FFE500]" : "bg-white text-black hover:bg-[#FFE500]"}`}>
-                          {g}
-                        </button>
-                      ))}
-                    </div>
+                    {currentUser.gender ? (
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-black uppercase text-black">
+                          {currentUser.gender === "Female" ? "♀" : currentUser.gender === "Male" ? "♂" : "⚧"} {currentUser.gender}
+                        </span>
+                        <span className="text-xs font-mono text-black/40 uppercase">Set at signup · can&apos;t be changed</span>
+                      </div>
+                    ) : (
+                      <div>
+                        <p className="text-xs font-mono text-black/40 uppercase mb-2">Not set — choose once, it can&apos;t be changed later</p>
+                        <div className="flex gap-2">
+                          {(["Male", "Female", "Other"] as Gender[]).map((g) => (
+                            <button key={g} type="button"
+                              onClick={() => updateGenderSettings(g, currentUser.showGender)}
+                              className="flex-1 py-1.5 text-xs font-black uppercase border-2 border-black bg-white text-black hover:bg-[#FFE500] transition-all">
+                              {g}
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
                     <label className="flex items-center gap-2 cursor-pointer">
                       <input type="checkbox" checked={currentUser.showGender} onChange={(e) => updateGenderSettings(currentUser.gender, e.target.checked)} className="w-4 h-4 accent-black" />
                       <span className="text-sm font-mono text-black/60 uppercase text-xs">Show gender on my profile</span>
@@ -773,41 +779,39 @@ export default function ProfilePage() {
                   )}
                 </div>
 
-                {/* Women's safety section */}
-                {currentUser.gender === "Female" && (
-                  <div className="border-2 border-black bg-[#F2F1EB] px-4 py-4 space-y-4">
-                    <div className="flex items-center gap-2">
-                      <span className="text-black">♀</span>
-                      <p className="text-sm font-black uppercase text-black">Women&apos;s Safety Settings</p>
-                    </div>
-                    <label className="flex items-start gap-3 cursor-pointer">
-                      <input type="checkbox" checked={verifiedPingsOnly}
-                        onChange={(e) => {
-                          setVerifiedPingsOnly(e.target.checked);
-                          localStorage.setItem("hangr_verified_pings_only", String(e.target.checked));
-                        }}
-                        className="w-4 h-4 mt-0.5 accent-black flex-shrink-0" />
-                      <div>
-                        <p className="text-xs font-black uppercase text-black">Only show pings from verified users</p>
-                        <p className="text-xs font-mono text-black/40 uppercase mt-0.5">Pings from unverified accounts are hidden from your inbox</p>
-                      </div>
-                    </label>
-                    <div className="space-y-1.5 pt-1 border-t-2 border-black">
-                      <p className="text-xs font-black uppercase text-black">Before every meetup</p>
-                      {[
-                        "Join only women-only or verified groups",
-                        "Tell your emergency contact where you're going",
-                        "Use the SOS button inside any group if you feel unsafe",
-                        "The fake safety call feature can help you exit politely",
-                      ].map((tip) => (
-                        <div key={tip} className="flex items-start gap-1.5">
-                          <span className="text-black/40 text-xs mt-0.5">•</span>
-                          <p className="text-xs font-mono text-black/60 uppercase">{tip}</p>
-                        </div>
-                      ))}
-                    </div>
+                {/* Enhanced safety settings — available to everyone individually, not tied to gender */}
+                <div className="border-2 border-black bg-[#F2F1EB] px-4 py-4 space-y-4">
+                  <div className="flex items-center gap-2">
+                    <span className="text-black">🛡️</span>
+                    <p className="text-sm font-black uppercase text-black">Enhanced Safety Settings</p>
                   </div>
-                )}
+                  <label className="flex items-start gap-3 cursor-pointer">
+                    <input type="checkbox" checked={verifiedPingsOnly}
+                      onChange={(e) => {
+                        setVerifiedPingsOnly(e.target.checked);
+                        localStorage.setItem("hangr_verified_pings_only", String(e.target.checked));
+                      }}
+                      className="w-4 h-4 mt-0.5 accent-black flex-shrink-0" />
+                    <div>
+                      <p className="text-xs font-black uppercase text-black">Only show pings from verified users</p>
+                      <p className="text-xs font-mono text-black/40 uppercase mt-0.5">Pings from unverified accounts are hidden from your inbox</p>
+                    </div>
+                  </label>
+                  <div className="space-y-1.5 pt-1 border-t-2 border-black">
+                    <p className="text-xs font-black uppercase text-black">Before every meetup</p>
+                    {[
+                      "Join only women-only or verified groups",
+                      "Tell your emergency contact where you're going",
+                      "Use the SOS button inside any group if you feel unsafe",
+                      "The fake safety call feature can help you exit politely",
+                    ].map((tip) => (
+                      <div key={tip} className="flex items-start gap-1.5">
+                        <span className="text-black/40 text-xs mt-0.5">•</span>
+                        <p className="text-xs font-mono text-black/60 uppercase">{tip}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
               </>
             )}
 
@@ -918,6 +922,8 @@ export default function ProfilePage() {
           onCancel={() => setCropModal(null)}
         />
       )}
+
+      {showPhotoVerify && <PhotoVerificationModal onClose={() => setShowPhotoVerify(false)} />}
     </div>
   );
 }

@@ -61,6 +61,7 @@ export interface User {
   statusText?: string;   // story-style status
   streakDays?: number;   // daily hangout streak
   totalMeetups?: number; // lifetime group count
+  bio?: string;          // free-text about-me
 }
 
 export interface SafeLocation {
