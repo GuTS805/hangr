@@ -2,46 +2,30 @@
 
 import { useState, useMemo, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { useStore } from "@/lib/store";
+import { useStore, mapProfile } from "@/lib/store";
+import { supabase, ProfileRow } from "@/lib/supabase";
 import { INTEREST_EMOJI } from "@/lib/mock-data";
-import { Interest, Post, PostComment } from "@/types";
+import { Interest, Post, User } from "@/types";
 
-// ── Mock users for demo (match IDs used in mock posts) ───────────────────────
-interface PublicUser {
-  id: string;
-  name: string;
-  avatar: string;
-  neighborhood: string;
-  city: string;
-  age: number;
-  interests: Interest[];
-  isVerified: boolean;
-  trustScore: number;
-  totalMeetups: number;
-  streakDays: number;
-  statusText?: string;
-  isFree: boolean;
-  gender?: string;
-  showGender: boolean;
-  joinedAt: number;
-}
+type PublicUser = User;
 
+// ── Mock users — demo fallback only, for the mock posts/follow-suggestions shown when real data is sparse ──
 const MOCK_USERS: PublicUser[] = [
-  { id: "u_aryan",  name: "Aryan Sharma",  avatar: "AR", neighborhood: "Crossing Republik", city: "Noida", age: 22, interests: ["Cafes","Cricket","Gaming"],      isVerified: true,  trustScore: 4.8, totalMeetups: 12, streakDays: 5, statusText: "Always down for chai ☕", isFree: true,  showGender: true, gender: "Male",   joinedAt: Date.now() - 90 * 86400000 },
-  { id: "u_priya",  name: "Priya Verma",   avatar: "PR", neighborhood: "Indirapuram",        city: "Noida", age: 21, interests: ["Gym","Music","Cafes"],           isVerified: false, trustScore: 4.5, totalMeetups: 7,  streakDays: 2, statusText: "Badminton anyone? 🏸",   isFree: true,  showGender: true, gender: "Female", joinedAt: Date.now() - 60 * 86400000 },
-  { id: "u_sahil",  name: "Sahil Khan",    avatar: "SK", neighborhood: "Vaishali",           city: "Noida", age: 23, interests: ["Gaming","Football","Cricket"],   isVerified: true,  trustScore: 4.9, totalMeetups: 20, streakDays: 8, statusText: "FIFA champion 🎮🏆",       isFree: false, showGender: true, gender: "Male",   joinedAt: Date.now() - 120 * 86400000 },
-  { id: "u_neha",   name: "Neha Gupta",    avatar: "NG", neighborhood: "Raj Nagar Ext.",     city: "Noida", age: 20, interests: ["Cricket","Movies","Food"],       isVerified: false, trustScore: 4.4, totalMeetups: 5,  streakDays: 0, statusText: undefined,                  isFree: false, showGender: true, gender: "Female", joinedAt: Date.now() - 30 * 86400000 },
-  { id: "u_vishal", name: "Vishal Tyagi",  avatar: "VT", neighborhood: "Kaushambi",          city: "Noida", age: 24, interests: ["Coding","Cafes","Gaming"],       isVerified: false, trustScore: 4.2, totalMeetups: 3,  streakDays: 1, statusText: "Side project mode 💻",    isFree: true,  showGender: false, joinedAt: Date.now() - 45 * 86400000 },
-  { id: "u1",       name: "Priya Verma",   avatar: "PR", neighborhood: "Indirapuram",        city: "Noida", age: 21, interests: ["Cafes","Music","Anime"],         isVerified: false, trustScore: 4.8, totalMeetups: 7,  streakDays: 2, isFree: true,  showGender: true, gender: "Female", joinedAt: Date.now() - 60 * 86400000 },
-  { id: "u2",       name: "Arjun Sharma",  avatar: "AS", neighborhood: "Crossing Republik",  city: "Noida", age: 22, interests: ["Gaming","Coding"],              isVerified: true,  trustScore: 4.7, totalMeetups: 10, streakDays: 3, isFree: true,  showGender: true, gender: "Male",   joinedAt: Date.now() - 50 * 86400000 },
-  { id: "u3",       name: "Sahil Khan",    avatar: "SK", neighborhood: "Vaishali",           city: "Noida", age: 23, interests: ["Gaming","Football","Cricket"],   isVerified: true,  trustScore: 4.9, totalMeetups: 20, streakDays: 8, isFree: false, showGender: true, gender: "Male",   joinedAt: Date.now() - 120 * 86400000 },
-  { id: "u5",       name: "Rohit Mishra",  avatar: "RO", neighborhood: "Kaushambi",          city: "Noida", age: 25, interests: ["Cafes","Cricket"],              isVerified: false, trustScore: 4.3, totalMeetups: 4,  streakDays: 0, isFree: false, showGender: true, gender: "Male",   joinedAt: Date.now() - 70 * 86400000 },
-  { id: "u6",       name: "Sneha Rawat",   avatar: "SR", neighborhood: "Sector 50",          city: "Noida", age: 21, interests: ["Movies","Music","Anime"],        isVerified: true,  trustScore: 5.0, totalMeetups: 15, streakDays: 6, isFree: false, showGender: true, gender: "Female", joinedAt: Date.now() - 80 * 86400000 },
-  { id: "u7",       name: "Vishal Tyagi",  avatar: "VT", neighborhood: "Kaushambi",          city: "Noida", age: 24, interests: ["Coding","Gaming"],              isVerified: false, trustScore: 4.2, totalMeetups: 3,  streakDays: 1, isFree: false, showGender: false, joinedAt: Date.now() - 45 * 86400000 },
-  { id: "u8",       name: "Kabir Tiwari",  avatar: "KT", neighborhood: "Indirapuram",        city: "Noida", age: 26, interests: ["Football","Cricket","Gym"],      isVerified: false, trustScore: 4.6, totalMeetups: 8,  streakDays: 4, isFree: true,  showGender: true, gender: "Male",   joinedAt: Date.now() - 55 * 86400000 },
-  { id: "u9",       name: "Riya Mehta",    avatar: "RM", neighborhood: "Sector 62",          city: "Noida", age: 20, interests: ["Anime","Gaming","Music"],        isVerified: true,  trustScore: 4.9, totalMeetups: 11, streakDays: 7, isFree: false, showGender: true, gender: "Female", joinedAt: Date.now() - 35 * 86400000 },
-  { id: "u10",      name: "Dev Agarwal",   avatar: "DA", neighborhood: "Vaishali",           city: "Noida", age: 23, interests: ["Coding","Cafes"],               isVerified: false, trustScore: 4.4, totalMeetups: 2,  streakDays: 0, isFree: false, showGender: true, gender: "Male",   joinedAt: Date.now() - 20 * 86400000 },
-  { id: "u11",      name: "Tanya Singh",   avatar: "TS", neighborhood: "Crossing Republik",  city: "Noida", age: 22, interests: ["Movies","Food","Music"],         isVerified: true,  trustScore: 4.7, totalMeetups: 9,  streakDays: 3, isFree: false, showGender: true, gender: "Female", joinedAt: Date.now() - 65 * 86400000 },
+  { id: "u_aryan",  name: "Aryan Sharma",  avatar: "AR", neighborhood: "Crossing Republik", city: "Noida", age: 22, interests: ["Cafes","Cricket","Gaming"],      isVerified: true,  collegeVerified: false, trustScore: 4.8, reviewCount: 0, totalMeetups: 12, streakDays: 5, statusText: "Always down for chai ☕", isFree: true,  showGender: true, gender: "Male",   joinedAt: Date.now() - 90 * 86400000 },
+  { id: "u_priya",  name: "Priya Verma",   avatar: "PR", neighborhood: "Indirapuram",        city: "Noida", age: 21, interests: ["Gym","Music","Cafes"],           isVerified: false, collegeVerified: false, trustScore: 4.5, reviewCount: 0, totalMeetups: 7,  streakDays: 2, statusText: "Badminton anyone? 🏸",   isFree: true,  showGender: true, gender: "Female", joinedAt: Date.now() - 60 * 86400000 },
+  { id: "u_sahil",  name: "Sahil Khan",    avatar: "SK", neighborhood: "Vaishali",           city: "Noida", age: 23, interests: ["Gaming","Football","Cricket"],   isVerified: true,  collegeVerified: false, trustScore: 4.9, reviewCount: 0, totalMeetups: 20, streakDays: 8, statusText: "FIFA champion 🎮🏆",       isFree: false, showGender: true, gender: "Male",   joinedAt: Date.now() - 120 * 86400000 },
+  { id: "u_neha",   name: "Neha Gupta",    avatar: "NG", neighborhood: "Raj Nagar Ext.",     city: "Noida", age: 20, interests: ["Cricket","Movies","Food"],       isVerified: false, collegeVerified: false, trustScore: 4.4, reviewCount: 0, totalMeetups: 5,  streakDays: 0, statusText: undefined,                  isFree: false, showGender: true, gender: "Female", joinedAt: Date.now() - 30 * 86400000 },
+  { id: "u_vishal", name: "Vishal Tyagi",  avatar: "VT", neighborhood: "Kaushambi",          city: "Noida", age: 24, interests: ["Coding","Cafes","Gaming"],       isVerified: false, collegeVerified: false, trustScore: 4.2, reviewCount: 0, totalMeetups: 3,  streakDays: 1, statusText: "Side project mode 💻",    isFree: true,  showGender: false, joinedAt: Date.now() - 45 * 86400000 },
+  { id: "u1",       name: "Priya Verma",   avatar: "PR", neighborhood: "Indirapuram",        city: "Noida", age: 21, interests: ["Cafes","Music","Anime"],         isVerified: false, collegeVerified: false, trustScore: 4.8, reviewCount: 0, totalMeetups: 7,  streakDays: 2, isFree: true,  showGender: true, gender: "Female", joinedAt: Date.now() - 60 * 86400000 },
+  { id: "u2",       name: "Arjun Sharma",  avatar: "AS", neighborhood: "Crossing Republik",  city: "Noida", age: 22, interests: ["Gaming","Coding"],              isVerified: true,  collegeVerified: false, trustScore: 4.7, reviewCount: 0, totalMeetups: 10, streakDays: 3, isFree: true,  showGender: true, gender: "Male",   joinedAt: Date.now() - 50 * 86400000 },
+  { id: "u3",       name: "Sahil Khan",    avatar: "SK", neighborhood: "Vaishali",           city: "Noida", age: 23, interests: ["Gaming","Football","Cricket"],   isVerified: true,  collegeVerified: false, trustScore: 4.9, reviewCount: 0, totalMeetups: 20, streakDays: 8, isFree: false, showGender: true, gender: "Male",   joinedAt: Date.now() - 120 * 86400000 },
+  { id: "u5",       name: "Rohit Mishra",  avatar: "RO", neighborhood: "Kaushambi",          city: "Noida", age: 25, interests: ["Cafes","Cricket"],              isVerified: false, collegeVerified: false, trustScore: 4.3, reviewCount: 0, totalMeetups: 4,  streakDays: 0, isFree: false, showGender: true, gender: "Male",   joinedAt: Date.now() - 70 * 86400000 },
+  { id: "u6",       name: "Sneha Rawat",   avatar: "SR", neighborhood: "Sector 50",          city: "Noida", age: 21, interests: ["Movies","Music","Anime"],        isVerified: true,  collegeVerified: false, trustScore: 5.0, reviewCount: 0, totalMeetups: 15, streakDays: 6, isFree: false, showGender: true, gender: "Female", joinedAt: Date.now() - 80 * 86400000 },
+  { id: "u7",       name: "Vishal Tyagi",  avatar: "VT", neighborhood: "Kaushambi",          city: "Noida", age: 24, interests: ["Coding","Gaming"],              isVerified: false, collegeVerified: false, trustScore: 4.2, reviewCount: 0, totalMeetups: 3,  streakDays: 1, isFree: false, showGender: false, joinedAt: Date.now() - 45 * 86400000 },
+  { id: "u8",       name: "Kabir Tiwari",  avatar: "KT", neighborhood: "Indirapuram",        city: "Noida", age: 26, interests: ["Football","Cricket","Gym"],      isVerified: false, collegeVerified: false, trustScore: 4.6, reviewCount: 0, totalMeetups: 8,  streakDays: 4, isFree: true,  showGender: true, gender: "Male",   joinedAt: Date.now() - 55 * 86400000 },
+  { id: "u9",       name: "Riya Mehta",    avatar: "RM", neighborhood: "Sector 62",          city: "Noida", age: 20, interests: ["Anime","Gaming","Music"],        isVerified: true,  collegeVerified: false, trustScore: 4.9, reviewCount: 0, totalMeetups: 11, streakDays: 7, isFree: false, showGender: true, gender: "Female", joinedAt: Date.now() - 35 * 86400000 },
+  { id: "u10",      name: "Dev Agarwal",   avatar: "DA", neighborhood: "Vaishali",           city: "Noida", age: 23, interests: ["Coding","Cafes"],               isVerified: false, collegeVerified: false, trustScore: 4.4, reviewCount: 0, totalMeetups: 2,  streakDays: 0, isFree: false, showGender: true, gender: "Male",   joinedAt: Date.now() - 20 * 86400000 },
+  { id: "u11",      name: "Tanya Singh",   avatar: "TS", neighborhood: "Crossing Republik",  city: "Noida", age: 22, interests: ["Movies","Food","Music"],         isVerified: true,  collegeVerified: false, trustScore: 4.7, reviewCount: 0, totalMeetups: 9,  streakDays: 3, isFree: false, showGender: true, gender: "Female", joinedAt: Date.now() - 65 * 86400000 },
 ];
 
 const MOCK_POSTS_BY_USER: Record<string, Post[]> = {
@@ -143,24 +127,34 @@ export default function PublicProfilePage() {
     setHighlights(allPosts.filter(p => ids.includes(p.id)));
   }, [userId, posts]);
 
-  // Find user: try nearbyUsers first (real DB), then mock fallback
-  const user: PublicUser | null = useMemo(() => {
-    const live = nearbyUsers.find(u => u.id === userId);
-    if (live) return {
-      id: live.id, name: live.name, avatar: live.avatar,
-      neighborhood: live.neighborhood, city: live.city ?? "Noida",
-      age: live.age, interests: live.interests,
-      isVerified: live.isVerified, trustScore: live.trustScore,
-      totalMeetups: live.totalMeetups ?? 0, streakDays: live.streakDays ?? 0,
-      statusText: live.statusText, isFree: live.isFree,
-      gender: live.gender, showGender: live.showGender,
-      joinedAt: live.joinedAt,
-    } as PublicUser;
-    return MOCK_USERS.find(u => u.id === userId) ?? null;
-  }, [userId, nearbyUsers]);
+  // Fetch the real profile from Supabase — this is the source of truth for anyone
+  // who isn't currently showing up in the live "nearby free users" presence feed.
+  const [dbUser, setDbUser] = useState<User | null>(null);
+  const [dbLoading, setDbLoading] = useState(true);
 
+  useEffect(() => {
+    let cancelled = false;
+    setDbLoading(true);
+    supabase.from("profiles").select("*").eq("id", userId).single().then(({ data }) => {
+      if (cancelled) return;
+      setDbUser(data ? mapProfile(data as ProfileRow) : null);
+      setDbLoading(false);
+    });
+    return () => { cancelled = true; };
+  }, [userId]);
+
+  // Prefer live presence data (has real-time free status), then the DB fetch, then the demo mock fallback.
+  const user: PublicUser | null = useMemo(() => {
+    return nearbyUsers.find(u => u.id === userId)
+      ?? dbUser
+      ?? MOCK_USERS.find(u => u.id === userId)
+      ?? null;
+  }, [userId, nearbyUsers, dbUser]);
 
   if (!user) {
+    if (dbLoading) {
+      return <div className="min-h-screen bg-gray-50" />;
+    }
     return (
       <div className="min-h-screen flex flex-col items-center justify-center gap-4 text-gray-400">
         <p className="text-5xl">👤</p>
@@ -262,14 +256,17 @@ export default function PublicProfilePage() {
           {user.statusText && (
             <p className="mt-2 text-sm text-gray-600 italic">"{user.statusText}"</p>
           )}
+          {user.bio && (
+            <p className="mt-2 text-sm text-gray-700 leading-relaxed">{user.bio}</p>
+          )}
         </div>
 
         {/* Stats */}
         <div className="grid grid-cols-3 gap-3 mb-5">
           {[
-            { label: "Meetups", value: user.totalMeetups },
+            { label: "Meetups", value: user.totalMeetups ?? 0 },
             { label: "Trust score", value: user.trustScore > 0 ? `⭐ ${user.trustScore.toFixed(1)}` : "New" },
-            { label: "Streak", value: user.streakDays > 0 ? `🔥 ${user.streakDays}d` : "—" },
+            { label: "Streak", value: (user.streakDays ?? 0) > 0 ? `🔥 ${user.streakDays}d` : "—" },
           ].map(s => (
             <div key={s.label} className="bg-white rounded-2xl border border-gray-100 p-4 text-center">
               <p className="text-xl font-extrabold text-gray-900">{s.value}</p>

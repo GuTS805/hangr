@@ -7,7 +7,7 @@ import type { RealtimeChannel } from "@supabase/supabase-js";
 
 // ── Mappers ───────────────────────────────────────────────────────
 
-function mapProfile(row: ProfileRow): User {
+export function mapProfile(row: ProfileRow): User {
   return {
     id: row.id,
     name: row.name,

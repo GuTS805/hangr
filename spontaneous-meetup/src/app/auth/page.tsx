@@ -10,6 +10,7 @@ import PhotoVerificationModal from "@/components/PhotoVerificationModal";
 
 type LoginStep    = "idle" | "otp";
 type PostAuthStep = "interests" | "verify";
+type AuthMode     = "signup" | "login";
 
 const PENDING_KEY = "hangr_pending_onboarding";
 
@@ -38,6 +39,7 @@ export default function AuthPage() {
   const [neighborhood, setNeighborhood] = useState("");
   const [detailsError, setDetailsError] = useState("");
 
+  const [authMode, setAuthMode]         = useState<AuthMode>("signup");
   const [loginStep, setLoginStep]       = useState<LoginStep>("idle");
   const [loginInput, setLoginInput]     = useState("");
   const [loginOtp, setLoginOtp]         = useState("");
@@ -71,7 +73,7 @@ export default function AuthPage() {
     setPostAuthStep("interests");
   }, [currentUser, needsOnboarding, postAuthStep, autoStarting]);
 
-  if (currentUser && !needsOnboarding && postAuthStep !== "verify") { router.replace("/"); return null; }
+  if (currentUser && !needsOnboarding && !postAuthStep) { router.replace("/"); return null; }
 
   function validateDetails(): PendingDetails | null {
     if (!name.trim()) { setDetailsError("Please enter your name."); return null; }
@@ -124,7 +126,7 @@ export default function AuthPage() {
   /* ── Auth actions ── */
   async function sendLoginOtp() {
     setLoginError("");
-    if (!stashDetails()) return;
+    if (authMode === "signup" && !stashDetails()) return;
     const val = loginInput.trim();
     if (!isEmail(val) && !isPhone(val)) { setLoginError("Please enter a valid email address or 10-digit phone number."); return; }
     setLoginLoading(true);
@@ -152,7 +154,6 @@ export default function AuthPage() {
 
   async function signInWithGoogle() {
     setLoginError("");
-    if (!stashDetails()) return;
     setLoginLoading(true);
     const { error } = await supabase.auth.signInWithOAuth({
       provider: "google",
@@ -332,17 +333,22 @@ export default function AuthPage() {
         </div>
 
         <div className="flex flex-col gap-4">
-          {basicFieldsJsx}
-
-          {detailsError && (
-            <div className="border-2 border-black bg-[#FF2D2D] text-white font-bold px-4 py-3 text-sm">
-              {detailsError}
-            </div>
+          {authMode === "signup" && (
+            <>
+              {basicFieldsJsx}
+              {detailsError && (
+                <div className="border-2 border-black bg-[#FF2D2D] text-white font-bold px-4 py-3 text-sm">
+                  {detailsError}
+                </div>
+              )}
+            </>
           )}
 
           <div className="flex items-center gap-0 my-1">
             <div className="flex-1 border-t-2 border-black" />
-            <span className="bg-white px-3 font-black text-xs uppercase -mt-[2px]">how should we reach you?</span>
+            <span className="bg-white px-3 font-black text-xs uppercase -mt-[2px]">
+              {authMode === "signup" ? "how should we reach you?" : "log in"}
+            </span>
             <div className="flex-1 border-t-2 border-black" />
           </div>
 
@@ -374,26 +380,36 @@ export default function AuthPage() {
                 onClick={sendLoginOtp}
                 disabled={loginLoading || (!isEmail(loginInput.trim()) && !isPhone(loginInput.trim().replace(/\D/g, "")))}
                 className="w-full bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide py-4 shadow-[4px_4px_0_#0A0A0A] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-                {loginLoading ? "SENDING..." : "Sign up with Phone/Email →"}
+                {loginLoading ? "SENDING..." : "Continue →"}
               </button>
 
-              <div className="flex items-center gap-0 my-1">
-                <div className="flex-1 border-t-2 border-black" />
-                <span className="bg-white px-3 font-black text-xs uppercase -mt-[2px]">or</span>
-                <div className="flex-1 border-t-2 border-black" />
-              </div>
+              {authMode === "login" && (
+                <>
+                  <div className="flex items-center gap-0 my-1">
+                    <div className="flex-1 border-t-2 border-black" />
+                    <span className="bg-white px-3 font-black text-xs uppercase -mt-[2px]">or</span>
+                    <div className="flex-1 border-t-2 border-black" />
+                  </div>
+
+                  <button
+                    onClick={signInWithGoogle}
+                    disabled={loginLoading}
+                    className="w-full bg-white border-2 border-black text-black font-black uppercase tracking-wide py-4 shadow-[4px_4px_0_#0A0A0A] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all flex items-center justify-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed">
+                    <svg width="18" height="18" viewBox="0 0 48 48">
+                      <path fill="#FFC107" d="M43.6 20H24v8h11.3c-1.6 4.4-5.8 7.5-11.3 7.5a12.5 12.5 0 010-25c3.2 0 6.1 1.2 8.3 3.2l5.7-5.7A21 21 0 0024 3C12.4 3 3 12.4 3 24s9.4 21 21 21c12.2 0 20.4-8.5 20.4-20.5 0-1.4-.1-2.4-.4-3.5z"/>
+                      <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8A12.4 12.4 0 0124 11.5c3.2 0 6.1 1.2 8.3 3.2l5.7-5.7A21 21 0 006.3 14.7z"/>
+                      <path fill="#4CAF50" d="M24 45c5.5 0 10.5-2 14.3-5.2l-6.6-5.4A12.4 12.4 0 0124 35.5c-5.4 0-9.6-3-11.3-7.4l-6.6 5c3.7 5.9 10.2 9.9 17.9 9.9z"/>
+                      <path fill="#1976D2" d="M43.6 20H24v8h11.3a12.5 12.5 0 01-4.7 5.8l6.6 5.4c-.4.3 6.2-4.5 6.2-15.2 0-1.4-.1-2.4-.4-3.5z"/>
+                    </svg>
+                    Continue with Google
+                  </button>
+                </>
+              )}
 
               <button
-                onClick={signInWithGoogle}
-                disabled={loginLoading}
-                className="w-full bg-white border-2 border-black text-black font-black uppercase tracking-wide py-4 shadow-[4px_4px_0_#0A0A0A] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all flex items-center justify-center gap-3 disabled:opacity-40 disabled:cursor-not-allowed">
-                <svg width="18" height="18" viewBox="0 0 48 48">
-                  <path fill="#FFC107" d="M43.6 20H24v8h11.3c-1.6 4.4-5.8 7.5-11.3 7.5a12.5 12.5 0 010-25c3.2 0 6.1 1.2 8.3 3.2l5.7-5.7A21 21 0 0024 3C12.4 3 3 12.4 3 24s9.4 21 21 21c12.2 0 20.4-8.5 20.4-20.5 0-1.4-.1-2.4-.4-3.5z"/>
-                  <path fill="#FF3D00" d="M6.3 14.7l6.6 4.8A12.4 12.4 0 0124 11.5c3.2 0 6.1 1.2 8.3 3.2l5.7-5.7A21 21 0 006.3 14.7z"/>
-                  <path fill="#4CAF50" d="M24 45c5.5 0 10.5-2 14.3-5.2l-6.6-5.4A12.4 12.4 0 0124 35.5c-5.4 0-9.6-3-11.3-7.4l-6.6 5c3.7 5.9 10.2 9.9 17.9 9.9z"/>
-                  <path fill="#1976D2" d="M43.6 20H24v8h11.3a12.5 12.5 0 01-4.7 5.8l6.6 5.4c-.4.3 6.2-4.5 6.2-15.2 0-1.4-.1-2.4-.4-3.5z"/>
-                </svg>
-                Sign up with Google
+                onClick={() => { setAuthMode(authMode === "signup" ? "login" : "signup"); setLoginError(""); }}
+                className="w-full text-center text-xs font-bold uppercase text-black/50 hover:text-black transition-colors py-1">
+                {authMode === "signup" ? "Already have an account? Log in" : "New here? Sign up"}
               </button>
             </>
           ) : (
