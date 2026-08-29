@@ -787,11 +787,23 @@ export default function HomePage() {
   const { currentUser, needsOnboarding } = useStore();
   const router = useRouter();
 
+  // Falls back to a hard reload if the client-side navigation doesn't take within 1.5s.
   useEffect(() => {
-    if (currentUser && needsOnboarding) router.replace("/auth");
+    if (!(currentUser && needsOnboarding)) return;
+    router.replace("/auth");
+    const t = setTimeout(() => { window.location.href = "/auth"; }, 1500);
+    return () => clearTimeout(t);
   }, [currentUser, needsOnboarding, router]);
 
-  if (currentUser && needsOnboarding) return null;
+  if (currentUser && needsOnboarding) {
+    return (
+      <div className="min-h-screen flex items-center justify-center" style={{ background: "var(--b-bg)" }}>
+        <p className="font-mono text-xs uppercase tracking-wider" style={{ color: "var(--b-black)", opacity: 0.4 }}>
+          Redirecting…
+        </p>
+      </div>
+    );
+  }
 
   return (
     <div className="flex min-h-screen items-start">

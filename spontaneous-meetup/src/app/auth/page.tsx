@@ -105,7 +105,24 @@ export default function AuthPage() {
     setPostAuthStep("interests");
   }, [currentUser, needsOnboarding, postAuthStep, autoStarting]);
 
-  if (currentUser && !needsOnboarding && !postAuthStep) { router.replace("/"); return null; }
+  // Already signed in and onboarded (e.g. arrived here via a magic-link click) — bounce home.
+  // Falls back to a hard reload if the client-side navigation doesn't take within 1.5s.
+  useEffect(() => {
+    if (!(currentUser && !needsOnboarding && !postAuthStep)) return;
+    router.replace("/");
+    const t = setTimeout(() => { window.location.href = "/"; }, 1500);
+    return () => clearTimeout(t);
+  }, [currentUser, needsOnboarding, postAuthStep, router]);
+
+  if (currentUser && !needsOnboarding && !postAuthStep) {
+    return (
+      <AuthShell>
+        <div className="border-2 border-black bg-white shadow-[6px_6px_0_#0A0A0A] p-8 text-center">
+          <p className="text-sm font-mono text-black/50 uppercase tracking-wider">Redirecting…</p>
+        </div>
+      </AuthShell>
+    );
+  }
 
   function validateDetails(): PendingDetails | null {
     if (!name.trim()) { setDetailsError("Please enter your name."); return null; }
