@@ -337,6 +337,38 @@ html.dark body {
   color: #F2F1EB;
 }
 
+/* ── Dark mode: brutalist (hard-border) system ──────────────────────────────
+   Auth, Profile, Explore, Follow, Favourites, Chats etc. hardcode
+   text-black / border-black / bg-white instead of the --b-* variables
+   above, so those never got a dark-mode equivalent — black text landing
+   on a (now-dark) card is what made it unreadable. Fix it here, once,
+   rather than touching every page.
+
+   Yellow (#FFE500) is a light accent color in both themes, so anything
+   sitting on it keeps dark text/borders on purpose — that part is
+   intentionally excluded below, including the hover-only yellow buttons
+   (dark text kicks in only while actually hovered). */
+html.dark .text-black   { color: #F2F1EB !important; }
+html.dark .border-black { border-color: #F2F1EB !important; }
+html.dark .divide-black > * + * { border-color: #F2F1EB !important; }
+
+html.dark [class~="bg-[#FFE500]"],
+html.dark [class~="bg-[#FFE500]"] .text-black {
+  color: #0A0A0A !important;
+}
+html.dark [class~="bg-[#FFE500]"] {
+  border-color: #0A0A0A !important;
+}
+html.dark [class~="hover:bg-[#FFE500]"]:hover,
+html.dark [class~="hover:bg-[#FFE500]"]:hover .text-black {
+  color: #0A0A0A !important;
+}
+
+/* Cream (#F2F1EB) is the light-mode page background itself (--b-bg), not an
+   accent — it must flip dark same as everything else, or whole pages stay
+   stuck light while the nav around them goes dark. */
+html.dark [class~="bg-[#F2F1EB]"] { background-color: #111111 !important; }
+
 /* Page backgrounds */
 html.dark .bg-gray-50,
 html.dark .min-h-screen.bg-gray-50 { background-color: #111111 !important; }
@@ -377,6 +409,25 @@ html.dark input:focus,
 html.dark textarea:focus {
   border-color: rgba(201,209,255,0.5) !important;
   box-shadow: 0 0 0 3px rgba(201,209,255,0.08) !important;
+}
+
+/* Brutalist-styled inputs (border-black + bg-white) — override the legacy
+   lavender-tinted rule above, which was built for a different color scheme
+   and reads as low-contrast gray-on-gray against this system's palette. */
+html.dark input.border-black.bg-white,
+html.dark textarea.border-black.bg-white {
+  background-color: #1A1A1A !important;
+  border-color: #F2F1EB !important;
+  color: #F2F1EB !important;
+}
+html.dark input.border-black.bg-white::placeholder,
+html.dark textarea.border-black.bg-white::placeholder {
+  color: rgba(242,241,235,0.35) !important;
+}
+html.dark input.border-black.bg-white:focus,
+html.dark textarea.border-black.bg-white:focus {
+  border-color: #FFE500 !important;
+  box-shadow: 3px 3px 0 #FFE500 !important;
 }
 
 /* Cards & containers */

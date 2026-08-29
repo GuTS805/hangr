@@ -304,7 +304,8 @@ export default function ProfilePage() {
   async function handleSignOut() {
     setLoggingOut(true);
     await logout();
-    router.replace("/auth");
+    // Hard reload so middleware re-evaluates the cleared session cookie
+    window.location.href = "/auth";
   }
 
   return (
