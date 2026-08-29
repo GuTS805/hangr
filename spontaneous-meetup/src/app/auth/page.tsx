@@ -218,6 +218,15 @@ export default function AuthPage() {
     if (error) { setLoginError(error.message); setLoginLoading(false); }
   }
 
+  // No email, no phone, no OTP — for showing the app to someone without asking for their contact info.
+  async function tryDemo() {
+    setLoginError("");
+    setLoginLoading(true);
+    const { error } = await supabase.auth.signInAnonymously();
+    setLoginLoading(false);
+    if (error) { setLoginError(error.message); }
+  }
+
   const basicFieldsJsx = (
     <>
       <div>
@@ -467,6 +476,13 @@ export default function AuthPage() {
                 onClick={() => { setAuthMode(authMode === "signup" ? "login" : "signup"); setLoginError(""); }}
                 className="w-full text-center text-xs font-bold uppercase text-black/50 hover:text-black transition-colors py-1">
                 {authMode === "signup" ? "Already have an account? Log in" : "New here? Sign up"}
+              </button>
+
+              <button
+                onClick={tryDemo}
+                disabled={loginLoading}
+                className="w-full text-center text-xs font-bold uppercase text-black/40 hover:text-black transition-colors py-1 underline underline-offset-2 disabled:opacity-40">
+                Just exploring? Try the demo — no email needed →
               </button>
             </>
           ) : (
