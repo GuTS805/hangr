@@ -179,7 +179,7 @@ export default function AuthPage() {
 
   async function verifyLoginOtp() {
     setLoginError("");
-    if (loginOtp.length < 4) { setLoginError("Please enter the OTP."); return; }
+    if (loginOtp.length < 6) { setLoginError("Please enter the full 6-digit OTP."); return; }
     setLoginLoading(true);
     const val = loginInput.trim();
     let error;
@@ -420,7 +420,7 @@ export default function AuthPage() {
                 onClick={sendLoginOtp}
                 disabled={loginLoading || (!isEmail(loginInput.trim()) && !isPhone(loginInput.trim().replace(/\D/g, "")))}
                 className="w-full bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide py-4 shadow-[4px_4px_0_#0A0A0A] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all disabled:opacity-40 disabled:cursor-not-allowed">
-                {loginLoading ? "SENDING..." : "Continue →"}
+                {loginLoading ? "SENDING..." : "Send OTP →"}
               </button>
 
               {authMode === "login" && (
@@ -470,7 +470,7 @@ export default function AuthPage() {
 
               <button
                 onClick={verifyLoginOtp}
-                disabled={loginLoading || loginOtp.length < 4}
+                disabled={loginLoading || loginOtp.length < 6}
                 className="w-full bg-[#FFE500] border-2 border-black text-black font-black uppercase tracking-wide py-4 shadow-[4px_4px_0_#0A0A0A] active:translate-x-[4px] active:translate-y-[4px] active:shadow-none transition-all disabled:opacity-40 disabled:cursor-not-allowed">
                 {loginLoading ? "VERIFYING..." : "Verify ✓"}
               </button>
