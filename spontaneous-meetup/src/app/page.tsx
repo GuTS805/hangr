@@ -423,8 +423,8 @@ function FeedColumn() {
       <div className="sticky top-0 z-30" style={{ background: "var(--b-card)", borderBottom: "2px solid #0A0A0A" }}>
         <div className="flex items-center justify-between px-5 py-4">
           <div>
-            <h1 className="font-bold uppercase tracking-wider" style={{ fontSize: 20, color: "var(--b-black)" }}>Home</h1>
-            <p className="font-mono text-xs mt-0.5" style={{ color: "var(--b-black)", opacity: 0.4 }}>{allPosts.length} posts from your area</p>
+            <h1 className="b-display uppercase" style={{ fontSize: 28, color: "var(--b-black)" }}>Home</h1>
+            <p className="font-mono text-xs mt-0.5 uppercase tracking-wide" style={{ color: "var(--b-black)", opacity: 0.4 }}>{allPosts.length} posts from your area</p>
           </div>
           <button onClick={handleRefresh} disabled={refreshing} className="w-10 h-10 flex items-center justify-center transition-all" style={{ border: "2px solid #0A0A0A", background: "var(--b-yellow)", boxShadow: "2px 2px 0 #0A0A0A", color: "#0A0A0A" }}>
             <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={refreshing ? "animate-spin" : ""}><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
@@ -538,9 +538,9 @@ function DashboardSidebar() {
 
   return (
     <div className="space-y-5">
-      {/* ── I'm Free status card ── */}
-      <div style={{ background: isFree ? "#FFE500" : "#0A0A0A", border: "2px solid #0A0A0A", boxShadow: "4px 4px 0 #0A0A0A" }}>
-        <div className="p-5">
+      {/* ── I'm Free status card — torn-edge signature: your status is your ticket in ── */}
+      <div className="torn-edge-b" style={{ background: isFree ? "#FFE500" : "#0A0A0A", border: "2px solid #0A0A0A", boxShadow: "4px 4px 0 #0A0A0A" }}>
+        <div className="p-5 pb-7">
           <div className="flex items-start justify-between mb-4">
             <div>
               <div className="flex items-center gap-2 mb-1">
@@ -549,7 +549,7 @@ function DashboardSidebar() {
                   {isFree ? "LIVE · VISIBLE TO PEOPLE NEARBY" : "OFFLINE · HIDDEN"}
                 </span>
               </div>
-              <p className="text-2xl font-black uppercase tracking-tight leading-tight" style={{ color: isFree ? "#0A0A0A" : "#FAFAF5" }}>
+              <p className="b-display uppercase text-3xl" style={{ color: isFree ? "#0A0A0A" : "#FAFAF5" }}>
                 {isFree ? "You're Free!" : "Go Free Now?"}
               </p>
               {isFree && freeUntil && <p className="font-mono text-xs mt-1" style={{ color: "#0A0A0A", opacity: 0.6 }}>{formatFreeUntil(freeUntil)} left</p>}

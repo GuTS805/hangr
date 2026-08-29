@@ -119,6 +119,59 @@ html.dark {
   opacity: 0.5;
 }
 
+/* ── Display type (hero moments — big, tight-tracked, confident) ──────────── */
+.b-display {
+  font-family: 'Space Grotesk', sans-serif;
+  font-weight: 700;
+  letter-spacing: -0.03em;
+  line-height: 0.92;
+}
+
+/* ── Signature: torn ticket edge ────────────────────────────────────────────
+   Sharp sawtooth clip — not a soft scallop. Used in exactly two places:
+   the auth panel divider, and the "I'm Free" status card. */
+.torn-edge-r {
+  clip-path: polygon(
+    0% 0%, 100% 0%,
+    88% 6.25%, 100% 12.5%, 88% 18.75%, 100% 25%,
+    88% 31.25%, 100% 37.5%, 88% 43.75%, 100% 50%,
+    88% 56.25%, 100% 62.5%, 88% 68.75%, 100% 75%,
+    88% 81.25%, 100% 87.5%, 88% 93.75%, 100% 100%,
+    0% 100%
+  );
+}
+.torn-edge-b {
+  clip-path: polygon(
+    0% 0%, 100% 0%, 100% 88%,
+    93.75% 100%, 87.5% 88%, 81.25% 100%, 75% 88%, 68.75% 100%,
+    62.5% 88%, 56.25% 100%, 50% 88%, 43.75% 100%, 37.5% 88%,
+    31.25% 100%, 25% 88%, 18.75% 100%, 12.5% 88%, 6.25% 100%,
+    0% 88%
+  );
+}
+/* Torn bottom edge on mobile (stacked), torn right edge from lg up (side-by-side) */
+.torn-panel {
+  clip-path: polygon(
+    0% 0%, 100% 0%, 100% 88%,
+    93.75% 100%, 87.5% 88%, 81.25% 100%, 75% 88%, 68.75% 100%,
+    62.5% 88%, 56.25% 100%, 50% 88%, 43.75% 100%, 37.5% 88%,
+    31.25% 100%, 25% 88%, 18.75% 100%, 12.5% 88%, 6.25% 100%,
+    0% 88%
+  );
+}
+@media (min-width: 1024px) {
+  .torn-panel {
+    clip-path: polygon(
+      0% 0%, 100% 0%,
+      88% 6.25%, 100% 12.5%, 88% 18.75%, 100% 25%,
+      88% 31.25%, 100% 37.5%, 88% 43.75%, 100% 50%,
+      88% 56.25%, 100% 62.5%, 88% 68.75%, 100% 75%,
+      88% 81.25%, 100% 87.5%, 88% 93.75%, 100% 100%,
+      0% 100%
+    );
+  }
+}
+
 /* ── Page transitions ───────────────────────────────────────────────────── */
 @keyframes page-in {
   from { opacity: 0; transform: translateY(7px); }

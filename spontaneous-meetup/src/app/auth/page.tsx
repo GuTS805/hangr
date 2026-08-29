@@ -26,6 +26,38 @@ function isEmail(v: string) { return v.includes("@"); }
 function isPhone(v: string) { return /^\d{10}$/.test(v.replace(/\s/g, "")); }
 function formatPhone(v: string) { return `+91${v.replace(/\D/g, "").slice(-10)}`; }
 
+/* ── Shared shell: brand panel (torn edge) + step content ──────────────────── */
+function AuthShell({ children }: { children: React.ReactNode }) {
+  return (
+    <div className="min-h-screen bg-[#F2F1EB] flex flex-col lg:flex-row">
+      <div className="torn-panel relative bg-[#FFE500] flex flex-col justify-center px-7 py-9 sm:px-10 sm:py-12 lg:w-[42%] lg:py-0 lg:pr-16">
+        <div className="lg:sticky lg:top-0 lg:h-screen lg:flex lg:flex-col lg:justify-center">
+          <p className="font-mono text-[11px] sm:text-xs uppercase tracking-[0.22em] text-black/55 mb-2 sm:mb-3">
+            Right now, nearby
+          </p>
+          <h1 className="b-display uppercase text-black text-6xl sm:text-7xl lg:text-8xl mb-3 sm:mb-4">
+            hangr
+          </h1>
+          <p className="text-sm sm:text-base font-bold text-black/75 max-w-xs leading-snug mb-8 lg:mb-12">
+            Cafes, cricket, gaming, chai runs — whoever&apos;s free, whenever you are.
+          </p>
+          <div className="flex flex-wrap gap-2 max-w-xs">
+            {INTERESTS.map(i => (
+              <span key={i} className="border-2 border-black/80 text-black text-[11px] font-bold uppercase px-2.5 py-1">
+                {INTEREST_EMOJI[i]} {i}
+              </span>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      <div className="flex-1 flex items-center justify-center px-5 py-8 sm:px-8 sm:py-10 lg:py-16">
+        <div className="w-full max-w-md">{children}</div>
+      </div>
+    </div>
+  );
+}
+
 /* ── Page component ──────────────────────────────────────────────────────── */
 export default function AuthPage() {
   const router = useRouter();
@@ -132,7 +164,14 @@ export default function AuthPage() {
     setLoginLoading(true);
     let error;
     if (isPhone(val)) ({ error } = await supabase.auth.signInWithOtp({ phone: formatPhone(val) }));
-    else              ({ error } = await supabase.auth.signInWithOtp({ email: val }));
+    else              ({ error } = await supabase.auth.signInWithOtp({
+      email: val,
+      // If the email's magic link gets clicked instead of the code being typed in,
+      // send it through the same code-exchange route Google OAuth uses — without
+      // this it defaults to the site root, which has nothing to consume the code,
+      // and bounces back to /auth in a loop.
+      options: { emailRedirectTo: `${window.location.origin}/auth/callback` },
+    }));
     setLoginLoading(false);
     if (error) { setLoginError(error.message); return; }
     setLoginStep("otp");
@@ -230,19 +269,19 @@ export default function AuthPage() {
   /* ── Brief transition while we move into the post-auth steps ── */
   if (currentUser && needsOnboarding && !postAuthStep) {
     return (
-      <div className="min-h-screen bg-[#F2F1EB] flex items-center justify-center p-6">
-        <div className="w-full max-w-md border-2 border-black bg-white shadow-[6px_6px_0_#0A0A0A] p-8 text-center">
+      <AuthShell>
+        <div className="border-2 border-black bg-white shadow-[6px_6px_0_#0A0A0A] p-8 text-center">
           <p className="text-sm font-mono text-black/50 uppercase tracking-wider">Setting things up…</p>
         </div>
-      </div>
+      </AuthShell>
     );
   }
 
   /* ── Post-auth step 1: interests ── */
   if (currentUser && postAuthStep === "interests") {
     return (
-      <div className="min-h-screen bg-[#F2F1EB] flex items-center justify-center p-6">
-        <div className="w-full max-w-md border-2 border-black bg-white shadow-[6px_6px_0_#0A0A0A] p-8">
+      <AuthShell>
+        <div className="border-2 border-black bg-white shadow-[6px_6px_0_#0A0A0A] p-8">
           <div className="bg-[#FFE500] border-b-2 border-black px-6 py-4 -mx-8 -mt-8 mb-6">
             <h2 className="text-2xl font-black uppercase tracking-tight text-black">
               {needsBasicDetails ? "Almost done!" : `Hey ${name.split(" ")[0] || "there"} 👋`}
@@ -286,15 +325,15 @@ export default function AuthPage() {
             </button>
           </form>
         </div>
-      </div>
+      </AuthShell>
     );
   }
 
   /* ── Post-auth step 2: optional photo verification ── */
   if (currentUser && postAuthStep === "verify") {
     return (
-      <div className="min-h-screen bg-[#F2F1EB] flex items-center justify-center p-6">
-        <div className="w-full max-w-md border-2 border-black bg-white shadow-[6px_6px_0_#0A0A0A] p-8 text-center">
+      <AuthShell>
+        <div className="border-2 border-black bg-white shadow-[6px_6px_0_#0A0A0A] p-8 text-center">
           <p className="text-5xl mb-3">📸</p>
           <h2 className="text-2xl font-black uppercase tracking-tight text-black mb-2">Get verified</h2>
           <p className="text-sm font-mono text-black/50 mb-6">
@@ -315,21 +354,22 @@ export default function AuthPage() {
         {showVerifyModal && (
           <PhotoVerificationModal onClose={() => { setShowVerifyModal(false); router.push("/"); }} />
         )}
-      </div>
+      </AuthShell>
     );
   }
 
   /* ── Pre-auth: single sign-up screen ── */
   return (
-    <div className="min-h-screen bg-[#F2F1EB] flex items-center justify-center p-6">
-      <div className="w-full max-w-md border-2 border-black bg-white shadow-[6px_6px_0_#0A0A0A] p-8">
+    <AuthShell>
+      <div className="border-2 border-black bg-white shadow-[6px_6px_0_#0A0A0A] p-8">
 
-        <div className="text-center mb-6">
-          <div className="w-16 h-16 border-2 border-black bg-[#FFE500] flex items-center justify-center text-3xl mb-4 shadow-[3px_3px_0_#0A0A0A] mx-auto">
-            ⚡
-          </div>
-          <h1 className="text-4xl font-black uppercase tracking-tight text-black leading-none mb-1">hangr</h1>
-          <p className="text-sm font-mono text-black/50 uppercase tracking-wider">meet people. right now.</p>
+        <div className="mb-6">
+          <h2 className="b-display uppercase text-black text-3xl sm:text-4xl">
+            {authMode === "signup" ? "Get in." : "Welcome back."}
+          </h2>
+          <p className="text-xs font-mono text-black/45 uppercase tracking-wider mt-1.5">
+            {authMode === "signup" ? "Takes about a minute" : "Good to see you again"}
+          </p>
         </div>
 
         <div className="flex flex-col gap-4">
@@ -449,6 +489,6 @@ export default function AuthPage() {
           </p>
         </div>
       </div>
-    </div>
+    </AuthShell>
   );
 }
