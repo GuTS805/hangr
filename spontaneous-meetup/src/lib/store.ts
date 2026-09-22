@@ -307,9 +307,14 @@ export const useStore = create<AppState>()((set, get) => ({
     }
 
     // Subscribe to auth changes for the rest of the session
-    supabase.auth.onAuthStateChange(async (event, session) => {
+    supabase.auth.onAuthStateChange((event, session) => {
       if (event === "SIGNED_IN" && session?.user) {
-        await loadAndSetProfile(session.user, set, get);
+        // Auth callbacks run while Supabase holds an internal lock. Calling
+        // another Supabase API from an awaited callback can deadlock the
+        // sign-in request, so load the profile after the callback returns.
+        setTimeout(() => {
+          void loadAndSetProfile(session.user, set, get);
+        }, 0);
       } else if (event === "SIGNED_OUT") {
         const { _presenceChannel, _groupsChannel } = get();
         _presenceChannel?.unsubscribe();

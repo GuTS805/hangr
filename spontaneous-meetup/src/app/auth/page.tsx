@@ -202,7 +202,7 @@ export default function AuthPage() {
     let error;
     if (isPhone(val)) ({ error } = await supabase.auth.verifyOtp({ phone: formatPhone(val), token: loginOtp, type: "sms" }));
     else              ({ error } = await supabase.auth.verifyOtp({ email: val, token: loginOtp, type: "email" }));
-    if (error) { setLoginError("Incorrect OTP. Please try again."); setLoginLoading(false); return; }
+    if (error) { setLoginError(error.message || "Unable to verify OTP. Please try again."); setLoginLoading(false); return; }
     const { data: { user } } = await supabase.auth.getUser();
     if (user && isPhone(val)) await supabase.from("profiles").update({ phone: formatPhone(val) }).eq("id", user.id);
     setLoginLoading(false);
