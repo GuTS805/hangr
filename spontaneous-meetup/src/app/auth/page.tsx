@@ -371,14 +371,14 @@ export default function AuthPage() {
             Verify Now
           </button>
           <button
-            onClick={() => router.push("/")}
+            onClick={() => { window.location.href = "/"; }}
             className="w-full border-2 border-black bg-transparent text-black font-bold uppercase py-3 hover:bg-black hover:text-[#FFE500] transition-colors">
             Skip for now
           </button>
         </div>
 
         {showVerifyModal && (
-          <PhotoVerificationModal onClose={() => { setShowVerifyModal(false); router.push("/"); }} />
+          <PhotoVerificationModal onClose={() => { setShowVerifyModal(false); window.location.href = "/"; }} />
         )}
       </AuthShell>
     );
