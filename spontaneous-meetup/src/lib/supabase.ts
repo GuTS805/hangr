@@ -104,3 +104,10 @@ export interface CommentRow {
   text: string;
   created_at: string;
 }
+
+// Primary keys are UUIDs; querying with anything else (mock "u1" ids, optimistic
+// "temp_…" ids) makes PostgREST answer 400, so check before hitting the DB.
+const UUID_RE = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+export function isUuid(id: string): boolean {
+  return UUID_RE.test(id);
+}

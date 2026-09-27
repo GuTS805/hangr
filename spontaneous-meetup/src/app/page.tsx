@@ -220,7 +220,7 @@ function PostCard({ post, isMock = false }: { post: Post; isMock?: boolean }) {
             {post.userNeighborhood && <span className="text-[12px] font-mono" style={{ color: "var(--b-black)", opacity: 0.45 }}>/ {post.userNeighborhood}</span>}
           </div>
           <div className="flex items-center gap-2 mt-1 flex-wrap">
-            <span className="font-mono text-[12px]" style={{ color: "var(--b-black)", opacity: 0.4 }}>{timeAgo(post.timestamp)}</span>
+            <span suppressHydrationWarning className="font-mono text-[12px]" style={{ color: "var(--b-black)", opacity: 0.4 }}>{timeAgo(post.timestamp)}</span>
             {post.topic && <span className="b-tag">{INTEREST_EMOJI[post.topic]} {post.topic}</span>}
           </div>
         </div>
@@ -286,7 +286,7 @@ function PostCard({ post, isMock = false }: { post: Post; isMock?: boolean }) {
                       <span className="text-[13px] font-bold text-gray-900 mr-1.5">{c.userName}</span>
                       <span className="text-[13px] text-gray-700 break-words">{c.text}</span>
                     </div>
-                    <span className="text-[11px] text-gray-500 ml-3 mt-1 block font-mono">{timeAgo(c.timestamp)}</span>
+                    <span suppressHydrationWarning className="text-[11px] text-gray-500 ml-3 mt-1 block font-mono">{timeAgo(c.timestamp)}</span>
                   </div>
                 </div>
               ))}
@@ -824,7 +824,7 @@ function HomeRail() {
       <div className="home-meetup-row"><div className="home-meetup-photo badminton">🏸</div><div className="home-meetup-info"><b>Evening Badminton</b><span>♧ ABES Court</span><small>👥 +5 going</small></div><div className="home-meetup-action"><small>Today, 6:00 PM</small><button onClick={() => router.push("/explore")}>Join</button></div></div>
       <div className="home-meetup-row"><div className="home-meetup-photo coffee">☕</div><div className="home-meetup-info"><b>Chai &amp; Code</b><span>♧ Starbucks, CR</span><small>👥 +3 going</small></div><div className="home-meetup-action"><small>Tomorrow, 5:00 PM</small><button onClick={() => router.push("/explore")}>Join</button></div></div>
     </section>
-    <section className="home-free-strip"><div><b>{nearbyUsers.filter(u => u.isFree).length ? `${nearbyUsers.filter(u => u.isFree).length} people free nearby` : "Nobody free nearby yet 👀"}</b><span>Go free above to get discovered!</span></div><button onClick={goFree}>{isFree ? "Go Offline" : "Go Free Now"} →</button></section>
+    <section className="home-free-strip"><div><b>{nearbyUsers.filter(u => u.isFree).length ? `${nearbyUsers.filter(u => u.isFree).length} people free nearby` : "Nobody free nearby yet 👀"}</b><span>{isFree ? "You’re visible to people nearby." : "Go free to get discovered!"}</span></div><button onClick={goFree}>{isFree ? "Go Offline" : "Go Free Now"} →</button></section>
     {showCreate && <CreateGroupModal onClose={() => setShowCreate(false)} />}
     {quickRoomActivity && <QuickRoomModal initialActivity={quickRoomActivity} onClose={() => setQuickRoomActivity(null)} />}
   </div>;

@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { supabase, MessageRow } from "@/lib/supabase";
+import { supabase, MessageRow, isUuid } from "@/lib/supabase";
 import { Message } from "@/types";
 
 function mapRow(row: MessageRow): Message {
@@ -19,7 +19,7 @@ export function useGroupMessages(groupId: string) {
   const [messages, setMessages] = useState<Message[]>([]);
 
   useEffect(() => {
-    if (!groupId) return;
+    if (!groupId || !isUuid(groupId)) return;
 
     // Load initial messages
     supabase

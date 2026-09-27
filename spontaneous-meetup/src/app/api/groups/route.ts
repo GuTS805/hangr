@@ -5,6 +5,12 @@ import { SAFE_LOCATIONS } from "@/lib/mock-data";
 
 const VALID_TOPICS = new Set(INTERESTS as unknown as string[]);
 const VALID_LOCATION_IDS = new Set(SAFE_LOCATIONS.map((l) => l.id));
+// Places picked on the map: OpenStreetMap results (see lib/overpass.ts) and dropped custom pins
+const MAP_LOCATION_ID = /^(osm_(node|way|relation)_\d{1,20}|custom_\d{1,20})$/;
+
+function isValidLocationId(id: unknown): id is string {
+  return typeof id === "string" && (VALID_LOCATION_IDS.has(id) || MAP_LOCATION_ID.test(id));
+}
 
 export async function POST(req: NextRequest) {
   const { user, sb, error } = await requireAuth(req);
@@ -21,8 +27,12 @@ export async function POST(req: NextRequest) {
   if (typeof topic !== "string" || !VALID_TOPICS.has(topic))
     return NextResponse.json({ error: "Invalid topic" }, { status: 400 });
 
-  if (typeof safeLocationId !== "string" || !VALID_LOCATION_IDS.has(safeLocationId))
-    return NextResponse.json({ error: "Invalid safe location" }, { status: 400 });
+  if (!isValidLocationId(safeLocationId))
+    return NextResponse.json({ error: "Invalid location" }, { status: 400 });
+
+  // Map-picked places aren't in SAFE_LOCATIONS, so the name sent by the client is all we have
+  if (!VALID_LOCATION_IDS.has(safeLocationId) && (typeof location !== "string" || location.trim().length === 0))
+    return NextResponse.json({ error: "Location name is required" }, { status: 400 });
 
   if (typeof plannedTime !== "string" || plannedTime.trim().length === 0)
     return NextResponse.json({ error: "plannedTime is required" }, { status: 400 });

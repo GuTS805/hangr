@@ -50,7 +50,7 @@ export default function FollowPage() {
     if (!currentUser) { router.push("/auth"); return; }
     setFollowing(prev => { const next = new Set(prev); if (next.has(id)) next.delete(id); else next.add(id); return next; });
   }
-  return <main className="people-page">
+  return <div className="people-page">
     <section className="people-main">
       <header className="people-header"><div><h1>People</h1><p>Discover and connect with amazing people in your neighbourhood.</p></div><div className="people-header-art" aria-hidden="true"><div className="people-art-avatars">{people.slice(0,3).map(p => <Avatar key={p.id} person={p} small />)}</div><strong>Good people<br />make great<br />neighbourhoods!</strong></div></header>
       <label className="people-search"><span aria-hidden="true">⌕</span><input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search people by name, area, interests..." /><span aria-hidden="true">☷</span></label>
@@ -66,5 +66,5 @@ export default function FollowPage() {
       <section className="people-side-card"><div className="people-side-title"><h2>People you may know</h2><button onClick={() => { setTab("suggestions"); setShowAllSuggestions(!showAllSuggestions); }}>{showAllSuggestions ? "Show less" : "See all"} →</button></div><div className="people-suggestions">{(showAllSuggestions ? people.filter(p => !following.has(p.id)) : suggestions).map(p => <div className="people-suggestion" key={p.id}><button onClick={() => router.push(`/profile/${p.id}`)}><Avatar person={p} small /></button><div><strong>{p.name}</strong><span className="people-rating">⭐ {p.rating}</span><p>📍 {p.area} · {p.mutual} mutual</p><div className="people-chips">{p.interests.slice(0,2).map(i => <span key={i}>{INTEREST_EMOJI[i]} {i}</span>)}</div></div><button className="people-mini-follow" onClick={() => toggleFollow(p.id)}>{following.has(p.id) ? "Following" : "Follow"}</button></div>)}</div></section>
       <section className="people-side-card"><div className="people-side-title"><h2>Discover by interests</h2><button onClick={() => { setTab("suggestions"); setInterest(null); }}>See all →</button></div><div className="people-discover">{discover.map(i => <button key={i.label} onClick={() => { setTab("suggestions"); setInterest(i.match); }}>{i.icon} &nbsp;{i.label}</button>)}</div></section>
     </aside>
-  </main>;
+  </div>;
 }

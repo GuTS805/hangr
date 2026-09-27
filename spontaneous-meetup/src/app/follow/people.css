@@ -2,3 +2,7 @@
 @media(max-width:1300px){.people-page{grid-template-columns:minmax(0,1.8fr) 320px}.people-card{gap:15px}.people-card-actions .following,.people-card-actions .follow{width:110px}}
 @media(max-width:1050px){.people-page{grid-template-columns:1fr}.people-sidebar{display:grid;grid-template-columns:repeat(2,1fr)}.people-sidebar .people-grow{grid-column:1/-1}}
 @media(max-width:650px){.people-page{padding:12px}.people-main{padding:20px 15px}.people-header h1{font-size:34px}.people-header p{font-size:13px}.people-header-art{display:none}.people-tabs{gap:4px}.people-tabs button{font-size:11px;gap:5px}.people-tabs button>span{font-size:16px}.people-card{padding:14px;gap:11px;min-height:0;flex-wrap:wrap}.people-avatar{width:57px;height:57px;font-size:19px}.people-card-info{flex-basis:calc(100% - 75px)}.people-name{font-size:14px}.people-card-info>p{font-size:11px}.people-card-actions{margin-left:68px}.people-card-actions>button{height:36px}.people-card-actions .following,.people-card-actions .follow{width:110px}.people-sidebar{display:flex}.people-grow{min-height:0}}
+
+/* People is light-only; keep the global dark input style from turning its search into a grey block */
+html.dark .people-page input { background: transparent !important; color: #111 !important; border: 0 !important; box-shadow: none !important; }
+html.dark .people-page input::placeholder { color: #828ca0 !important; }

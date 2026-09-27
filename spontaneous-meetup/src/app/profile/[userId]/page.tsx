@@ -3,7 +3,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { useStore, mapProfile } from "@/lib/store";
-import { supabase, ProfileRow } from "@/lib/supabase";
+import { supabase, ProfileRow, isUuid } from "@/lib/supabase";
 import { INTEREST_EMOJI } from "@/lib/mock-data";
 import { Interest, Post, User } from "@/types";
 
@@ -118,7 +118,8 @@ export default function PublicProfilePage() {
   useEffect(() => {
     const saved = localStorage.getItem(`hangr_highlights_${userId}`);
     if (!saved) return;
-    const ids: string[] = JSON.parse(saved);
+    let ids: string[];
+    try { ids = JSON.parse(saved); } catch { return; }
     // Find matching posts from store + mock
     const allPosts = [
       ...posts,
@@ -134,6 +135,7 @@ export default function PublicProfilePage() {
 
   useEffect(() => {
     let cancelled = false;
+    if (!isUuid(userId)) { setDbLoading(false); return; } // demo/mock profile
     setDbLoading(true);
     supabase.from("profiles").select("*").eq("id", userId).single().then(({ data }) => {
       if (cancelled) return;

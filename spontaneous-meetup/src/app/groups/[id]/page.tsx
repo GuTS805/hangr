@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
+import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { useGroupMessages } from "@/hooks/useGroupMessages";
@@ -204,6 +205,15 @@ export default function GroupPage() {
                   <div className="flex-1">
                     <p className="text-xs font-black uppercase">{safeLocation.name}</p>
                     <p className="text-xs font-bold capitalize">{safeLocation.type} · VERIFIED SAFE LOCATION ✓</p>
+                  </div>
+                </div>
+              )}
+              {!safeLocation && group.location && (
+                <div className="border-2 border-black bg-white text-black px-3 py-2.5 flex items-center gap-2">
+                  <span className="text-lg">📍</span>
+                  <div className="flex-1">
+                    <p className="text-xs font-black uppercase">{group.location}</p>
+                    <p className="text-xs font-bold">Picked on the map · not a verified safe location</p>
                   </div>
                 </div>
               )}
@@ -449,9 +459,9 @@ export default function GroupPage() {
                   {(canJoin || isMember) && !ec && (
                     <p className="text-xs font-bold uppercase text-black/50 text-center">
                       Add an{" "}
-                      <a href="/profile" className="text-black underline font-black">
+                      <Link href="/profile" className="text-black underline font-black">
                         emergency contact
-                      </a>{" "}
+                      </Link>{" "}
                       in your profile to enable SOS and check-in features
                     </p>
                   )}

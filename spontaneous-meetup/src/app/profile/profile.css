@@ -21,3 +21,30 @@ body:has(.profile-shell) { background: #f8f8f7 !important; } body:has(.profile-s
 .profile-safety .profile-tabs button:first-child { background: transparent !important; }
 @media (max-width: 1100px) { .profile-shell, .profile-safety { grid-template-columns: 1fr; }.profile-card, .profile-highlights, .profile-panel { grid-column: 1; }.profile-card { grid-row: auto !important; }.profile-panel { grid-row: auto !important; }.profile-highlights { grid-row: auto !important; }.profile-safety .profile-topbar { grid-row: auto; }.profile-top-search { display: none; } }
 @media (max-width: 640px) { .profile-shell { padding: 12px !important; gap: 12px; }.profile-cover { height: 195px !important; }.profile-card .profile-avatar { width: 94px !important; height: 94px !important; font-size: 35px !important; }.profile-card .profile-avatar > div, .profile-card .profile-avatar > img { border-radius: 15px !important; border-width: 4px !important; }.profile-avatar-row { bottom: -42px !important; padding: 0 14px !important; }.profile-avatar-actions { gap: 5px; }.profile-avatar-actions button { height: 35px; padding: 0 8px !important; font-size: 11px !important; }.profile-body { padding: 58px 14px 17px !important; }.profile-body h1 { font-size: 27px !important; }.profile-panel-body { padding: 14px !important; }.profile-topbar > span { display: none; } }
+
+/* ── Dark mode: globals.css flips text to light, so the light surfaces pinned above need dark variants ── */
+html.dark .profile-stats { background: #1f2024 !important; border-color: #2e3036 !important; }
+html.dark .profile-avatar-actions button:not(.profile-share-button) { background: #1f2024 !important; border-color: #3a3d44 !important; color: #eceef2 !important; }
+html.dark .profile-mode { background: #22200f; border-color: #4a4320; }
+html.dark .profile-mode > div > span:first-child { background: #3a3515 !important; }
+html.dark .profile-mode-state small { color: #a2a9b8; }
+html.dark .profile-interests > div.space-y-2 > div,
+html.dark .profile-groups > div.space-y-2 > div { background: #1f2024 !important; border-color: #2e3036 !important; }
+html.dark .profile-interests > div:first-child button { color: #eceef2 !important; border-color: #3a3d44 !important; background: transparent !important; }
+html.dark .profile-safety .profile-tabs { background: #1f2024; border-color: #2e3036 !important; }
+html.dark .profile-safety .profile-panel-body > div { background: #1a1b1f; border-color: #2e3036; }
+html.dark .profile-safety .profile-trust > div { background: #1f2024 !important; }
+html.dark .profile-shell .text-black\/40 { color: rgba(242, 241, 235, .5) !important; }
+html.dark .profile-tabs button[aria-selected="false"] { background: #26282d !important; }
+html.dark .profile-shell .text-black\/30 { color: rgba(242, 241, 235, .4) !important; }
+html.dark .profile-groups .space-y-2 > div,
+html.dark .profile-interests .space-y-2 > div { background: #1f2024 !important; border-color: #2e3036 !important; }
+html.dark .profile-topbar h2, html.dark .profile-topbar button { color: #eceef2; }
+html.dark .profile-topbar button { border-color: #3a3d44; }
+html.dark .profile-safety .profile-verification > div,
+html.dark .profile-safety .profile-trust > div,
+html.dark .profile-safety .profile-gender > div,
+html.dark .profile-safety .profile-emergency > div { background: #1f2024 !important; border-color: #2e3036 !important; }
+html.dark .profile-shell .text-black\/50 { color: rgba(242, 241, 235, .6) !important; }
+html.dark .profile-shell .text-black\/60 { color: rgba(242, 241, 235, .7) !important; }
+html.dark .profile-shell .text-black\/70 { color: rgba(242, 241, 235, .8) !important; }
