@@ -163,7 +163,19 @@ function UserAvatar({ user, size = 28 }: { user: { avatar: string; name: string 
 export default function Navbar() {
   const pathname = usePathname();
   const router = useRouter();
-  const { currentUser, isFree, logout, darkMode, toggleDarkMode } = useStore();
+  const { currentUser, isFree, logout, darkMode, toggleDarkMode, setCachedUserPos } = useStore();
+  const [locating, setLocating] = useState(false);
+
+  // Ask for location, cache it for the map, then open Explore centred on the user
+  function enableLocation() {
+    if (!navigator.geolocation) { router.push("/explore"); return; }
+    setLocating(true);
+    navigator.geolocation.getCurrentPosition(
+      (p) => { setCachedUserPos({ lat: p.coords.latitude, lng: p.coords.longitude }); setLocating(false); router.push("/explore"); },
+      () => { setLocating(false); router.push("/explore"); },
+      { timeout: 8000, maximumAge: 60000 },
+    );
+  }
   const [showDropdown, setShowDropdown] = useState(false);
   const dropdownRef = useRef<HTMLDivElement>(null);
 
@@ -277,9 +289,6 @@ export default function Navbar() {
         })}
       </nav>
 
-      {/* Mobile bottom spacer */}
-      <div className="mobile-bottom-spacer sm:hidden" />
-
       {/* ─────────────────────────────────────────────────
           DESKTOP: fixed left sidebar
       ───────────────────────────────────────────────── */}
@@ -298,6 +307,7 @@ export default function Navbar() {
             </div>
             <span className="text-white font-bold text-xl tracking-tight">hangr</span>
           </Link>
+          {pathname === "/" && <p className="home-nav-tagline">People Nearby. For Real.</p>}
         </div>
 
         {/* Nav links */}
@@ -322,6 +332,7 @@ export default function Navbar() {
           })}
         </nav>
 
+        {pathname === "/" && <div className="home-nav-location"><b>Find your people</b><p>Turn on location to see what&apos;s happening around you.</p><button onClick={enableLocation} disabled={locating}>{locating ? "Locating…" : <>➤ &nbsp; Enable Location</>}</button></div>}
         {/* Bottom: pings + dark mode + user profile */}
         <div className="px-3 pb-4 flex-shrink-0" style={{ borderTop: "1px solid rgba(255,255,255,0.08)" }}>
           {currentUser && (

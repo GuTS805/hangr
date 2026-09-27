@@ -47,6 +47,8 @@ export default function RootLayout({
         <Navbar />
         {/* sm:pl-60 offsets the fixed 240px left sidebar on desktop */}
         <main className="sm:pl-60">{children}</main>
+        {/* Keeps page content clear of the fixed mobile bottom nav */}
+        <div className="mobile-bottom-spacer sm:hidden" />
         <PingToast />
       </body>
     </html>

@@ -17,12 +17,14 @@ const QUICK_ACTIVITIES: { emoji: string; label: string; interest: Interest; time
   { emoji: "🎵", label: "Music jam", interest: "Music", time: "Tonight 7 PM" },
 ];
 
-interface Props { onClose: () => void }
+interface Props { onClose: () => void; initialActivity?: string }
 
-export default function QuickRoomModal({ onClose }: Props) {
+export default function QuickRoomModal({ onClose, initialActivity }: Props) {
   const router = useRouter();
   const { createGroup, currentUser } = useStore();
-  const [picked, setPicked] = useState<typeof QUICK_ACTIVITIES[0] | null>(null);
+  const [picked, setPicked] = useState<typeof QUICK_ACTIVITIES[0] | null>(
+    () => QUICK_ACTIVITIES.find((a) => a.label === initialActivity) ?? null,
+  );
   const [maxMembers] = useState(6);
 
   function launch() {

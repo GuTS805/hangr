@@ -13,6 +13,7 @@ import CreateGroupModal from "@/components/CreateGroupModal";
 import QuickRoomModal from "@/components/QuickRoomModal";
 import GroupCard from "@/components/GroupCard";
 import { fetchNearbyPlaces } from "@/lib/overpass";
+import "./home.css";
 
 // ─────────────────────────────────────────────────────────────────────────────
 // Feed helpers
@@ -314,7 +315,7 @@ function FilterBar({ filter, setFilter }: { filter: FeedFilter; setFilter: (f: F
   return (
     <div className="flex gap-2 overflow-x-auto py-3 px-4" style={{ scrollbarWidth: "none", borderBottom: "2px solid #0A0A0A", background: "var(--b-bg)" }}>
       {(["all", ...FILTER_TOPICS] as FeedFilter[]).map((t) => (
-        <button key={t} onClick={() => setFilter(t)}
+        <button key={t} onClick={() => setFilter(t)} aria-pressed={filter === t}
           className="flex-shrink-0 text-xs font-bold uppercase tracking-wide transition-all active:scale-95"
           style={filter === t
             ? { background: "#0A0A0A", color: "#FFE500", border: "2px solid #0A0A0A", padding: "6px 14px" }
@@ -400,8 +401,17 @@ function GroupSavePrompts() {
 }
 
 // ── Feed column ───────────────────────────────────────────────────────────────
-function FeedColumn() {
-  const { posts, loadPosts } = useStore();
+function greetingForNow(): string {
+  const h = new Date().getHours();
+  return h < 5 ? "GOOD EVENING" : h < 12 ? "GOOD MORNING" : h < 17 ? "GOOD AFTERNOON" : "GOOD EVENING";
+}
+
+function matchesSearch(p: Post, q: string): boolean {
+  return [p.text, p.userName, p.userNeighborhood, p.topic ?? ""].some((f) => f.toLowerCase().includes(q));
+}
+
+function FeedColumn({ search }: { search: string }) {
+  const { posts, loadPosts, currentUser } = useStore();
   const [filter, setFilter] = useState<FeedFilter>("all");
   const [refreshing, setRefreshing] = useState(false);
   useEffect(() => { loadPosts(); }, [loadPosts]);
@@ -411,7 +421,8 @@ function FeedColumn() {
     return [...posts, ...MOCK_POSTS.filter((m) => !dbIds.has(m.id))].sort((a, b) => b.timestamp - a.timestamp);
   }, [posts]);
 
-  const filtered = filter === "all" ? allPosts : allPosts.filter((p) => p.topic === filter);
+  const q = search.trim().toLowerCase();
+  const filtered = allPosts.filter((p) => (filter === "all" || p.topic === filter) && (!q || matchesSearch(p, q)));
 
   const handleRefresh = useCallback(async () => {
     setRefreshing(true); await loadPosts(); setRefreshing(false);
@@ -419,28 +430,28 @@ function FeedColumn() {
 
   return (
     <div>
-      {/* Sticky header */}
-      <div className="sticky top-0 z-30" style={{ background: "var(--b-card)", borderBottom: "2px solid #0A0A0A" }}>
-        <div className="flex items-center justify-between px-5 py-4">
-          <div>
-            <h1 className="b-display uppercase" style={{ fontSize: 28, color: "var(--b-black)" }}>Home</h1>
-            <p className="font-mono text-xs mt-0.5 uppercase tracking-wide" style={{ color: "var(--b-black)", opacity: 0.4 }}>{allPosts.length} posts from your area</p>
-          </div>
-          <button onClick={handleRefresh} disabled={refreshing} className="w-10 h-10 flex items-center justify-center transition-all" style={{ border: "2px solid #0A0A0A", background: "var(--b-yellow)", boxShadow: "2px 2px 0 #0A0A0A", color: "#0A0A0A" }}>
-            <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" className={refreshing ? "animate-spin" : ""}><polyline points="23 4 23 10 17 10"/><polyline points="1 20 1 14 7 14"/><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"/></svg>
-          </button>
+      <div className="home-hero">
+        <div className="home-hero-copy">
+          <p className="home-greeting" suppressHydrationWarning>{greetingForNow()}, {currentUser?.name.split(" ")[0].toUpperCase() || "NEIGHBOR"} 👋</p>
+          <h1>What’s happening <mark>nearby?</mark></h1>
+          <p className="home-subtitle">Real people. Real conversations. A more connected neighborhood.</p>
+        </div>
+        <div className="home-hero-art" aria-hidden="true">
+          <span>Same<br/>City<br/>Different<br/>People</span>
+          <div className="home-city" />
+          <strong>Better<br/>Connections →</strong>
         </div>
       </div>
-
       <GroupSavePrompts />
-      <PostComposer />
       <FilterBar filter={filter} setFilter={setFilter} />
+      <PostComposer />
+      <div className="home-feed-meta"><span>{q ? `${filtered.length} ${filtered.length === 1 ? "RESULT" : "RESULTS"} FOR “${search.trim().toUpperCase()}”` : "NEIGHBORHOOD FEED"}</span><button onClick={handleRefresh} disabled={refreshing} aria-label="Refresh feed" className={refreshing ? "animate-spin" : ""}>↻</button></div>
 
       {filtered.length === 0 ? (
         <div className="flex flex-col items-center justify-center py-20 text-center px-8">
           <div className="w-20 h-20 rounded-full flex items-center justify-center mb-4 text-4xl" style={{ background: "linear-gradient(135deg,#eff6ff,#f5f3ff)" }}>{filter === "all" ? "✨" : INTEREST_EMOJI[filter]}</div>
-          <p className="font-bold text-gray-800 text-lg">No posts yet</p>
-          <p className="text-gray-400 text-sm mt-1">{filter === "all" ? "Pehli post tum karo!" : `No ${filter} posts yet — drop one!`}</p>
+          <p className="font-bold text-gray-800 text-lg">{q ? "No matching posts" : "No posts yet"}</p>
+          <p className="text-gray-400 text-sm mt-1">{q ? "Try a different search." : filter === "all" ? "Pehli post tum karo!" : `No ${filter} posts yet — drop one!`}</p>
         </div>
       ) : (
         <>{filtered.map((post) => <PostCard key={post.id} post={post} isMock={post.id.startsWith("mock_")} />)}<div className="h-16" /></>
@@ -783,9 +794,59 @@ function GuestSidebar() {
 // Main page
 // ─────────────────────────────────────────────────────────────────────────────
 
-export default function HomePage() {
-  const { currentUser, needsOnboarding } = useStore();
+function HomeRail() {
   const router = useRouter();
+  const { currentUser, isFree, toggleFree, updateStreak, nearbyUsers } = useStore();
+  const [showCreate, setShowCreate] = useState(false);
+  const [quickRoomActivity, setQuickRoomActivity] = useState<string | null>(null);
+  // [emoji, tile label, QuickRoomModal activity label]
+  const quickActs = [["☕", "Chai Run", "Chai run"], ["🎮", "Gaming", "Gaming cafe"], ["🍕", "Food Trip", "Food trip"], ["🏏", "Cricket", "Cricket"], ["💻", "Study", "Study/code"], ["🎬", "Movie", "Movie hangout"]];
+  const goFree = () => {
+    if (!currentUser) { router.push("/auth"); return; }
+    if (isFree) { toggleFree(); return; }
+    if (!navigator.geolocation) { toggleFree(); updateStreak(); return; }
+    navigator.geolocation.getCurrentPosition(
+      p => { toggleFree(p.coords.latitude, p.coords.longitude); updateStreak(); },
+      () => { toggleFree(); updateStreak(); },
+      { timeout: 6000, maximumAge: 60000 },
+    );
+  };
+  return <div className="home-rail-inner">
+    <section className="home-promo"><div className="home-promo-content">
+      <h2>Not just online.<br/>In your neighborhood.</h2><p>Discover people, places and events around you.</p>
+      <button onClick={goFree}>{isFree ? "Go Offline" : "Go Free Now"} <span>→</span></button>
+      <div className="home-promo-stats"><div><b>12+</b><small>Cafes</small></div><div><b>8+</b><small>Parks</small></div><div><b>3+</b><small>Gyms</small></div><div><b>20+</b><small>People</small></div></div>
+    </div></section>
+    <section className="home-rail-card home-quick"><div className="home-rail-heading"><h2>⚡ <span>Quick Start</span></h2><button onClick={() => currentUser ? setShowCreate(true) : router.push("/auth")}>＋ Custom</button></div>
+      <div className="home-quick-grid">{quickActs.map(([emoji, label, activity]) => <button key={label} onClick={() => currentUser ? setQuickRoomActivity(activity) : router.push("/auth")}><span>{emoji}</span><small>{label}</small></button>)}</div>
+    </section>
+    <section className="home-rail-card home-meetups"><div className="home-rail-heading"><h2>✦ <span>Nearby Meetups</span></h2><button onClick={() => router.push("/explore")}>See All →</button></div>
+      <div className="home-meetup-row"><div className="home-meetup-photo badminton">🏸</div><div className="home-meetup-info"><b>Evening Badminton</b><span>♧ ABES Court</span><small>👥 +5 going</small></div><div className="home-meetup-action"><small>Today, 6:00 PM</small><button onClick={() => router.push("/explore")}>Join</button></div></div>
+      <div className="home-meetup-row"><div className="home-meetup-photo coffee">☕</div><div className="home-meetup-info"><b>Chai &amp; Code</b><span>♧ Starbucks, CR</span><small>👥 +3 going</small></div><div className="home-meetup-action"><small>Tomorrow, 5:00 PM</small><button onClick={() => router.push("/explore")}>Join</button></div></div>
+    </section>
+    <section className="home-free-strip"><div><b>{nearbyUsers.filter(u => u.isFree).length ? `${nearbyUsers.filter(u => u.isFree).length} people free nearby` : "Nobody free nearby yet 👀"}</b><span>Go free above to get discovered!</span></div><button onClick={goFree}>{isFree ? "Go Offline" : "Go Free Now"} →</button></section>
+    {showCreate && <CreateGroupModal onClose={() => setShowCreate(false)} />}
+    {quickRoomActivity && <QuickRoomModal initialActivity={quickRoomActivity} onClose={() => setQuickRoomActivity(null)} />}
+  </div>;
+}
+
+export default function HomePage() {
+  const { currentUser, needsOnboarding, darkMode, toggleDarkMode } = useStore();
+  const router = useRouter();
+  const [search, setSearch] = useState("");
+  const searchRef = useRef<HTMLInputElement>(null);
+
+  // Ctrl+K / ⌘K focuses the feed search
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === "k") {
+        e.preventDefault();
+        searchRef.current?.focus();
+      }
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, []);
 
   // Falls back to a hard reload if the client-side navigation doesn't take within 1.5s.
   useEffect(() => {
@@ -806,15 +867,21 @@ export default function HomePage() {
   }
 
   return (
-    <div className="flex min-h-screen items-start">
+    <div className="home-shell">
+      <header className="home-topbar">
+        <form onSubmit={e => { e.preventDefault(); searchRef.current?.blur(); }} className="home-search" role="search"><span>⌕</span><input ref={searchRef} type="search" value={search} onChange={e => setSearch(e.target.value)} onKeyDown={e => { if (e.key === "Escape") setSearch(""); }} placeholder="Search posts, people, places..." aria-label="Search the feed"/><kbd>Ctrl K</kbd></form>
+        <div className="home-top-actions"><button className="home-location" onClick={() => router.push("/explore")}>📍 <span>{currentUser?.neighborhood || "Crossing Republik"}</span>⌄</button><button className="home-theme" onClick={toggleDarkMode} aria-label="Toggle theme">{darkMode ? "☾" : "☼"}</button><button className="home-post-button" onClick={() => currentUser ? document.querySelector<HTMLTextAreaElement>(".home-shell textarea")?.focus() : router.push("/auth")}>＋ <span>Post</span></button></div>
+      </header>
+      <div className="home-content">
       {/* ── Center: Feed — fills all leftover space ── */}
-      <div className="flex-1 min-w-0 border-r border-gray-100">
-        <FeedColumn />
+      <div className="home-main-column">
+        <FeedColumn search={search} />
       </div>
 
       {/* ── Right: fixed-width sidebar, no inner centering ── */}
-      <div className="hidden lg:block w-[400px] xl:w-[460px] shrink-0 sticky top-0 max-h-screen overflow-y-auto p-5">
-        {currentUser ? <DashboardSidebar /> : <GuestSidebar />}
+      <div className="home-right-column">
+        <HomeRail />
+      </div>
       </div>
     </div>
   );
