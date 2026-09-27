@@ -37,9 +37,18 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL("/auth", request.url));
   }
 
-  // Redirect already-authenticated users away from /auth
+  // Redirect already-onboarded users away from /auth. Users who haven't finished
+  // onboarding must stay here — the home page sends them back to /auth, so
+  // bouncing them to / would loop forever.
   if (user && pathname === "/auth") {
-    return NextResponse.redirect(new URL("/", request.url));
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("onboarded")
+      .eq("id", user.id)
+      .maybeSingle();
+    if (profile?.onboarded) {
+      return NextResponse.redirect(new URL("/", request.url));
+    }
   }
 
   return response;
