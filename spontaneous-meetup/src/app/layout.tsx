@@ -1,15 +1,9 @@
 import type { Metadata, Viewport } from "next";
-import { Geist } from "next/font/google";
 import "./globals.css";
 import Navbar from "@/components/Navbar";
 import StoreInitializer from "@/components/StoreInitializer";
 import ThemeProvider from "@/components/ThemeProvider";
 import PingToast from "@/components/PingToast";
-
-const geist = Geist({
-  variable: "--font-geist",
-  subsets: ["latin"],
-});
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -40,7 +34,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" className={`${geist.variable} h-full`}>
+    <html lang="en" className="h-full">
       <body className="min-h-full antialiased font-sans overscroll-none" style={{ background: "var(--b-bg)", color: "var(--b-black)" }}>
         <StoreInitializer />
         <ThemeProvider />

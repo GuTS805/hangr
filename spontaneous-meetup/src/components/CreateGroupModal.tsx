@@ -5,6 +5,7 @@ import { useRouter } from "next/navigation";
 import { useStore } from "@/lib/store";
 import { Interest, SafeLocation } from "@/types";
 import { INTERESTS, INTEREST_EMOJI, SAFE_LOCATIONS, SAFE_LOCATION_ICONS } from "@/lib/mock-data";
+import "./create-group.css";
 
 interface Props {
   onClose: () => void;
@@ -29,7 +30,9 @@ export default function CreateGroupModal({ onClose, prefilledLocation }: Props) 
   const [femaleOnly, setFemaleOnly] = useState(false);
   const [expiresInHours, setExpiresInHours] = useState(4);
 
-  const selectedLocation = SAFE_LOCATIONS.find((l) => l.id === safeLocationId)!;
+  const locations = prefilledLocation && !SAFE_LOCATIONS.some(l => l.id === prefilledLocation.id)
+    ? [prefilledLocation, ...SAFE_LOCATIONS] : SAFE_LOCATIONS;
+  const selectedLocation = locations.find((l) => l.id === safeLocationId) ?? locations[0];
 
   function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -41,12 +44,12 @@ export default function CreateGroupModal({ onClose, prefilledLocation }: Props) 
 
   return (
     <div
-      className="fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/40 sm:p-4"
+      className="create-group-overlay fixed inset-0 z-[9999] flex items-end sm:items-center justify-center bg-black/40 sm:p-4"
       onClick={(e) => e.target === e.currentTarget && onClose()}
     >
-      <div className="mobile-sheet mobile-sheet-bottom bg-white rounded-t-3xl sm:rounded-2xl p-6 w-full max-w-md shadow-xl max-h-[92vh] overflow-y-auto">
+      <div className="create-group-dialog mobile-sheet mobile-sheet-bottom bg-white rounded-t-3xl sm:rounded-2xl p-6 w-full max-w-md shadow-xl max-h-[92vh] overflow-y-auto">
         <div className="flex items-center justify-between mb-5">
-          <h2 className="text-lg font-bold text-gray-900">Create a Group</h2>
+          <div><h2 className="text-lg font-bold text-gray-900">Create a Group</h2><p className="create-group-subtitle">Bring people together around a shared interest</p></div>
           <button onClick={onClose} className="text-gray-400 hover:text-gray-700 text-xl leading-none">×</button>
         </div>
 
@@ -97,7 +100,7 @@ export default function CreateGroupModal({ onClose, prefilledLocation }: Props) 
               <span className="text-xs text-emerald-600 font-normal">✓ Safe locations only</span>
             </label>
             <div className="space-y-1.5 max-h-48 overflow-y-auto pr-1">
-              {SAFE_LOCATIONS.map((loc) => (
+              {locations.map((loc) => (
                 <label
                   key={loc.id}
                   className={`flex items-center gap-3 p-2.5 rounded-xl border cursor-pointer transition-colors ${

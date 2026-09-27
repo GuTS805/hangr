@@ -3,7 +3,7 @@
 import "leaflet/dist/leaflet.css";
 import { useEffect, useRef, useCallback } from "react";
 import {
-  MapContainer, TileLayer, Marker, Popup,
+  MapContainer, TileLayer, Marker, Popup, Tooltip,
   Circle, useMapEvents, useMap,
 } from "react-leaflet";
 import L from "leaflet";
@@ -124,16 +124,17 @@ export interface Props {
   onSelect: (loc: SafeLocation) => void;
   onCustomPin: (pin: CustomPin) => void;
   height?: string;
+  showLabels?: boolean;
 }
 
 // ── Main ──────────────────────────────────────────────────────────────────
 export default function MapView({
   locations, selectedId, userPosition, userAccuracy = 0,
   customPin, flyToUser = false,
-  onSelect, onCustomPin, height = "460px",
+  onSelect, onCustomPin, height = "460px", showLabels = false,
 }: Props) {
   // Centered over Ghaziabad/NCR to show all locations at a glance
-  const DEFAULT_CENTER: [number, number] = [28.638, 77.408];
+  const DEFAULT_CENTER: [number, number] = [28.637, 77.451];
   const initialCenter: [number, number] = userPosition
     ? [userPosition.lat, userPosition.lng]
     : DEFAULT_CENTER;
@@ -156,7 +157,7 @@ export default function MapView({
       >
         <MapContainer
           center={initialCenter}
-          zoom={userPosition ? 15 : 12}
+          zoom={userPosition ? 15 : 14}
           style={{ height: "100%", width: "100%" }}
           scrollWheelZoom
           zoomControl
@@ -193,6 +194,7 @@ export default function MapView({
               icon={makeLocIcon(loc.type, loc.id === selectedId)}
               eventHandlers={{ click: () => onSelect(loc) }}
             >
+              {showLabels && <Tooltip permanent direction="right" offset={[10, -24]} className="explore-place-tooltip"><strong>{loc.name}</strong><span>{loc.type} · {loc.distanceKm?.toFixed(1) ?? "?"} km</span></Tooltip>}
               <Popup closeButton={false}>
                 <div style={{ minWidth: 170 }}>
                   <p style={{ fontWeight: 700, fontSize: 13, margin: "0 0 3px" }}>{loc.name}</p>

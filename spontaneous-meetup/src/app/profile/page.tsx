@@ -9,6 +9,7 @@ import TrustBadge from "@/components/TrustBadge";
 import { STATUS_PRESETS } from "@/components/UserCard";
 import ImageCropModal from "@/components/ImageCropModal";
 import PhotoVerificationModal from "@/components/PhotoVerificationModal";
+import "./profile.css";
 
 // ── Cover options ────────────────────────────────────────────────────────────
 
@@ -40,7 +41,7 @@ function Avatar({ src, size = "lg", isFree }: { src: string; size?: "sm" | "md" 
   const isEmoji = src && !isUrl && src.length <= 2;
 
   return (
-    <div className={`relative flex-shrink-0 ${dim}`}>
+    <div className={`profile-avatar relative flex-shrink-0 ${dim}`}>
       {isUrl ? (
         <img src={src} alt="avatar" referrerPolicy="no-referrer"
           className={`${dim} object-cover border-4 border-white shadow-md`} />
@@ -112,6 +113,7 @@ export default function ProfilePage() {
   const [collegeMsg, setCollegeMsg] = useState("");
   const [statusText, setStatusText] = useState("");
   const [statusSaved, setStatusSaved] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const [emergencyName, setEmergencyName] = useState("");
   const [emergencyPhone, setEmergencyPhone] = useState("");
   const [emergencySaved, setEmergencySaved] = useState(false);
@@ -124,6 +126,7 @@ export default function ProfilePage() {
   const [pendingAvatar, setPendingAvatar]       = useState<string | null>(null);
   const [coverId, setCoverId]                   = useState<string>("");
   const [coverImage, setCoverImage]             = useState<string | null>(null);
+  const [coverCustomized, setCoverCustomized]   = useState(false);
   const [saving, setSaving] = useState(false);
   const [loggingOut, setLoggingOut] = useState(false);
 
@@ -169,8 +172,9 @@ export default function ProfilePage() {
   useEffect(() => {
     if (!currentUser) return;
     const img = localStorage.getItem(`hangr_cover_img_${currentUser.id}`);
-    if (img) { setCoverImage(img); return; }
+    if (img) { setCoverImage(img); setCoverCustomized(true); return; }
     const saved = localStorage.getItem(`hangr_cover_${currentUser.id}`);
+    setCoverCustomized(Boolean(saved));
     setCoverId(saved ?? pickDefaultCover(currentUser.name));
   }, [currentUser?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
@@ -215,6 +219,7 @@ export default function ProfilePage() {
   function chooseCover(id: string) {
     setCoverId(id);
     setCoverImage(null);
+    setCoverCustomized(true);
     localStorage.setItem(`hangr_cover_${currentUser!.id}`, id);
     localStorage.removeItem(`hangr_cover_img_${currentUser!.id}`);
     setShowCoverPicker(false);
@@ -242,6 +247,7 @@ export default function ProfilePage() {
       setPendingAvatar(dataUrl);
     } else {
       setCoverImage(dataUrl);
+      setCoverCustomized(true);
       localStorage.setItem(`hangr_cover_img_${currentUser!.id}`, dataUrl);
       localStorage.removeItem(`hangr_cover_${currentUser!.id}`);
     }
@@ -308,12 +314,24 @@ export default function ProfilePage() {
     window.location.href = "/auth";
   }
 
+  async function shareProfile() {
+    const url = `${window.location.origin}/profile/${currentUser!.id}`;
+    if (navigator.share) {
+      try { await navigator.share({ title: `${currentUser!.name} on hangr`, url }); } catch { /* dismissed */ }
+      return;
+    }
+    await navigator.clipboard.writeText(url);
+    setShareCopied(true);
+    setTimeout(() => setShareCopied(false), 2000);
+  }
+
   return (
-    <div className="min-h-[calc(100vh-56px)] bg-[#F2F1EB] p-3 sm:p-5 lg:p-8">
-      <div className="h-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-4 sm:gap-5">
+    <div className={`profile-shell profile-${rightTab} min-h-[calc(100vh-56px)] bg-[#F2F1EB] p-3 sm:p-5 lg:p-8`}>
+      <div className="profile-topbar"><button onClick={() => router.back()} aria-label="Go back">←</button><div><h2>My Profile</h2><p>Manage your profile, safety and preferences</p></div><div className="profile-top-search">⌕ &nbsp; Search people, places, or vibes...</div><span>♧</span><Avatar src={displayAvatar} size="sm" isFree={isFree}/></div>
+      <div className="profile-columns h-full max-w-6xl mx-auto grid grid-cols-1 lg:grid-cols-[3fr_2fr] gap-4 sm:gap-5">
 
         {/* ── LEFT: Profile Card ── */}
-        <div className="bg-white border-2 border-black shadow-[4px_4px_0_#0A0A0A] overflow-hidden flex flex-col">
+        <div className="profile-card bg-white border-2 border-black shadow-[4px_4px_0_#0A0A0A] overflow-hidden flex flex-col">
 
           {/* Hidden file inputs */}
           <input ref={avatarFileRef} type="file" accept="image/*" className="hidden" onChange={handleAvatarFile} />
@@ -321,21 +339,19 @@ export default function ProfilePage() {
 
           {/* Cover */}
           <div
-            className={`relative h-48 sm:h-56 flex-shrink-0 transition-all duration-500 ${coverImage ? "" : `bg-gradient-to-br ${coverCls}`}`}
-            style={coverImage ? { backgroundImage: `url(${coverImage})`, backgroundSize: "cover", backgroundPosition: "center" } : undefined}
+            className={`profile-cover relative h-48 sm:h-56 flex-shrink-0 transition-all duration-500 ${coverImage ? "has-custom-cover" : `bg-gradient-to-br ${coverCls}`}`}
+            style={coverImage ? { backgroundImage: `url(${coverImage})`, backgroundSize: "cover", backgroundPosition: "center" } : rightTab === "status" && !coverCustomized ? { backgroundImage: "url('/profile-cover-sunset.png')", backgroundSize: "cover", backgroundPosition: "center" } : undefined}
           >
             {/* Nav buttons */}
-            <div className="absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-4">
+            <div className="profile-cover-actions absolute inset-x-0 top-0 flex items-center justify-between px-4 pt-4">
               <button onClick={() => router.back()}
                 className="border-2 border-black bg-white text-black font-bold w-9 h-9 flex items-center justify-center hover:bg-[#FFE500] transition-colors">
                 ←
               </button>
-              {editing && (
-                <button onClick={() => setShowCoverPicker(!showCoverPicker)}
+              <button onClick={() => setShowCoverPicker(!showCoverPicker)}
                   className="flex items-center gap-1.5 border-2 border-black bg-white px-3 py-1.5 text-xs font-black uppercase text-black hover:bg-[#FFE500] transition-colors shadow-[2px_2px_0_#0A0A0A]">
-                  🖼️ Change background
+                  📷 Change Cover
                 </button>
-              )}
             </div>
 
             {/* Cover picker */}
@@ -356,7 +372,7 @@ export default function ProfilePage() {
             )}
 
             {/* Avatar row */}
-            <div className="absolute -bottom-10 left-0 right-0 px-5 sm:px-6 flex items-end justify-between">
+            <div className="profile-avatar-row absolute -bottom-10 left-0 right-0 px-5 sm:px-6 flex items-end justify-between">
               <div className="relative" ref={avatarPickerRef}>
                 <Avatar src={displayAvatar} size="lg" isFree={isFree} />
 
@@ -396,16 +412,16 @@ export default function ProfilePage() {
                 )}
               </div>
 
-              <button onClick={editing ? () => setEditing(false) : startEditing}
+              <div className="profile-avatar-actions"><button onClick={editing ? () => setEditing(false) : startEditing}
                 className="border-2 border-black bg-white font-black uppercase px-4 py-1.5 text-sm hover:bg-[#FFE500] transition-colors mb-1">
-                {editing ? "✕ Cancel" : "✏️ Edit"}
-              </button>
+                {editing ? "Cancel" : "✎ Edit Profile"}
+              </button>{rightTab === "status" && <button onClick={shareProfile} className="profile-share-button">{shareCopied ? "✓ Copied" : "↗ Share Profile"}</button>}</div>
             </div>
           </div>
 
           {/* Body */}
-          <div className="flex-1 flex flex-col pt-14 px-5 sm:px-6 pb-6">
-            <p className="text-sm text-black/40 font-mono uppercase mb-1">
+          <div className="profile-body flex-1 flex flex-col pt-14 px-5 sm:px-6 pb-6">
+            <p className="profile-count-summary text-sm text-black/40 font-mono uppercase mb-1">
               <span className="font-black text-black">{myGroups.length}</span> groups&nbsp;·&nbsp;
               <span className="font-black text-black">{currentUser.interests.length}</span> interests
             </p>
@@ -415,28 +431,33 @@ export default function ProfilePage() {
               @{currentUser.name.toLowerCase().replace(/\s+/g, "")}
             </p>
 
-            <div className="mb-3">
+            <div className="profile-trust-badge mb-3">
               <TrustBadge score={currentUser.trustScore} reviewCount={currentUser.reviewCount}
                 isVerified={currentUser.isVerified} collegeVerified={currentUser.collegeVerified} size="md" />
             </div>
 
-            <p className="text-sm text-black/60 mb-1 leading-relaxed font-mono">
+            <p className="profile-meta text-sm text-black/60 mb-1 leading-relaxed font-mono">
               {currentUser.age} y/o · {currentUser.city}
               {currentUser.neighborhood && ` · ${currentUser.neighborhood}`}
               {currentUser.showGender && currentUser.gender && ` · ${currentUser.gender}`}
             </p>
-            <p className="text-sm text-black/70 mb-4 leading-relaxed font-mono">
+            <p className="profile-bio text-sm text-black/70 mb-4 leading-relaxed font-mono">
               {currentUser.bio || "Down to hang out anytime 🙌"}
             </p>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 border-2 border-black overflow-hidden mb-5">
-              {[
+            <div className={`profile-stats grid ${rightTab === "status" ? "grid-cols-4" : "grid-cols-3"} border-2 border-black overflow-hidden mb-5`}>
+              {(rightTab === "status" ? [
+                { icon: "👥", value: myGroups.length, label: "groups" },
+                { icon: "❤️", value: currentUser.interests.length, label: "interests" },
+                { icon: "🗓️", value: currentUser.totalMeetups ?? myGroups.length, label: "sessions" },
+                { icon: isFree ? "🟢" : "⚫", value: isFree ? "Free" : "Busy", label: "right now" },
+              ] : [
                 { icon: isFree ? "🟢" : "⚫", value: isFree ? "Free" : "Busy", label: "right now" },
                 { icon: "📍", value: currentUser.neighborhood || "—", label: "area" },
-                { icon: "👥", value: myGroups.length, label: "sessions" },
-              ].map(({ icon, value, label }, idx) => (
-                <div key={label} className={`flex flex-col items-center py-3 px-2 ${idx < 2 ? "border-r-2 border-black" : ""}`}>
+                { icon: "👥", value: currentUser.totalMeetups ?? myGroups.length, label: "sessions" },
+              ]).map(({ icon, value, label }, idx) => (
+                <div key={label} className={`flex flex-col items-center py-3 px-2 ${idx < (rightTab === "status" ? 3 : 2) ? "border-r-2 border-black" : ""}`}>
                   <span className="text-lg mb-1">{icon}</span>
                   <span className="text-sm font-black text-black truncate max-w-full text-center uppercase">{value}</span>
                   <span className="text-xs font-mono text-black/40 uppercase mt-0.5">{label}</span>
@@ -505,6 +526,7 @@ export default function ProfilePage() {
 
             {/* I'm Free CTA */}
             <button onClick={() => toggleFree()}
+              data-profile-free-cta
               className={`w-full flex items-center justify-between border-2 border-black px-5 py-4 font-black text-white text-base transition-all active:scale-[0.98] ${
                 isFree ? "bg-green-500 hover:bg-green-600" : "bg-black hover:bg-black/80"
               }`}>
@@ -520,10 +542,10 @@ export default function ProfilePage() {
         </div>
 
         {/* ── RIGHT: Status / Safety Card ── */}
-        <div className="bg-white border-2 border-black shadow-[4px_4px_0_#0A0A0A] flex flex-col overflow-hidden">
-          <div className="flex border-b-2 border-black px-2 pt-2">
+        <div className="profile-panel bg-white border-2 border-black shadow-[4px_4px_0_#0A0A0A] flex flex-col overflow-hidden">
+          <div className="profile-tabs flex border-b-2 border-black px-2 pt-2">
             {(["status", "safety"] as RightTab[]).map((t) => (
-              <button key={t} onClick={() => setRightTab(t)}
+              <button key={t} onClick={() => setRightTab(t)} aria-selected={rightTab === t} role="tab"
                 className={`flex-1 py-3 text-sm font-black uppercase transition-colors ${
                   rightTab === t ? "border-b-4 border-black text-black" : "text-black/40 hover:text-black border-b-4 border-transparent"
                 }`}>
@@ -532,12 +554,13 @@ export default function ProfilePage() {
             ))}
           </div>
 
-          <div className="flex-1 overflow-y-auto px-5 sm:px-6 py-5 space-y-5">
+          <div className="profile-panel-body flex-1 overflow-y-auto px-5 sm:px-6 py-5 space-y-5">
             {rightTab === "status" ? (
               <>
                 {/* Status text editor */}
-                <div>
+                <div className="profile-vibe">
                   <p className="text-xs font-black uppercase tracking-wide text-black mb-2">Your vibe right now</p>
+                  <p className="profile-vibe-description">Pick what you&apos;re up for! Let people know your vibe.</p>
                   <div className="flex flex-wrap gap-1.5 mb-2">
                     {STATUS_PRESETS.map((p) => (
                       <button key={p} onClick={() => setStatusText(p)}
@@ -560,24 +583,24 @@ export default function ProfilePage() {
                   )}
                 </div>
 
-                <div>
+                <div className="profile-mode">
                   <p className="text-xs font-black uppercase tracking-wide text-black mb-2">Current mode</p>
                   <div className="flex items-center gap-3 mb-4">
                     <span className={`w-10 h-10 border-2 border-black flex items-center justify-center text-lg ${isFree ? "bg-green-100" : "bg-[#F2F1EB]"}`}>
                       {isFree ? "🟢" : "⚫"}
                     </span>
-                    <span className="text-4xl font-black uppercase text-black">{isFree ? "Visible" : "Hidden"}</span>
+                    <span className="profile-mode-state text-4xl font-black uppercase text-black">{isFree ? "Visible" : "Hidden"}<small>{isFree ? "People nearby can discover you" : "You're currently invisible to others"}</small></span>
                   </div>
                   <button onClick={() => toggleFree()}
                     className={`w-full flex items-center justify-center gap-2 border-2 border-black py-3.5 font-black uppercase text-white transition-colors ${
                       isFree ? "bg-black hover:bg-black/80" : "bg-black hover:bg-black/80"
                     }`}>
                     <span className="text-lg">+</span>
-                    {isFree ? "Go offline" : "I'm Free now"}
+                    {isFree ? "Go Offline" : "Go Free Now"} &nbsp; →
                   </button>
                 </div>
 
-                <div>
+                <div className="profile-interests">
                   <div className="flex items-center justify-between mb-3">
                     <p className="text-sm font-black uppercase text-black">Interests</p>
                     <button onClick={startEditing} className="text-xs font-black uppercase border-2 border-black px-2 py-0.5 hover:bg-[#FFE500] transition-colors">+ Edit</button>
@@ -602,7 +625,7 @@ export default function ProfilePage() {
                 </div>
 
                 {myGroups.length > 0 && (
-                  <div>
+                  <div className="profile-groups">
                     <p className="text-sm font-black uppercase text-black mb-3">My Groups</p>
                     <div className="space-y-2">
                       {myGroups.map((g) => (
@@ -624,7 +647,7 @@ export default function ProfilePage() {
               </>
             ) : (
               <>
-                <div>
+                <div className="profile-verification">
                   <p className="text-sm font-black uppercase text-black mb-3">Verification</p>
                   <div className="space-y-2">
                     <div className={`flex items-center justify-between border-2 border-black px-4 py-3 ${currentUser.isVerified ? "bg-[#F2F1EB]" : "bg-white"}`}>
@@ -667,7 +690,7 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <div>
+                <div className="profile-trust">
                   <p className="text-sm font-black uppercase text-black mb-3">Trust Score</p>
                   <div className="border-2 border-black bg-[#F2F1EB] px-4 py-4">
                     <div className="flex items-center justify-between mb-2">
@@ -684,8 +707,8 @@ export default function ProfilePage() {
                   </div>
                 </div>
 
-                <div>
-                  <p className="text-sm font-black uppercase text-black mb-3">Gender</p>
+                <div className="profile-gender">
+                  <p className="text-sm font-black uppercase text-black mb-3">Gender Visibility</p>
                   <div className="border-2 border-black bg-[#F2F1EB] px-4 py-3 space-y-3">
                     {currentUser.gender ? (
                       <div className="flex items-center justify-between">
@@ -734,7 +757,7 @@ export default function ProfilePage() {
                 )}
 
                 {/* Emergency Contact */}
-                <div>
+                <div className="profile-emergency">
                   <p className="text-sm font-black uppercase text-black mb-1">Emergency Contact</p>
                   <p className="text-xs font-mono text-black/40 uppercase mb-3">Saved on your device only. Share your location before a meetup.</p>
                   <div className="border-2 border-black bg-[#F2F1EB] px-4 py-3 space-y-2">
@@ -758,7 +781,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Auto-SOS Timer */}
-                <div>
+                <div className="profile-sos">
                   <p className="text-sm font-black uppercase text-black mb-1">Auto-SOS Timer</p>
                   <p className="text-xs font-mono text-black/40 uppercase mb-3">
                     Starts when you join a meetup. If you don&apos;t tap &quot;I&apos;m Safe&quot; before it ends, an urgent SOS alert fires automatically.
@@ -781,7 +804,7 @@ export default function ProfilePage() {
                 </div>
 
                 {/* Enhanced safety settings — available to everyone individually, not tied to gender */}
-                <div className="border-2 border-black bg-[#F2F1EB] px-4 py-4 space-y-4">
+                <div className="profile-extra-safety border-2 border-black bg-[#F2F1EB] px-4 py-4 space-y-4">
                   <div className="flex items-center gap-2">
                     <span className="text-black">🛡️</span>
                     <p className="text-sm font-black uppercase text-black">Enhanced Safety Settings</p>
@@ -816,15 +839,14 @@ export default function ProfilePage() {
               </>
             )}
 
-            <div className="flex items-start gap-3 border-2 border-black bg-[#00C44A] text-black px-4 py-3">
+            <div className="profile-privacy flex items-start gap-3 border-2 border-black bg-[#00C44A] text-black px-4 py-3">
               <span className="text-black mt-0.5">✓</span>
               <p className="text-xs font-mono text-black/80 uppercase leading-relaxed">You&apos;re only visible to people within your city. Your exact location is never shared.</p>
             </div>
 
-            <button
+            <button className="profile-signout"
               onClick={handleSignOut}
               disabled={loggingOut}
-              className="border-2 border-black bg-white text-[#FF2D2D] font-black uppercase py-3 w-full hover:bg-[#FF2D2D] hover:text-white transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
             >
               {loggingOut ? "Signing out..." : "Sign out"}
             </button>
@@ -834,8 +856,8 @@ export default function ProfilePage() {
       </div>
 
       {/* ── Highlights manager ── */}
-      <div className="max-w-2xl mx-auto px-3 sm:px-4 pb-8 mt-2">
-        <div className="bg-white border-2 border-black shadow-[4px_4px_0_#0A0A0A] overflow-hidden">
+      <div className="profile-highlights max-w-2xl mx-auto px-3 sm:px-4 pb-8 mt-2">
+        <div className="profile-highlights-card bg-white border-2 border-black shadow-[4px_4px_0_#0A0A0A] overflow-hidden">
           <div className="flex items-center justify-between px-4 py-4 border-b-2 border-black">
             <div>
               <p className="text-sm font-black uppercase text-black">✨ Highlights</p>
@@ -858,6 +880,7 @@ export default function ProfilePage() {
                 <p className="text-xs font-mono text-black/40 uppercase mt-1">
                   {myPosts.length === 0 ? "Post something first, then pin it here" : "Tap '+ Manage' to pin your best posts"}
                 </p>
+                {myPosts.length === 0 && <button className="profile-first-post" onClick={() => router.push("/")}>✎ &nbsp; Create your first post</button>}
               </div>
             ) : (
               <div className="divide-y-2 divide-black">

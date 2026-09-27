@@ -7,6 +7,13 @@ import { useStore } from "@/lib/store";
 import { LogoMark } from "@/components/Logo";
 import NotificationsPanel from "@/components/NotificationsPanel";
 
+function ExploreLogoMark() {
+  return <svg width="38" height="38" viewBox="0 0 40 40" fill="none" aria-hidden="true">
+    <circle cx="20" cy="5" r="2.4" fill="#ffdf00"/><circle cx="12" cy="8" r="1.5" fill="#ffdf00"/><circle cx="28" cy="8" r="1.5" fill="#ffdf00"/>
+    <path d="M10 17c1-6 6-9 10-9s9 3 10 9M8 20c5 2 8-1 12 1 4-2 8 1 12-1M7 25c4-2 7-1 11 1 4-2 8-2 14 0M9 29c5-2 8 0 11 1 4-2 8-2 11-1M11 33c4-1 7 1 9 1s5-2 9-1" stroke="#fff" strokeWidth="2" strokeLinecap="round"/>
+  </svg>;
+}
+
 // ── SVG icons ────────────────────────────────────────────────────────────────
 
 function HomeIcon({ active }: { active: boolean }) {
@@ -300,7 +307,7 @@ export default function Navbar() {
         <div className="px-5 py-5 flex-shrink-0">
           <Link href="/" className="flex items-center gap-3 hover:opacity-85 transition-opacity">
             <div className="relative flex-shrink-0">
-              <LogoMark size={34} />
+              {pathname === "/explore" ? <ExploreLogoMark /> : <LogoMark size={34} />}
               {isFree && (
                 <span className="absolute -top-0.5 -right-0.5 w-2.5 h-2.5 rounded-full bg-green-400 border-2 border-[#111]" />
               )}
