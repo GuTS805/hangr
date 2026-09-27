@@ -4,6 +4,7 @@ import { create } from "zustand";
 import { User, Group, Message, Interest, Review, Report, ReportReason, Gender, Post, PostComment, Ping } from "@/types";
 import { supabase, ProfileRow, GroupRow, MessageRow, PostRow, CommentRow, PingRow } from "./supabase";
 import type { RealtimeChannel } from "@supabase/supabase-js";
+import { haversine } from "./geo";
 
 // ── Mappers ───────────────────────────────────────────────────────
 
@@ -30,6 +31,16 @@ export function mapProfile(row: ProfileRow): User {
     totalMeetups: row.total_meetups ?? 0,
     bio: row.bio ?? undefined,
   };
+}
+
+// Supabase query builders are lazy: the request is only sent once the builder is
+// awaited or .then()'d. Fire-and-forget writes must go through this, otherwise
+// they silently never reach the database.
+function persist(query: PromiseLike<{ error: { message: string } | null }>, what: string): void {
+  query.then(
+    ({ error }) => { if (error) console.error(`[store] ${what} failed:`, error.message); },
+    (err: unknown) => console.error(`[store] ${what} failed:`, err),
+  );
 }
 
 function mapGroup(row: GroupRow): Group {
@@ -158,7 +169,7 @@ async function loadAndSetProfile(
     // Keep Google avatar in sync (fire-and-forget, don't block profile load)
     const freshAvatar = authUser.user_metadata?.avatar_url as string | undefined;
     if (freshAvatar && (profile as ProfileRow).avatar !== freshAvatar) {
-      supabase.from("profiles").update({ avatar: freshAvatar }).eq("id", authUser.id);
+      persist(supabase.from("profiles").update({ avatar: freshAvatar }).eq("id", authUser.id), "avatar sync");
       (profile as ProfileRow).avatar = freshAvatar;
     }
   }
@@ -452,7 +463,6 @@ export const useStore = create<AppState>()((set, get) => ({
           const uLng = p.lng as number;
           if (!uLat || !uLng) continue;
 
-          const { haversine } = require("./geo");
           const dist = haversine({ lat, lng }, { lat: uLat, lng: uLng });
 
           nearby.push({
@@ -577,11 +587,14 @@ export const useStore = create<AppState>()((set, get) => ({
     set({ groups: [newGroup, ...groups] });
 
     apiCall("/api/groups", "POST", { name, topic, safeLocationId, location, plannedTime, femaleOnly, expiresInHours })
-      .then((res) => {
-        if (!res.ok) { get().loadGroups(); return; }
+      .then(async (res) => {
+        if (!res.ok) {
+          const { error } = await res.json().catch(() => ({ error: res.statusText })) as { error?: string };
+          console.error("[store] create group failed:", error);
+        }
         get().loadGroups();
       })
-      .catch(() => get().loadGroups());
+      .catch((err: unknown) => { console.error("[store] create group failed:", err); get().loadGroups(); });
   },
 
   sendMessage: (groupId, text) => {
@@ -603,13 +616,13 @@ export const useStore = create<AppState>()((set, get) => ({
       ),
     });
 
-    supabase.from("messages").insert({
+    persist(supabase.from("messages").insert({
       group_id: groupId,
       user_id: currentUser.id,
       user_name: currentUser.name,
       user_avatar: currentUser.avatar,
       text,
-    });
+    }), "send message");
   },
 
   // ── Voting ────────────────────────────────────────────────────
@@ -650,9 +663,9 @@ export const useStore = create<AppState>()((set, get) => ({
       ),
     });
 
-    supabase.from("groups")
+    persist(supabase.from("groups")
       .update({ final_location_id: winner, voting_open: false })
-      .eq("id", groupId);
+      .eq("id", groupId), "finalize location");
   },
 
   reopenVoting: (groupId) => {
@@ -661,9 +674,9 @@ export const useStore = create<AppState>()((set, get) => ({
         g.id === groupId ? { ...g, votingOpen: true, finalLocationId: null } : g
       ),
     });
-    supabase.from("groups")
+    persist(supabase.from("groups")
       .update({ voting_open: true, final_location_id: null })
-      .eq("id", groupId);
+      .eq("id", groupId), "reopen voting");
   },
 
   // ── Safety ────────────────────────────────────────────────────
@@ -672,18 +685,18 @@ export const useStore = create<AppState>()((set, get) => ({
     const { currentUser } = get();
     if (!currentUser) return;
     set((s) => ({ blockedUserIds: [...s.blockedUserIds, userId] }));
-    supabase.from("blocked_users")
-      .insert({ blocker_id: currentUser.id, blocked_id: userId });
+    persist(supabase.from("blocked_users")
+      .insert({ blocker_id: currentUser.id, blocked_id: userId }), "block user");
   },
 
   unblockUser: (userId) => {
     const { currentUser } = get();
     if (!currentUser) return;
     set((s) => ({ blockedUserIds: s.blockedUserIds.filter((id) => id !== userId) }));
-    supabase.from("blocked_users")
+    persist(supabase.from("blocked_users")
       .delete()
       .eq("blocker_id", currentUser.id)
-      .eq("blocked_id", userId);
+      .eq("blocked_id", userId), "unblock user");
   },
 
   reportUser: (userId, reason) => {
@@ -929,9 +942,9 @@ export const useStore = create<AppState>()((set, get) => ({
     set((s) => ({
       currentUser: s.currentUser ? { ...s.currentUser, gender, showGender } : null,
     }));
-    supabase.from("profiles")
+    persist(supabase.from("profiles")
       .update({ gender: gender ?? null, show_gender: showGender })
-      .eq("id", currentUser.id);
+      .eq("id", currentUser.id), "update gender settings");
   },
 
   updateProfile: async (updates) => {
@@ -957,9 +970,9 @@ export const useStore = create<AppState>()((set, get) => ({
     set((s) => ({
       currentUser: s.currentUser ? { ...s.currentUser, collegeVerified: true } : null,
     }));
-    supabase.from("profiles")
+    persist(supabase.from("profiles")
       .update({ college_verified: true })
-      .eq("id", currentUser.id);
+      .eq("id", currentUser.id), "verify college");
   },
 
   // Called only after the caller has already run a live face-match against
@@ -995,7 +1008,7 @@ export const useStore = create<AppState>()((set, get) => ({
     const { currentUser } = get();
     if (!currentUser) return;
     set((s) => ({ currentUser: s.currentUser ? { ...s.currentUser, statusText: text || undefined } : null }));
-    supabase.from("profiles").update({ status_text: text || null }).eq("id", currentUser.id);
+    persist(supabase.from("profiles").update({ status_text: text || null }).eq("id", currentUser.id), "update status");
   },
 
   updateStreak: () => {
@@ -1008,7 +1021,7 @@ export const useStore = create<AppState>()((set, get) => ({
     const isConsecutive = lastActive === new Date(Date.now() - 86400000).toISOString().slice(0, 10);
     const newStreak = isConsecutive ? (currentUser.streakDays ?? 0) + 1 : 1;
     set((s) => ({ currentUser: s.currentUser ? { ...s.currentUser, streakDays: newStreak } : null }));
-    supabase.from("profiles").update({ streak_days: newStreak, last_active_date: today }).eq("id", currentUser.id);
+    persist(supabase.from("profiles").update({ streak_days: newStreak, last_active_date: today }).eq("id", currentUser.id), "update streak");
   },
 
   // Legacy no-op kept so old callers don't crash if any exist
